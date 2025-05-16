@@ -1,4 +1,3 @@
-
 import { Filter, Check } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
 import { 
@@ -73,7 +72,7 @@ export default function Sidebar() {
       </div>
       
       <div className="mb-6">
-        <h3 className="text-sm font-medium mb-2">Market Scope</h3>
+        <h3 className="text-sm font-medium mb-2">Addressable Markets</h3>
         <div className="flex flex-col space-y-2">
           <div
             className="flex items-center cursor-pointer p-1 hover:bg-gray-100 rounded"
