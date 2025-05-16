@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { format, parseISO, isValid, isBefore, startOfDay } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import { format } from "date-fns";
 import { useDashboard } from "../context/DashboardContext";
 import { getPotentialOwners, getBlockerCategories } from "../data/mockData";
 import { Button } from "@/components/ui/button";
@@ -26,9 +25,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Globe, Loader2, AlertTriangle } from "lucide-react";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { useToast } from "@/components/ui/use-toast";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 interface BlockerModalProps {
   open: boolean;
@@ -48,8 +45,6 @@ export default function BlockerModal({ open, onClose, blockerId, productId, mark
     user
   } = useDashboard();
   
-  const { toast } = useToast();
-  
   // Initialize form state
   const [formData, setFormData] = useState({
     category: "",
@@ -62,14 +57,6 @@ export default function BlockerModal({ open, onClose, blockerId, productId, mark
   });
   
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [translatedText, setTranslatedText] = useState<string | null>(null);
-  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
-  const [translationOpen, setTranslationOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  
-  // Get user's timezone
-  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   
   // Populate form if editing an existing blocker
   useEffect(() => {
@@ -85,46 +72,23 @@ export default function BlockerModal({ open, onClose, blockerId, productId, mark
           escalated: blocker.escalated,
           resolved: blocker.resolved
         });
-        
-        // Set the selected date for the calendar
-        if (blocker.eta && isValid(new Date(blocker.eta))) {
-          setSelectedDate(parseISO(blocker.eta));
-        }
       }
     } else {
       // Initialize with defaults for new blocker
-      const oneWeekLater = new Date();
-      oneWeekLater.setDate(oneWeekLater.getDate() + 7);
-      const etaDate = startOfDay(oneWeekLater);
-      
-      // Convert to UTC midnight
-      const etaUTC = new Date(
-        Date.UTC(etaDate.getFullYear(), etaDate.getMonth(), etaDate.getDate(), 0, 0, 0)
-      );
-      
       setFormData({
         category: "",
         owner: user.name,
-        eta: etaUTC.toISOString().split('T')[0],
+        eta: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"), // 1 week from now
         note: "",
         jira_url: "",
         escalated: false,
         resolved: false
       });
-      
-      setSelectedDate(etaUTC);
     }
   }, [blockerId, getBlockerById, user.name]);
   
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Reset translation when note changes
-    if (field === 'note') {
-      setTranslatedText(null);
-      setDetectedLanguage(null);
-      setTranslationOpen(false);
-    }
   };
   
   const handleSubmit = () => {
@@ -160,120 +124,9 @@ export default function BlockerModal({ open, onClose, blockerId, productId, mark
   const owners = getPotentialOwners();
 
   const handleEtaSelect = (date: Date) => {
-    if (!date) return;
-    
-    // Check if date is in the past
-    const today = startOfDay(new Date());
-    if (isBefore(date, today)) {
-      toast({
-        title: "Invalid Date",
-        description: "ETA must be greater than or equal to today's date.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Convert the selected date to UTC midnight
-    const utcDate = new Date(
-      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0)
-    );
-    
-    handleChange("eta", utcDate.toISOString().split('T')[0]);
-    setSelectedDate(date);
+    handleChange("eta", format(date, "yyyy-MM-dd"));
     setCalendarOpen(false);
   };
-  
-  const translateNote = async () => {
-    if (!formData.note.trim()) return;
-    
-    setIsTranslating(true);
-    
-    try {
-      // First detect the language
-      const detectResponse = await fetch("https://translation.googleapis.com/language/translate/v2/detect", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          q: formData.note,
-          key: "G_TRANSLATE_KEY" // Note: This would be replaced with the actual key from environment variables
-        }),
-      });
-      
-      const detectData = await detectResponse.json();
-      
-      if (!detectResponse.ok) {
-        throw new Error(`Language detection failed: ${detectData.error?.message || 'Unknown error'}`);
-      }
-      
-      const detectedLang = detectData.data.detections[0][0].language;
-      setDetectedLanguage(detectedLang);
-      
-      // If language is already English, no need to translate
-      if (detectedLang === 'en') {
-        setIsTranslating(false);
-        toast({
-          title: "Already in English",
-          description: "The text is already in English, no translation needed.",
-        });
-        return;
-      }
-      
-      // Translate to English
-      const translateResponse = await fetch("https://translation.googleapis.com/language/translate/v2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          q: formData.note,
-          source: detectedLang,
-          target: "en",
-          format: "text",
-          key: "G_TRANSLATE_KEY" // Note: This would be replaced with the actual key from environment variables
-        }),
-      });
-      
-      const translateData = await translateResponse.json();
-      
-      if (!translateResponse.ok) {
-        throw new Error(`Translation failed: ${translateData.error?.message || 'Unknown error'}`);
-      }
-      
-      setTranslatedText(translateData.data.translations[0].translatedText);
-      setTranslationOpen(true);
-      
-    } catch (error) {
-      console.error("Translation error:", error);
-      toast({
-        title: "Translation Failed",
-        description: error instanceof Error ? error.message : "Failed to translate text. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsTranslating(false);
-    }
-  };
-  
-  const formatEtaDate = (dateString: string) => {
-    if (!dateString || !isValid(new Date(dateString))) return "";
-    
-    const date = parseISO(dateString);
-    
-    // Format in user's local timezone
-    const localFormatted = format(date, "dd MMM yyyy");
-    
-    // Format in UTC for tooltip
-    const utcFormatted = formatInTimeZone(date, "UTC", "yyyy-MM-dd HH:mm'Z'");
-    
-    return {
-      localFormatted,
-      utcFormatted
-    };
-  };
-  
-  const etaFormatted = formatEtaDate(formData.eta);
   
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
@@ -341,21 +194,18 @@ export default function BlockerModal({ open, onClose, blockerId, productId, mark
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left group"
+                    className="w-full justify-start text-left"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    <span>{etaFormatted.localFormatted || "Pick a date"}</span>
-                    <span className="ml-auto text-xs text-muted-foreground opacity-0 group-hover:opacity-100">
-                      UTC: {etaFormatted.utcFormatted}
-                    </span>
+                    {formData.eta || "Pick a date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={selectedDate}
+                    selected={formData.eta ? new Date(formData.eta) : undefined}
                     onSelect={handleEtaSelect}
-                    disabled={(date) => isBefore(date, startOfDay(new Date()))}
+                    disabled={(date) => date < new Date()}
                     initialFocus
                   />
                 </PopoverContent>
@@ -374,25 +224,7 @@ export default function BlockerModal({ open, onClose, blockerId, productId, mark
           </div>
           
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="note">Notes</Label>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="sm"
-                onClick={translateNote}
-                disabled={isTranslating || !formData.note.trim()}
-                title="Click to see English translation"
-                className="text-sm"
-              >
-                {isTranslating ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                ) : (
-                  <Globe className="h-4 w-4 mr-1" />
-                )}
-                Translate
-              </Button>
-            </div>
+            <Label htmlFor="note">Notes</Label>
             <Textarea
               id="note"
               value={formData.note}
@@ -400,29 +232,6 @@ export default function BlockerModal({ open, onClose, blockerId, productId, mark
               rows={4}
               placeholder="Provide details about this blocker..."
             />
-            
-            {(translatedText || isTranslating) && (
-              <Collapsible open={translationOpen} onOpenChange={setTranslationOpen} className="mt-2">
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full flex justify-between">
-                    <span>
-                      Machine translation from {detectedLanguage?.toUpperCase() || "detected language"} → English
-                    </span>
-                    <span className="text-xs">{translationOpen ? "Hide" : "Show"}</span>
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="p-2 mt-2 bg-muted/50 rounded-md">
-                  {isTranslating ? (
-                    <div className="flex items-center justify-center py-2">
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      <span>Translating...</span>
-                    </div>
-                  ) : (
-                    <p className="text-sm">{translatedText}</p>
-                  )}
-                </CollapsibleContent>
-              </Collapsible>
-            )}
           </div>
           
           <div className="flex items-center space-x-4">
