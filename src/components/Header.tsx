@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronDown, Menu, Settings, UploadCloud, Grid2x2 } from 'lucide-react';
@@ -32,7 +33,7 @@ const Header = () => {
             onClick={handleLogoClick}
             className="inline-flex items-center mr-6"
           >
-            <span className="font-bold text-xl">Launch Radar</span>
+            <span className="font-bold text-xl">Global First Launch Coverage</span>
           </button>
 
           {!isMobile && (
@@ -47,7 +48,7 @@ const Header = () => {
                 to="/my"
                 className="text-sm font-medium transition-colors hover:text-primary"
               >
-                My Launch Radar
+                My Coverage
               </Link>
               
               <DropdownMenu>
@@ -102,7 +103,7 @@ const Header = () => {
                     className="text-sm font-medium transition-colors hover:text-primary"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    My Launch Radar
+                    My Coverage
                   </Link>
                   
                   <div className="pt-2 pb-1">

@@ -2,7 +2,7 @@
 import { DashboardProvider } from "../context/DashboardContext";
 import MyLaunchRadar from "../components/MyLaunchRadar";
 
-const MyLaunchRadarPage = () => {
+const MyCoveragePage = () => {
   return (
     <DashboardProvider>
       <MyLaunchRadar />
@@ -10,4 +10,4 @@ const MyLaunchRadarPage = () => {
   );
 };
 
-export default MyLaunchRadarPage;
+export default MyCoveragePage;
