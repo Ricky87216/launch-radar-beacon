@@ -53,7 +53,8 @@ const GlobalNavBar = () => {
   }, [toggleSidebar, navigate]);
 
   // Determine if the user has admin privileges
-  const hasAdminAccess = user?.role === 'admin' || user?.role === 'can_edit_status';
+  // Fix: Check for admin role using the correct role type from the User interface
+  const hasAdminAccess = user?.role === 'admin' || user?.role === 'editor';
 
   return (
     <header className="sticky top-0 z-50 h-14 w-full border-b bg-background">
@@ -93,7 +94,8 @@ const GlobalNavBar = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.avatarUrl} />
+                  {/* Fix: Use user.name for the avatar since avatarUrl doesn't exist */}
+                  <AvatarImage src="" />
                   <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
               </Button>
