@@ -105,7 +105,8 @@ export function TamDetailsModal({ isOpen, onClose, productId }: TamDetailsModalP
             question: `TAM Escalation: ${escalationText}`,
             answer: null,
             status: 'OPEN',
-            tam_escalation: true
+            tam_escalation: true,
+            answered_at: null // Adding this field to fix the type error
           });
           
           toast.success("TAM escalation submitted successfully!");
