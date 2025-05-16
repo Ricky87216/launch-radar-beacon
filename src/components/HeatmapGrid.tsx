@@ -5,6 +5,8 @@ import {
   AlertTriangle, 
   Info 
 } from "lucide-react";
+import { parseISO, isValid, format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { useDashboard } from "../context/DashboardContext";
 import { Market, Product } from "../types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -28,6 +30,12 @@ export default function HeatmapGrid() {
   
   const markets = useMemo(() => getVisibleMarkets(), [getVisibleMarkets]);
   const products = useMemo(() => getFilteredProducts(), [getFilteredProducts]);
+  
+  // Get user's timezone
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const userTimezoneAbbr = new Intl.DateTimeFormat('en', { timeZoneName: 'short' })
+    .formatToParts(new Date())
+    .find(part => part.type === 'timeZoneName')?.value || '';
   
   // Function to handle drill-down
   const handleDrillDown = (market: Market) => {
@@ -71,12 +79,34 @@ export default function HeatmapGrid() {
     return `${value.toFixed(1)}%`;
   };
   
-  // Get product-specific blockers
+  // Format ETA date in a timezone-aware manner
+  const formatEtaDate = (dateString: string | null) => {
+    if (!dateString || !isValid(new Date(dateString))) return { formatted: "N/A", utcFormatted: "" };
+    
+    const date = parseISO(dateString);
+    
+    // Format in user's local timezone
+    const formatted = format(date, "dd MMM");
+    
+    // Format in UTC for tooltip
+    const utcFormatted = formatInTimeZone(date, "UTC", "yyyy-MM-dd HH:mm'Z'");
+    
+    return { formatted, utcFormatted };
+  };
+  
+  // Get product-specific blockers with formatted ETAs
   const getProductBlockers = (productId: string) => {
     return blockers
       .filter(blocker => blocker.product_id === productId && !blocker.resolved)
-      .map(blocker => `[${blocker.category}] ${blocker.note} (ETA: ${new Date(blocker.eta).toLocaleDateString()})`)
-      .join('\n');
+      .map(blocker => {
+        const { formatted, utcFormatted } = formatEtaDate(blocker.eta);
+        return {
+          ...blocker,
+          formattedEta: formatted,
+          utcEta: utcFormatted,
+          displayText: `[${blocker.category}] ${blocker.note} (ETA: ${formatted} ${userTimezoneAbbr})`
+        };
+      });
   };
   
   if (markets.length === 0 || products.length === 0) {
@@ -216,11 +246,25 @@ export default function HeatmapGrid() {
                           <span className="font-semibold">Notes:</span> {product.notes}
                         </div>
                       )}
-                      {getProductBlockers(product.id) && (
+                      
+                      {getProductBlockers(product.id).length > 0 && (
                         <div>
                           <span className="font-semibold text-red-500">Blockers:</span>
                           <div className="whitespace-pre-line text-xs mt-1">
-                            {getProductBlockers(product.id)}
+                            {getProductBlockers(product.id).map((blocker, index) => (
+                              <div key={blocker.id} className="mb-1">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div>{blocker.displayText}</div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">
+                                      <div className="text-xs">Original UTC: {blocker.utcEta}</div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}
