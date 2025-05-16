@@ -46,10 +46,10 @@ export default function Sidebar() {
       
       <div className="mb-6">
         <h3 className="text-sm font-medium mb-2">Coverage Type</h3>
-        <div className="flex items-center space-x-2 mb-2">
+        <div className="flex flex-wrap items-center space-x-2 mb-2">
           <button
             onClick={() => setCoverageType('city_percentage')}
-            className={`px-3 py-1 text-sm rounded-md ${
+            className={`px-3 py-1 text-sm rounded-md mb-2 ${
               coverageType === 'city_percentage' 
                 ? 'bg-primary text-white' 
                 : 'bg-gray-100 hover:bg-gray-200'
@@ -59,13 +59,23 @@ export default function Sidebar() {
           </button>
           <button
             onClick={() => setCoverageType('gb_weighted')}
-            className={`px-3 py-1 text-sm rounded-md ${
+            className={`px-3 py-1 text-sm rounded-md mb-2 ${
               coverageType === 'gb_weighted' 
                 ? 'bg-primary text-white' 
                 : 'bg-gray-100 hover:bg-gray-200'
             }`}
           >
             GB Weighted
+          </button>
+          <button
+            onClick={() => setCoverageType('tam_percentage')}
+            className={`px-3 py-1 text-sm rounded-md mb-2 ${
+              coverageType === 'tam_percentage' 
+                ? 'bg-primary text-white' 
+                : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+          >
+            TAM %
           </button>
         </div>
       </div>

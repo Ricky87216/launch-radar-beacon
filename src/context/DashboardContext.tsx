@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { 
   Market, 
@@ -21,8 +22,8 @@ interface DashboardContextProps {
   coverageData: Coverage[];
   blockers: Blocker[];
   user: User;
-  coverageType: 'city_percentage' | 'gb_weighted';
-  setCoverageType: (type: 'city_percentage' | 'gb_weighted') => void;
+  coverageType: 'city_percentage' | 'gb_weighted' | 'tam_percentage';
+  setCoverageType: (type: 'city_percentage' | 'gb_weighted' | 'tam_percentage') => void;
   selectedLOBs: string[];
   setSelectedLOBs: (lobs: string[]) => void;
   selectedSubTeams: string[];
@@ -43,7 +44,7 @@ interface DashboardContextProps {
   getVisibleMarkets: () => Market[];
   getFilteredProducts: () => Product[];
   getProductNotes: (productId: string) => string;
-  getAllMarkets: () => Market[]; // Added this function to return all markets
+  getAllMarkets: () => Market[];
 }
 
 const DashboardContext = createContext<DashboardContextProps | undefined>(undefined);
@@ -56,7 +57,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [blockersData, setBlockersData] = useState<Blocker[]>(blockers);
   
   // State for user preferences and filters
-  const [coverageType, setCoverageType] = useState<'city_percentage' | 'gb_weighted'>('city_percentage');
+  const [coverageType, setCoverageType] = useState<'city_percentage' | 'gb_weighted' | 'tam_percentage'>('city_percentage');
   const [selectedLOBs, setSelectedLOBs] = useState<string[]>([]);
   const [selectedSubTeams, setSelectedSubTeams] = useState<string[]>([]);
   const [hideFullCoverage, setHideFullCoverage] = useState(false);
@@ -73,7 +74,22 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     
     if (!coverage) return null;
     
-    const value = coverageType === 'city_percentage' ? coverage.city_percentage : coverage.gb_weighted;
+    let value;
+    switch (coverageType) {
+      case 'city_percentage':
+        value = coverage.city_percentage;
+        break;
+      case 'gb_weighted':
+        value = coverage.gb_weighted;
+        break;
+      case 'tam_percentage':
+        // For demo purposes, we'll use a calculation based on existing values
+        // In a real app, this would come from the actual data
+        value = (coverage.city_percentage * 0.7) + (coverage.gb_weighted * 0.3);
+        break;
+      default:
+        value = coverage.city_percentage;
+    }
     
     const blocker = blockersData.find(b => 
       b.product_id === productId && 
@@ -211,7 +227,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         getVisibleMarkets,
         getFilteredProducts,
         getProductNotes,
-        getAllMarkets // Added to the provider value
+        getAllMarkets
       }}
     >
       {children}
