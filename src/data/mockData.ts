@@ -15,13 +15,14 @@ export const currentUser: User = {
 // Mock Markets Data
 export const markets: Market[] = [
   // Mega Regions
-  { id: "mr-1", name: "Americas", type: "mega_region", parent_id: null, geo_path: "/Americas" },
+  { id: "mr-1", name: "US&C", type: "mega_region", parent_id: null, geo_path: "/US&C" },
   { id: "mr-2", name: "EMEA", type: "mega_region", parent_id: null, geo_path: "/EMEA" },
   { id: "mr-3", name: "APAC", type: "mega_region", parent_id: null, geo_path: "/APAC" },
+  { id: "mr-4", name: "Latam", type: "mega_region", parent_id: null, geo_path: "/Latam" },
   
   // Regions
-  { id: "r-1", name: "North America", type: "region", parent_id: "mr-1", geo_path: "/Americas/North America" },
-  { id: "r-2", name: "South America", type: "region", parent_id: "mr-1", geo_path: "/Americas/South America" },
+  { id: "r-1", name: "North America", type: "region", parent_id: "mr-1", geo_path: "/US&C/North America" },
+  { id: "r-2", name: "South America", type: "region", parent_id: "mr-4", geo_path: "/Latam/South America" },
   { id: "r-3", name: "Western Europe", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Western Europe" },
   { id: "r-4", name: "Eastern Europe", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Eastern Europe" },
   { id: "r-5", name: "Middle East", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Middle East" },
@@ -30,9 +31,9 @@ export const markets: Market[] = [
   { id: "r-8", name: "Oceania", type: "region", parent_id: "mr-3", geo_path: "/APAC/Oceania" },
   
   // Countries
-  { id: "c-1", name: "USA", type: "country", parent_id: "r-1", geo_path: "/Americas/North America/USA" },
-  { id: "c-2", name: "Canada", type: "country", parent_id: "r-1", geo_path: "/Americas/North America/Canada" },
-  { id: "c-3", name: "Brazil", type: "country", parent_id: "r-2", geo_path: "/Americas/South America/Brazil" },
+  { id: "c-1", name: "USA", type: "country", parent_id: "r-1", geo_path: "/US&C/North America/USA" },
+  { id: "c-2", name: "Canada", type: "country", parent_id: "r-1", geo_path: "/US&C/North America/Canada" },
+  { id: "c-3", name: "Brazil", type: "country", parent_id: "r-2", geo_path: "/Latam/South America/Brazil" },
   { id: "c-4", name: "UK", type: "country", parent_id: "r-3", geo_path: "/EMEA/Western Europe/UK" },
   { id: "c-5", name: "Germany", type: "country", parent_id: "r-3", geo_path: "/EMEA/Western Europe/Germany" },
   { id: "c-6", name: "Poland", type: "country", parent_id: "r-4", geo_path: "/EMEA/Eastern Europe/Poland" },
@@ -42,10 +43,10 @@ export const markets: Market[] = [
   { id: "c-10", name: "Australia", type: "country", parent_id: "r-8", geo_path: "/APAC/Oceania/Australia" },
   
   // Cities
-  { id: "city-1", name: "New York", type: "city", parent_id: "c-1", geo_path: "/Americas/North America/USA/New York" },
-  { id: "city-2", name: "San Francisco", type: "city", parent_id: "c-1", geo_path: "/Americas/North America/USA/San Francisco" },
-  { id: "city-3", name: "Toronto", type: "city", parent_id: "c-2", geo_path: "/Americas/North America/Canada/Toronto" },
-  { id: "city-4", name: "São Paulo", type: "city", parent_id: "c-3", geo_path: "/Americas/South America/Brazil/São Paulo" },
+  { id: "city-1", name: "New York", type: "city", parent_id: "c-1", geo_path: "/US&C/North America/USA/New York" },
+  { id: "city-2", name: "San Francisco", type: "city", parent_id: "c-1", geo_path: "/US&C/North America/USA/San Francisco" },
+  { id: "city-3", name: "Toronto", type: "city", parent_id: "c-2", geo_path: "/US&C/North America/Canada/Toronto" },
+  { id: "city-4", name: "São Paulo", type: "city", parent_id: "c-3", geo_path: "/Latam/South America/Brazil/São Paulo" },
   { id: "city-5", name: "London", type: "city", parent_id: "c-4", geo_path: "/EMEA/Western Europe/UK/London" },
   { id: "city-6", name: "Manchester", type: "city", parent_id: "c-4", geo_path: "/EMEA/Western Europe/UK/Manchester" },
   { id: "city-7", name: "Berlin", type: "city", parent_id: "c-5", geo_path: "/EMEA/Western Europe/Germany/Berlin" },
@@ -56,7 +57,7 @@ export const markets: Market[] = [
   { id: "city-12", name: "Sydney", type: "city", parent_id: "c-10", geo_path: "/APAC/Oceania/Australia/Sydney" }
 ];
 
-// Mock Products Data
+// Now let's add additional coverage data for the Latam mega region
 export const products: Product[] = [
   { id: "p-1", name: "Product Alpha", line_of_business: "Business Services", sub_team: "Core Platform", status: "Active", launch_date: "2023-01-15" },
   { id: "p-2", name: "Product Beta", line_of_business: "Business Services", sub_team: "Core Platform", status: "Active", launch_date: "2023-02-20" },
@@ -164,3 +165,4 @@ export const getPotentialOwners = (): string[] => {
     "Robert Taylor"
   ];
 };
+
