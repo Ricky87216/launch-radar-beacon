@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { DashboardProvider } from "@/context/DashboardContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import MyLaunchRadar from "./pages/MyLaunchRadar";
@@ -31,28 +32,30 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <SidebarProvider>
-          <div className="flex min-h-screen w-full">
-            <GlobalSidebar />
-            <div className="flex flex-col flex-1">
-              <GlobalNavBar />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/my" element={<MyLaunchRadar />} />
-                <Route path="/escalations" element={<EscalationsLog />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/data-sync" element={<DataSync />} />
-                <Route path="/admin/bulk-edit" element={<BulkEdit />} />
-                <Route path="/admin/logs" element={<Logs />} />
-                <Route path="/admin/answer-hub" element={<AnswerHub />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+      <DashboardProvider>
+        <BrowserRouter>
+          <SidebarProvider>
+            <div className="flex min-h-screen w-full">
+              <GlobalSidebar />
+              <div className="flex flex-col flex-1">
+                <GlobalNavBar />
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/my" element={<MyLaunchRadar />} />
+                  <Route path="/escalations" element={<EscalationsLog />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/data-sync" element={<DataSync />} />
+                  <Route path="/admin/bulk-edit" element={<BulkEdit />} />
+                  <Route path="/admin/logs" element={<Logs />} />
+                  <Route path="/admin/answer-hub" element={<AnswerHub />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
             </div>
-          </div>
-        </SidebarProvider>
-      </BrowserRouter>
+          </SidebarProvider>
+        </BrowserRouter>
+      </DashboardProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
