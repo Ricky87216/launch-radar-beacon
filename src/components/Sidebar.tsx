@@ -15,7 +15,9 @@ export default function Sidebar() {
     hideFullCoverage,
     setHideFullCoverage,
     coverageType,
-    setCoverageType
+    setCoverageType,
+    useTam,
+    setUseTam
   } = useDashboard();
   
   const linesOfBusiness = getLinesOfBusiness();
@@ -67,6 +69,44 @@ export default function Sidebar() {
           >
             GB Weighted
           </button>
+          <button
+            onClick={() => setCoverageType('tam_percentage')}
+            className={`px-3 py-1 text-sm rounded-md ${
+              coverageType === 'tam_percentage' 
+                ? 'bg-primary text-white' 
+                : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+          >
+            TAM %
+          </button>
+        </div>
+      </div>
+      
+      <div className="mb-6">
+        <h3 className="text-sm font-medium mb-2">Market Scope</h3>
+        <div className="flex flex-col space-y-2">
+          <div
+            className="flex items-center cursor-pointer p-1 hover:bg-gray-100 rounded"
+            onClick={() => setUseTam(false)}
+          >
+            <div className={`w-4 h-4 rounded-full border mr-2 flex items-center justify-center ${
+              !useTam ? 'bg-primary border-primary' : 'border-gray-300'
+            }`}>
+              {!useTam && <div className="w-2 h-2 rounded-full bg-white"></div>}
+            </div>
+            <span className="text-sm">All Markets</span>
+          </div>
+          <div
+            className="flex items-center cursor-pointer p-1 hover:bg-gray-100 rounded"
+            onClick={() => setUseTam(true)}
+          >
+            <div className={`w-4 h-4 rounded-full border mr-2 flex items-center justify-center ${
+              useTam ? 'bg-primary border-primary' : 'border-gray-300'
+            }`}>
+              {useTam && <div className="w-2 h-2 rounded-full bg-white"></div>}
+            </div>
+            <span className="text-sm">TAM Only</span>
+          </div>
         </div>
       </div>
       

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { 
   Market, 
@@ -5,14 +6,17 @@ import {
   Coverage, 
   Blocker, 
   User, 
-  HeatmapCell 
+  HeatmapCell,
+  TamScope,
+  CellComment
 } from "../types";
 import { 
   markets, 
   products, 
   coverageData, 
   blockers, 
-  currentUser 
+  currentUser,
+  tamScopeData
 } from "../data/mockData";
 
 interface DashboardContextProps {
@@ -21,8 +25,8 @@ interface DashboardContextProps {
   coverageData: Coverage[];
   blockers: Blocker[];
   user: User;
-  coverageType: 'city_percentage' | 'gb_weighted';
-  setCoverageType: (type: 'city_percentage' | 'gb_weighted') => void;
+  coverageType: 'city_percentage' | 'gb_weighted' | 'tam_percentage';
+  setCoverageType: (type: 'city_percentage' | 'gb_weighted' | 'tam_percentage') => void;
   selectedLOBs: string[];
   setSelectedLOBs: (lobs: string[]) => void;
   selectedSubTeams: string[];
@@ -43,7 +47,16 @@ interface DashboardContextProps {
   getVisibleMarkets: () => Market[];
   getFilteredProducts: () => Product[];
   getProductNotes: (productId: string) => string;
-  getAllMarkets: () => Market[]; // Added this function to return all markets
+  getAllMarkets: () => Market[];
+  useTam: boolean;
+  setUseTam: (useTam: boolean) => void;
+  isMarketInTam: (productId: string, marketId: string) => boolean;
+  getProductTamCities: (productId: string) => Market[];
+  getProductTamCountries: (productId: string) => Market[];
+  getProductTamRegions: (productId: string) => Market[];
+  isUserLocationInTam: (productId: string) => boolean;
+  addCellComment: (comment: Omit<CellComment, "comment_id" | "created_at">) => void;
+  updateCellComment: (commentId: string, updates: Partial<CellComment>) => void;
 }
 
 const DashboardContext = createContext<DashboardContextProps | undefined>(undefined);
@@ -54,16 +67,103 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [productsData, setProductsData] = useState<Product[]>(products);
   const [coverageDataState, setCoverageDataState] = useState<Coverage[]>(coverageData);
   const [blockersData, setBlockersData] = useState<Blocker[]>(blockers);
+  const [tamScopeState, setTamScopeState] = useState<TamScope[]>(tamScopeData || []);
+  const [cellCommentsState, setCellCommentsState] = useState<CellComment[]>([]);
   
   // State for user preferences and filters
-  const [coverageType, setCoverageType] = useState<'city_percentage' | 'gb_weighted'>('city_percentage');
+  const [coverageType, setCoverageType] = useState<'city_percentage' | 'gb_weighted' | 'tam_percentage'>('city_percentage');
   const [selectedLOBs, setSelectedLOBs] = useState<string[]>([]);
   const [selectedSubTeams, setSelectedSubTeams] = useState<string[]>([]);
   const [hideFullCoverage, setHideFullCoverage] = useState(false);
+  const [useTam, setUseTam] = useState(false);
   
   // State for drill-down navigation
   const [currentLevel, setCurrentLevel] = useState<'mega_region' | 'region' | 'country' | 'city'>('mega_region');
   const [selectedParent, setSelectedParent] = useState<string | null>(null);
+  
+  // Function to check if a market is in TAM scope for a product
+  const isMarketInTam = (productId: string, marketId: string): boolean => {
+    // If the market is a city, check directly
+    const market = getMarketById(marketId);
+    if (!market) return false;
+    
+    if (market.type === 'city') {
+      return tamScopeState.some(ts => ts.product_id === productId && ts.city_id === marketId);
+    } else {
+      // For non-city markets, check if any children cities are in TAM
+      const cityChildren = getCityChildrenForMarket(marketId);
+      return cityChildren.some(city => tamScopeState.some(ts => ts.product_id === productId && ts.city_id === city.id));
+    }
+  };
+  
+  // Get all city children for a given market
+  const getCityChildrenForMarket = (marketId: string): Market[] => {
+    const market = getMarketById(marketId);
+    if (!market) return [];
+    
+    if (market.type === 'city') return [market];
+    
+    // For non-city markets, recursively get all city children
+    let cities: Market[] = [];
+    
+    if (market.type === 'country') {
+      cities = marketsData.filter(m => m.type === 'city' && m.parent_id === marketId);
+    } else if (market.type === 'region') {
+      const countries = marketsData.filter(m => m.type === 'country' && m.parent_id === marketId);
+      countries.forEach(country => {
+        cities = [...cities, ...marketsData.filter(m => m.type === 'city' && m.parent_id === country.id)];
+      });
+    } else if (market.type === 'mega_region') {
+      const regions = marketsData.filter(m => m.type === 'region' && m.parent_id === marketId);
+      regions.forEach(region => {
+        const countries = marketsData.filter(m => m.type === 'country' && m.parent_id === region.id);
+        countries.forEach(country => {
+          cities = [...cities, ...marketsData.filter(m => m.type === 'city' && m.parent_id === country.id)];
+        });
+      });
+    }
+    
+    return cities;
+  };
+  
+  // Get all cities in TAM for a specific product
+  const getProductTamCities = (productId: string): Market[] => {
+    const tamCityIds = tamScopeState
+      .filter(ts => ts.product_id === productId)
+      .map(ts => ts.city_id);
+    
+    return marketsData.filter(m => m.type === 'city' && tamCityIds.includes(m.id));
+  };
+  
+  // Get all countries that have at least one city in TAM for a specific product
+  const getProductTamCountries = (productId: string): Market[] => {
+    const tamCities = getProductTamCities(productId);
+    const tamCountryIds = new Set(tamCities.map(city => city.parent_id).filter(Boolean) as string[]);
+    
+    return marketsData.filter(m => m.type === 'country' && tamCountryIds.has(m.id));
+  };
+  
+  // Get all regions that have at least one city in TAM for a specific product
+  const getProductTamRegions = (productId: string): Market[] => {
+    const tamCountries = getProductTamCountries(productId);
+    const tamRegionIds = new Set(tamCountries.map(country => country.parent_id).filter(Boolean) as string[]);
+    
+    return marketsData.filter(m => m.type === 'region' && tamRegionIds.has(m.id));
+  };
+  
+  // Check if user's location (region/country) is in TAM for a product
+  const isUserLocationInTam = (productId: string): boolean => {
+    // First check if user's country is in TAM
+    const userCountry = marketsData.find(m => m.type === 'country' && m.name === currentUser.country);
+    
+    if (userCountry) {
+      // Check if any city in this country is in TAM
+      const citiesInCountry = marketsData.filter(m => m.type === 'city' && m.parent_id === userCountry.id);
+      return citiesInCountry.some(city => tamScopeState.some(ts => ts.product_id === productId && ts.city_id === city.id));
+    }
+    
+    return false;
+  };
   
   // Function to get coverage value as a normalized cell for the heatmap
   const getCoverageCell = (productId: string, marketId: string): HeatmapCell | null => {
@@ -73,7 +173,31 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     
     if (!coverage) return null;
     
-    const value = coverageType === 'city_percentage' ? coverage.city_percentage : coverage.gb_weighted;
+    let value: number;
+    
+    if (coverageType === 'city_percentage') {
+      value = coverage.city_percentage;
+    } else if (coverageType === 'gb_weighted') {
+      value = coverage.gb_weighted;
+    } else {
+      // TAM percentage - for demo purposes, let's calculate it based on other metrics
+      // In a real implementation, this would come from the database or be calculated server-side
+      value = coverage.tam_percentage || (coverage.city_percentage * 1.2 > 100 ? 100 : coverage.city_percentage * 1.2);
+    }
+    
+    // If useTam is true, adjust the calculation for TAM-only markets
+    if (useTam) {
+      const market = getMarketById(marketId);
+      if (!market) return null;
+      
+      // For demo purposes, we'll simply adjust the value by a factor
+      // In a real implementation, this would be calculated differently
+      if (isMarketInTam(productId, marketId)) {
+        value = Math.min(value * 1.15, 100); // Slightly boost TAM markets
+      } else {
+        value = Math.max(value * 0.85, 0); // Slightly reduce non-TAM markets
+      }
+    }
     
     const blocker = blockersData.find(b => 
       b.product_id === productId && 
@@ -113,6 +237,33 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       blocker.id === blockerId 
         ? { ...blocker, ...updates, updated_at: new Date().toISOString() } 
         : blocker
+    ));
+  };
+  
+  // Function to add a new cell comment
+  const addCellComment = (comment: Omit<CellComment, "comment_id" | "created_at">) => {
+    const newComment: CellComment = {
+      ...comment,
+      comment_id: `c-${cellCommentsState.length + 1}`,
+      created_at: new Date().toISOString(),
+    };
+    
+    setCellCommentsState(prev => [...prev, newComment]);
+  };
+  
+  // Function to update an existing cell comment
+  const updateCellComment = (commentId: string, updates: Partial<CellComment>) => {
+    setCellCommentsState(prev => prev.map(comment => 
+      comment.comment_id === commentId 
+        ? { 
+            ...comment, 
+            ...updates, 
+            ...(updates.answer ? { 
+              status: 'ANSWERED', 
+              answered_at: new Date().toISOString() 
+            } : {}) 
+          } 
+        : comment
     ));
   };
   
@@ -211,7 +362,16 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         getVisibleMarkets,
         getFilteredProducts,
         getProductNotes,
-        getAllMarkets // Added to the provider value
+        getAllMarkets,
+        useTam,
+        setUseTam,
+        isMarketInTam,
+        getProductTamCities,
+        getProductTamCountries,
+        getProductTamRegions,
+        isUserLocationInTam,
+        addCellComment,
+        updateCellComment
       }}
     >
       {children}

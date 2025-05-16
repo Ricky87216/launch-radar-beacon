@@ -1,5 +1,5 @@
 
-import { Market, Product, Coverage, Blocker, User } from "../types";
+import { Market, Product, Coverage, Blocker, User, TamScope } from "../types";
 
 // Mock User Data
 export const currentUser: User = {
@@ -78,13 +78,45 @@ products.forEach(product => {
     // Generate random coverage values
     const cityPercentage = Math.random() * 100;
     const gbWeighted = Math.random() * 100;
+    const tamPercentage = Math.min(cityPercentage * 1.2, 100); // TAM % is slightly higher but capped at 100%
     
     coverageData.push({
       product_id: product.id,
       market_id: market.id,
       city_percentage: cityPercentage,
       gb_weighted: gbWeighted,
+      tam_percentage: tamPercentage,
       updated_at: new Date().toISOString()
+    });
+  });
+});
+
+// Mock TAM Scope Data - Generate some random TAM data
+export const tamScopeData: TamScope[] = [];
+
+// Add cities to TAM for each product (not all cities, just a selection)
+products.forEach(product => {
+  // Get city IDs
+  const cityIds = markets
+    .filter(m => m.type === 'city')
+    .map(m => m.id);
+  
+  // Add a random selection of cities to the TAM for this product
+  const numCities = Math.floor(Math.random() * (cityIds.length - 4)) + 4; // At least 4 cities
+  const shuffledCities = [...cityIds].sort(() => 0.5 - Math.random());
+  const selectedCities = shuffledCities.slice(0, numCities);
+  
+  // Always include London in the TAM for demo purposes (as our user is in the UK)
+  const london = markets.find(m => m.name === 'London' && m.type === 'city');
+  if (london && !selectedCities.includes(london.id)) {
+    selectedCities.push(london.id);
+  }
+  
+  // Add the cities to the TAM
+  selectedCities.forEach(cityId => {
+    tamScopeData.push({
+      product_id: product.id,
+      city_id: cityId
     });
   });
 });
@@ -165,4 +197,3 @@ export const getPotentialOwners = (): string[] => {
     "Robert Taylor"
   ];
 };
-

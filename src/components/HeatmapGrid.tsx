@@ -3,7 +3,8 @@ import { useMemo, useState, useEffect } from "react";
 import { 
   ChevronRight, 
   AlertTriangle, 
-  Info 
+  Info,
+  Tag
 } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
 import { Market, Product } from "../types";
@@ -13,6 +14,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { CellCommentPopover } from "./CellCommentPopover";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
+import { TamDetailsModal } from "./TamDetailsModal";
 
 export default function HeatmapGrid() {
   const { 
@@ -29,7 +31,8 @@ export default function HeatmapGrid() {
     blockers,
     setSelectedLOBs,
     setSelectedSubTeams,
-    setHideFullCoverage
+    setHideFullCoverage,
+    useTam
   } = useDashboard();
   
   const markets = useMemo(() => getVisibleMarkets(), [getVisibleMarkets]);
@@ -41,6 +44,10 @@ export default function HeatmapGrid() {
   const [focusedComment, setFocusedComment] = useState<string | null>(null);
   const [focusedProduct, setFocusedProduct] = useState<string | null>(null);
   const [focusedMarket, setFocusedMarket] = useState<string | null>(null);
+  
+  // State for TAM details modal
+  const [isTamModalOpen, setIsTamModalOpen] = useState(false);
+  const [selectedProductForTam, setSelectedProductForTam] = useState<string | null>(null);
 
   // Parse URL parameters on component mount and when location changes
   useEffect(() => {
@@ -166,6 +173,11 @@ export default function HeatmapGrid() {
       .join('\n');
   };
   
+  const handleOpenTamModal = (productId: string) => {
+    setSelectedProductForTam(productId);
+    setIsTamModalOpen(true);
+  };
+  
   if (markets.length === 0 || products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8">
@@ -191,11 +203,24 @@ export default function HeatmapGrid() {
             {currentLevel === 'country' && `Viewing Countries in ${getMarketById(selectedParent || "")?.name || ""}`}
             {currentLevel === 'city' && `Viewing Cities in ${getMarketById(selectedParent || "")?.name || ""}`}
           </span>
+          
+          {/* TAM Mode Pill - shown when TAM filter is active */}
+          {useTam && (
+            <div className="ml-auto">
+              <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                TAM Mode Active
+              </span>
+            </div>
+          )}
         </div>
         
         {/* Coverage type indicator */}
         <div className="text-sm text-gray-500 mb-4">
-          Showing: {coverageType === 'city_percentage' ? 'City Coverage %' : 'GB-Weighted Coverage %'}
+          Showing: {
+            coverageType === 'city_percentage' ? 'City Coverage %' : 
+            coverageType === 'gb_weighted' ? 'GB-Weighted Coverage %' : 
+            'TAM Coverage %'
+          }
         </div>
         
         {/* Heatmap grid */}
@@ -218,8 +243,18 @@ export default function HeatmapGrid() {
               {products.map(product => (
                 <TableRow key={product.id}>
                   <TableCell className="sticky left-0 bg-white z-10 border-b">
-                    <div className="text-sm font-medium">{product.name}</div>
-                    <div className="text-xs text-gray-500">{product.line_of_business} - {product.sub_team}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="mr-2">
+                        <div className="text-sm font-medium">{product.name}</div>
+                        <div className="text-xs text-gray-500">{product.line_of_business} - {product.sub_team}</div>
+                      </div>
+                      <button 
+                        onClick={() => handleOpenTamModal(product.id)}
+                        className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
+                      >
+                        TAM
+                      </button>
+                    </div>
                   </TableCell>
                   
                   {markets.map(market => {
@@ -333,6 +368,15 @@ export default function HeatmapGrid() {
           </Table>
         </div>
       </div>
+      
+      {/* TAM Details Modal */}
+      {selectedProductForTam && (
+        <TamDetailsModal 
+          isOpen={isTamModalOpen}
+          onClose={() => setIsTamModalOpen(false)}
+          productId={selectedProductForTam}
+        />
+      )}
     </div>
   );
 }
