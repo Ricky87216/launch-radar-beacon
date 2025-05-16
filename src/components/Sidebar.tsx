@@ -69,16 +69,6 @@ export default function Sidebar() {
           >
             GB Weighted
           </button>
-          <button
-            onClick={() => setCoverageType('tam_percentage')}
-            className={`px-3 py-1 text-sm rounded-md ${
-              coverageType === 'tam_percentage' 
-                ? 'bg-primary text-white' 
-                : 'bg-gray-100 hover:bg-gray-200'
-            }`}
-          >
-            TAM %
-          </button>
         </div>
       </div>
       
