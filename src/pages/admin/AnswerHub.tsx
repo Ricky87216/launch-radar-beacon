@@ -153,11 +153,13 @@ export default function AnswerHub() {
       if (error) throw error;
       
       if (data) {
-        setComments(data);
+        // Explicitly type the data as Comment[]
+        const typedData = data as Comment[];
+        setComments(typedData);
         
         // Initialize answers state
         const initialAnswers: Record<string, string> = {};
-        data.forEach(comment => {
+        typedData.forEach(comment => {
           if (comment.answer) {
             initialAnswers[comment.comment_id] = comment.answer;
           } else {
@@ -174,6 +176,7 @@ export default function AnswerHub() {
     }
   };
   
+  // Handle answer submission
   const handleAnswer = async (commentId: string) => {
     const answer = answers[commentId];
     if (!answer.trim()) return;
@@ -214,6 +217,7 @@ export default function AnswerHub() {
     }
   };
   
+  // Handle status toggle
   const handleToggleStatus = async (commentId: string, newStatus: 'OPEN' | 'ANSWERED') => {
     try {
       const comment = comments.find(c => c.comment_id === commentId);

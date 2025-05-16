@@ -67,18 +67,23 @@ export function CellCommentPopover({ productId, marketId }: CellCommentProps) {
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      setComments(data || []);
       
-      // Initialize answers state
-      const initialAnswers: Record<string, string> = {};
-      data?.forEach(comment => {
-        if (comment.answer) {
-          initialAnswers[comment.comment_id] = comment.answer;
-        } else {
-          initialAnswers[comment.comment_id] = '';
-        }
-      });
-      setAnswers(initialAnswers);
+      // Ensure data is properly typed as Comment[]
+      if (data) {
+        const typedData = data as Comment[];
+        setComments(typedData);
+        
+        // Initialize answers state
+        const initialAnswers: Record<string, string> = {};
+        typedData.forEach(comment => {
+          if (comment.answer) {
+            initialAnswers[comment.comment_id] = comment.answer;
+          } else {
+            initialAnswers[comment.comment_id] = '';
+          }
+        });
+        setAnswers(initialAnswers);
+      }
     } catch (error) {
       console.error('Error fetching comments:', error);
       toast.error('Failed to load comments');
@@ -104,9 +109,12 @@ export function CellCommentPopover({ productId, marketId }: CellCommentProps) {
         
       if (error) throw error;
       
-      setComments(prev => [data[0], ...prev]);
-      setNewQuestion('');
-      toast.success('Question added successfully');
+      if (data) {
+        const newComment = data[0] as Comment;
+        setComments(prev => [newComment, ...prev]);
+        setNewQuestion('');
+        toast.success('Question added successfully');
+      }
     } catch (error) {
       console.error('Error adding question:', error);
       toast.error('Failed to add question');
@@ -129,7 +137,7 @@ export function CellCommentPopover({ productId, marketId }: CellCommentProps) {
         
       if (error) throw error;
       
-      // Update local state
+      // Update local state with proper typing
       setComments(prev => 
         prev.map(comment => 
           comment.comment_id === commentId 
