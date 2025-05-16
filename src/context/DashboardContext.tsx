@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { 
   Market, 
@@ -44,6 +43,7 @@ interface DashboardContextProps {
   getVisibleMarkets: () => Market[];
   getFilteredProducts: () => Product[];
   getProductNotes: (productId: string) => string;
+  getAllMarkets: () => Market[]; // Added this function to return all markets
 }
 
 const DashboardContext = createContext<DashboardContextProps | undefined>(undefined);
@@ -176,6 +176,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     return [productNotes, productBlockers].filter(Boolean).join('\n\n');
   };
   
+  // Function to get all markets
+  const getAllMarkets = (): Market[] => {
+    return marketsData;
+  };
+  
   return (
     <DashboardContext.Provider
       value={{
@@ -205,7 +210,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         updateCoverage,
         getVisibleMarkets,
         getFilteredProducts,
-        getProductNotes
+        getProductNotes,
+        getAllMarkets // Added to the provider value
       }}
     >
       {children}
