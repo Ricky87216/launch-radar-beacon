@@ -1,5 +1,5 @@
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { 
   ChevronRight, 
   AlertTriangle, 
@@ -10,6 +10,7 @@ import { Market, Product } from "../types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { CellCommentPopover } from "./CellCommentPopover";
 
 export default function HeatmapGrid() {
   const { 
@@ -147,7 +148,7 @@ export default function HeatmapGrid() {
                     }
                     
                     return (
-                      <TableCell key={market.id} className={`border-b ${getCellColor(cell.coverage)}`}>
+                      <TableCell key={market.id} className={`border-b ${getCellColor(cell.coverage)} relative`}>
                         <div className="flex items-center justify-between">
                           <TooltipProvider>
                             <Tooltip>
@@ -172,29 +173,34 @@ export default function HeatmapGrid() {
                             </Tooltip>
                           </TooltipProvider>
                           
-                          {cell.hasBlocker && (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <AlertTriangle className="w-4 h-4 text-red-500" />
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                  <span>This market has a blocker</span>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          )}
-                          
-                          {currentLevel !== 'city' && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleDrillDown(market)}
-                              className="h-5 w-5 ml-1"
-                            >
-                              <ChevronRight className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <div className="flex items-center">
+                            {/* Comment Popover added here */}
+                            <CellCommentPopover productId={product.id} marketId={market.id} />
+                            
+                            {cell.hasBlocker && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top">
+                                    <span>This market has a blocker</span>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                            
+                            {currentLevel !== 'city' && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => handleDrillDown(market)}
+                                className="h-5 w-5 ml-1"
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                     );

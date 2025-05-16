@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cell_comment: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          author_id: string
+          city_id: string
+          comment_id: string
+          created_at: string
+          product_id: string
+          question: string
+          status: string
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          author_id: string
+          city_id: string
+          comment_id?: string
+          created_at?: string
+          product_id: string
+          question: string
+          status?: string
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          author_id?: string
+          city_id?: string
+          comment_id?: string
+          created_at?: string
+          product_id?: string
+          question?: string
+          status?: string
+        }
+        Relationships: []
+      }
       change_log: {
         Row: {
           actor: string | null

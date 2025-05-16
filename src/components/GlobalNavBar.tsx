@@ -116,6 +116,9 @@ const GlobalNavBar = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/admin/bulk-edit">Ops Update Center</Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin/answer-hub">Answer Hub</Link>
+                  </DropdownMenuItem>
                 </>
               )}
               

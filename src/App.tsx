@@ -12,6 +12,7 @@ import AdminDashboard from "./pages/admin";
 import DataSync from "./pages/admin/DataSync";
 import BulkEdit from "./pages/admin/BulkEdit";
 import Logs from "./pages/admin/Logs";
+import AnswerHub from "./pages/admin/AnswerHub";
 import GlobalNavBar from "./components/GlobalNavBar";
 import GlobalSidebar from "./components/GlobalSidebar";
 
@@ -44,6 +45,7 @@ const App = () => (
                 <Route path="/admin/data-sync" element={<DataSync />} />
                 <Route path="/admin/bulk-edit" element={<BulkEdit />} />
                 <Route path="/admin/logs" element={<Logs />} />
+                <Route path="/admin/answer-hub" element={<AnswerHub />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
