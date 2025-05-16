@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { MessageCircle, Check, AlertCircle } from 'lucide-react';
+import { MessageCircle, Check, AlertCircle, Link, Copy, Check as CheckIcon } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,10 +8,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { toast } from '@/components/ui/sonner';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface CellCommentProps {
   productId: string;
   marketId: string;
+  focusCommentId?: string;
 }
 
 type Comment = {
@@ -21,18 +23,22 @@ type Comment = {
   author_id: string;
   question: string;
   answer: string | null;
-  status: string; // Changed from 'OPEN' | 'ANSWERED' to string to match Supabase
+  status: string;
   created_at: string;
   answered_at: string | null;
 }
 
-export function CellCommentPopover({ productId, marketId }: CellCommentProps) {
+export function CellCommentPopover({ productId, marketId, focusCommentId }: CellCommentProps) {
   const { user, getProductById, getMarketById } = useDashboard();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
   const [newQuestion, setNewQuestion] = useState('');
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [open, setOpen] = useState(false);
+  const [copySuccess, setCopySuccess] = useState<Record<string, boolean>>({});
+  
+  const navigate = useNavigate();
+  const location = useLocation();
   
   const canEditStatus = user?.role === 'admin' || user?.role === 'editor';
   const product = getProductById(productId);
@@ -48,6 +54,13 @@ export function CellCommentPopover({ productId, marketId }: CellCommentProps) {
     if (openCount > 0) return 'text-blue-500';
     return 'text-green-500';
   };
+  
+  // Open popover if there's a focused comment
+  useEffect(() => {
+    if (focusCommentId && comments.find(c => c.comment_id === focusCommentId)) {
+      setOpen(true);
+    }
+  }, [focusCommentId, comments]);
   
   // Fetch comments when popover opens
   useEffect(() => {
@@ -152,6 +165,32 @@ export function CellCommentPopover({ productId, marketId }: CellCommentProps) {
     }
   };
 
+  // Generate shareable link for a comment
+  const generateCommentLink = (commentId: string) => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/#/?product=${productId}&market=${marketId}&focusComment=${commentId}`;
+  };
+
+  // Copy link to clipboard
+  const copyToClipboard = async (commentId: string) => {
+    const link = generateCommentLink(commentId);
+    
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopySuccess({...copySuccess, [commentId]: true});
+      
+      // Reset success icon after 2 seconds
+      setTimeout(() => {
+        setCopySuccess({...copySuccess, [commentId]: false});
+      }, 2000);
+      
+      toast.success('Link copied to clipboard');
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      toast.error('Failed to copy link');
+    }
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -171,8 +210,8 @@ export function CellCommentPopover({ productId, marketId }: CellCommentProps) {
       </PopoverTrigger>
       <PopoverContent className="w-80 max-h-96 overflow-y-auto" align="start">
         <div className="space-y-4">
-          <div className="font-semibold text-sm border-b pb-2">
-            Questions for {product?.name || 'Product'} in {market?.name || 'Location'}
+          <div className="font-semibold text-sm border-b pb-2 flex justify-between items-center">
+            <span>Questions for {product?.name || 'Product'} in {market?.name || 'Location'}</span>
           </div>
           
           {loading ? (
@@ -182,8 +221,28 @@ export function CellCommentPopover({ productId, marketId }: CellCommentProps) {
           ) : (
             <div className="space-y-4">
               {comments.map(comment => (
-                <div key={comment.comment_id} className="border rounded-md p-3 space-y-2">
-                  <div className="font-medium text-sm">{comment.question}</div>
+                <div 
+                  key={comment.comment_id} 
+                  className={`border rounded-md p-3 space-y-2 ${focusCommentId === comment.comment_id ? 'ring-2 ring-blue-500' : ''}`}
+                  id={`comment-${comment.comment_id}`}
+                >
+                  <div className="flex justify-between">
+                    <div className="font-medium text-sm">{comment.question}</div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 text-gray-500 hover:text-gray-700"
+                      onClick={() => copyToClipboard(comment.comment_id)}
+                      title="Copy link to this comment"
+                    >
+                      {copySuccess[comment.comment_id] ? (
+                        <CheckIcon className="h-3 w-3" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+                  
                   <div className="text-xs text-gray-500">
                     Asked {format(new Date(comment.created_at), 'MMM d, yyyy')}
                   </div>

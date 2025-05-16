@@ -1,5 +1,5 @@
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { 
   ChevronRight, 
   AlertTriangle, 
@@ -11,6 +11,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { CellCommentPopover } from "./CellCommentPopover";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/sonner";
 
 export default function HeatmapGrid() {
   const { 
@@ -24,11 +26,95 @@ export default function HeatmapGrid() {
     getMarketById,
     coverageType,
     getProductNotes,
-    blockers
+    blockers,
+    setSelectedLOBs,
+    setSelectedSubTeams,
+    setHideFullCoverage
   } = useDashboard();
   
   const markets = useMemo(() => getVisibleMarkets(), [getVisibleMarkets]);
   const products = useMemo(() => getFilteredProducts(), [getFilteredProducts]);
+  
+  // Parse URL parameters for highlighting specific comments
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [focusedComment, setFocusedComment] = useState<string | null>(null);
+  const [focusedProduct, setFocusedProduct] = useState<string | null>(null);
+  const [focusedMarket, setFocusedMarket] = useState<string | null>(null);
+
+  // Parse URL parameters on component mount and when location changes
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const focusComment = searchParams.get('focusComment');
+    const product = searchParams.get('product');
+    const market = searchParams.get('market');
+    
+    if (focusComment) {
+      setFocusedComment(focusComment);
+    }
+    
+    if (product) {
+      setFocusedProduct(product);
+    }
+    
+    if (market) {
+      setFocusedMarket(market);
+    }
+    
+    // If we have a focused comment and market/product, but they're not visible with current filters
+    if (focusComment && product && market) {
+      // Check if product and market are in the current visible set
+      const isProductVisible = products.some(p => p.id === product);
+      const isMarketVisible = markets.some(m => m.id === market);
+      
+      // If either is not visible, adjust filters to show them
+      if (!isProductVisible || !isMarketVisible) {
+        toast.info("Cell hidden by filters – clearing filters now.");
+        
+        // Reset filters to make the cell visible
+        setSelectedLOBs([]);
+        setSelectedSubTeams([]);
+        setHideFullCoverage(false);
+        
+        // If we're not at the city level, we need to drill down
+        if (currentLevel !== 'city') {
+          // Find the path to the market (assuming it's a city)
+          const targetMarket = getMarketById(market);
+          if (targetMarket) {
+            if (targetMarket.type === 'city') {
+              // Drill down to city level
+              const country = getMarketById(targetMarket.parent_id || "");
+              const region = country ? getMarketById(country.parent_id || "") : null;
+              
+              if (region) {
+                // Set up the drill-down path
+                setCurrentLevel('region');
+                setSelectedParent(region.id);
+                
+                setTimeout(() => {
+                  setCurrentLevel('country');
+                  setSelectedParent(country?.id || null);
+                  
+                  setTimeout(() => {
+                    setCurrentLevel('city');
+                    setSelectedParent(targetMarket.parent_id);
+                  }, 100);
+                }, 100);
+              }
+            }
+          }
+        }
+      }
+      
+      // Scroll to the comment when it's rendered
+      setTimeout(() => {
+        const commentElement = document.getElementById(`comment-${focusComment}`);
+        if (commentElement) {
+          commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+    }
+  }, [location.search, products, markets]);
   
   // Function to handle drill-down
   const handleDrillDown = (market: Market) => {
@@ -138,6 +224,7 @@ export default function HeatmapGrid() {
                   
                   {markets.map(market => {
                     const cell = getCoverageCell(product.id, market.id);
+                    const isHighlighted = focusedProduct === product.id && focusedMarket === market.id;
                     
                     if (!cell) {
                       return (
@@ -148,7 +235,11 @@ export default function HeatmapGrid() {
                     }
                     
                     return (
-                      <TableCell key={market.id} className={`border-b ${getCellColor(cell.coverage)} relative`}>
+                      <TableCell 
+                        key={market.id} 
+                        className={`border-b ${getCellColor(cell.coverage)} relative ${isHighlighted ? 'ring-2 ring-blue-500' : ''}`}
+                        id={`cell-${product.id}-${market.id}`}
+                      >
                         <div className="flex items-center justify-between">
                           <TooltipProvider>
                             <Tooltip>
@@ -174,8 +265,12 @@ export default function HeatmapGrid() {
                           </TooltipProvider>
                           
                           <div className="flex items-center">
-                            {/* Comment Popover added here */}
-                            <CellCommentPopover productId={product.id} marketId={market.id} />
+                            {/* Comment Popover - pass focusedComment if this is the target cell */}
+                            <CellCommentPopover 
+                              productId={product.id} 
+                              marketId={market.id} 
+                              focusCommentId={isHighlighted ? focusedComment || undefined : undefined} 
+                            />
                             
                             {cell.hasBlocker && (
                               <TooltipProvider>

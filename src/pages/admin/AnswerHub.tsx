@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '@/context/DashboardContext';
@@ -5,12 +6,12 @@ import { format } from 'date-fns';
 import { 
   Clock, 
   Search, 
-  PlusCircle, 
   MessageSquare,
   CheckCircle,
   XCircle,
   Filter,
-  Loader2
+  Loader2,
+  Link
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 type Comment = {
   comment_id: string;
@@ -28,7 +30,7 @@ type Comment = {
   author_id: string;
   question: string;
   answer: string | null;
-  status: string; // Changed from 'OPEN' | 'ANSWERED' to string to match Supabase
+  status: string;
   created_at: string;
   answered_at: string | null;
   selected?: boolean;
@@ -89,6 +91,14 @@ export default function AnswerHub() {
     } else {
       return `${(median / 24).toFixed(1)} days`;
     }
+  };
+  
+  // Count questions in the past week
+  const getQuestionsThisWeek = () => {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    return comments.filter(c => new Date(c.created_at) > oneWeekAgo).length;
   };
   
   // Fetch comments from the database
@@ -260,6 +270,11 @@ export default function AnswerHub() {
     }
   };
   
+  // Navigate to the specific cell in the heatmap
+  const navigateToCell = (comment: Comment) => {
+    navigate(`/?product=${comment.product_id}&market=${comment.city_id}&focusComment=${comment.comment_id}`);
+  };
+  
   // Handle bulk actions for selected comments
   const [selectedComments, setSelectedComments] = useState<string[]>([]);
   
@@ -361,6 +376,15 @@ export default function AnswerHub() {
       region: region?.name || 'Unknown'
     };
   };
+
+  // Get coverage percentage for a specific cell
+  const getCoveragePercentage = (productId: string, marketId: string) => {
+    const { getCoverageCell } = useDashboard();
+    const cell = getCoverageCell(productId, marketId);
+    
+    if (!cell) return 'N/A';
+    return `${cell.coverage.toFixed(1)}%`;
+  };
   
   if (!(user?.role === 'admin' || user?.role === 'editor')) {
     return null;
@@ -386,6 +410,10 @@ export default function AnswerHub() {
           <div className="flex items-center gap-1 px-3 py-1 bg-purple-50 rounded-md">
             <Clock className="w-4 h-4 text-purple-500" />
             <span className="font-medium">Median Response Time:</span> {getMedianTimeToAnswer()}
+          </div>
+          <div className="flex items-center gap-1 px-3 py-1 bg-orange-50 rounded-md">
+            <MessageSquare className="w-4 h-4 text-orange-500" />
+            <span className="font-medium">Questions This Week:</span> {getQuestionsThisWeek()}
           </div>
         </div>
       </div>
@@ -521,18 +549,20 @@ export default function AnswerHub() {
                       </TableHead>
                       <TableHead className="w-[180px]">Product</TableHead>
                       <TableHead>Question</TableHead>
-                      <TableHead className="w-[150px]">Region</TableHead>
-                      <TableHead className="w-[150px]">Country</TableHead>
-                      <TableHead className="w-[150px]">City</TableHead>
+                      <TableHead className="w-[100px]">Coverage %</TableHead>
+                      <TableHead className="w-[100px]">Region</TableHead>
+                      <TableHead className="w-[100px]">Country</TableHead>
+                      <TableHead className="w-[100px]">City</TableHead>
                       <TableHead className="w-[120px]">Date</TableHead>
                       <TableHead className="w-[300px]">Answer</TableHead>
-                      <TableHead className="w-[100px]">Actions</TableHead>
+                      <TableHead className="w-[120px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredComments.map(comment => {
                       const product = getProductById(comment.product_id);
                       const { city, country, region } = getCityInfo(comment.city_id);
+                      const coverage = getCoveragePercentage(comment.product_id, comment.city_id);
                       
                       return (
                         <TableRow key={comment.comment_id}>
@@ -548,10 +578,21 @@ export default function AnswerHub() {
                             {product?.name || 'Unknown Product'}
                           </TableCell>
                           <TableCell>
-                            <div className="max-h-[80px] overflow-y-auto">
-                              {comment.question}
-                            </div>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <div className="max-h-[80px] overflow-y-auto cursor-pointer">
+                                  {comment.question.length > 100 
+                                    ? comment.question.slice(0, 100) + '...' 
+                                    : comment.question}
+                                </div>
+                              </HoverCardTrigger>
+                              <HoverCardContent side="right" className="w-96">
+                                <div className="font-medium">Full Question:</div>
+                                <div className="mt-2">{comment.question}</div>
+                              </HoverCardContent>
+                            </HoverCard>
                           </TableCell>
+                          <TableCell>{coverage}</TableCell>
                           <TableCell>{region}</TableCell>
                           <TableCell>{country}</TableCell>
                           <TableCell>{city}</TableCell>
@@ -565,13 +606,22 @@ export default function AnswerHub() {
                             />
                           </TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
+                            <div className="flex flex-col gap-2">
                               <Button 
                                 size="sm" 
+                                className="w-full"
                                 onClick={() => handleAnswer(comment.comment_id)}
                                 disabled={!answers[comment.comment_id] || isSubmitting}
                               >
                                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="w-full flex items-center gap-1"
+                                onClick={() => navigateToCell(comment)}
+                              >
+                                <Link className="h-4 w-4" /> Context
                               </Button>
                             </div>
                           </TableCell>
@@ -599,16 +649,18 @@ export default function AnswerHub() {
                       <TableHead className="w-[180px]">Product</TableHead>
                       <TableHead>Question</TableHead>
                       <TableHead>Answer</TableHead>
+                      <TableHead className="w-[100px]">Coverage %</TableHead>
                       <TableHead className="w-[150px]">Location</TableHead>
                       <TableHead className="w-[120px]">Asked</TableHead>
                       <TableHead className="w-[120px]">Answered</TableHead>
-                      <TableHead className="w-[100px]">Actions</TableHead>
+                      <TableHead className="w-[120px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredComments.map(comment => {
                       const product = getProductById(comment.product_id);
                       const { city, country } = getCityInfo(comment.city_id);
+                      const coverage = getCoveragePercentage(comment.product_id, comment.city_id);
                       
                       return (
                         <TableRow key={comment.comment_id}>
@@ -624,28 +676,60 @@ export default function AnswerHub() {
                             {product?.name || 'Unknown Product'}
                           </TableCell>
                           <TableCell>
-                            <div className="max-h-[80px] overflow-y-auto">
-                              {comment.question}
-                            </div>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <div className="max-h-[80px] overflow-y-auto cursor-pointer">
+                                  {comment.question.length > 100 
+                                    ? comment.question.slice(0, 100) + '...' 
+                                    : comment.question}
+                                </div>
+                              </HoverCardTrigger>
+                              <HoverCardContent side="right" className="w-96">
+                                <div className="font-medium">Full Question:</div>
+                                <div className="mt-2">{comment.question}</div>
+                              </HoverCardContent>
+                            </HoverCard>
                           </TableCell>
                           <TableCell>
-                            <div className="max-h-[80px] overflow-y-auto">
-                              {comment.answer}
-                            </div>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <div className="max-h-[80px] overflow-y-auto cursor-pointer">
+                                  {comment.answer && comment.answer.length > 100 
+                                    ? comment.answer.slice(0, 100) + '...' 
+                                    : comment.answer}
+                                </div>
+                              </HoverCardTrigger>
+                              <HoverCardContent side="right" className="w-96">
+                                <div className="font-medium">Full Answer:</div>
+                                <div className="mt-2">{comment.answer}</div>
+                              </HoverCardContent>
+                            </HoverCard>
                           </TableCell>
+                          <TableCell>{coverage}</TableCell>
                           <TableCell>{city}, {country}</TableCell>
                           <TableCell>{format(new Date(comment.created_at), 'MMM d, yyyy')}</TableCell>
                           <TableCell>
                             {comment.answered_at && format(new Date(comment.answered_at), 'MMM d, yyyy')}
                           </TableCell>
                           <TableCell>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => handleToggleStatus(comment.comment_id, 'OPEN')}
-                            >
-                              Reopen
-                            </Button>
+                            <div className="flex flex-col gap-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="w-full" 
+                                onClick={() => handleToggleStatus(comment.comment_id, 'OPEN')}
+                              >
+                                Reopen
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="w-full flex items-center gap-1"
+                                onClick={() => navigateToCell(comment)}
+                              >
+                                <Link className="h-4 w-4" /> Context
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
