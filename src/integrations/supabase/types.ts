@@ -9,6 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      change_log: {
+        Row: {
+          actor: string | null
+          created_at: string
+          diff: Json
+          id: string
+          operation: string
+          row_count: number
+        }
+        Insert: {
+          actor?: string | null
+          created_at?: string
+          diff: Json
+          id?: string
+          operation: string
+          row_count: number
+        }
+        Update: {
+          actor?: string | null
+          created_at?: string
+          diff?: Json
+          id?: string
+          operation?: string
+          row_count?: number
+        }
+        Relationships: []
+      }
+      etl_status: {
+        Row: {
+          created_at: string
+          errors: string[]
+          operation: string
+          rows_created: number
+          rows_processed: number
+          rows_updated: number
+          run_id: string
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          errors?: string[]
+          operation: string
+          rows_created?: number
+          rows_processed?: number
+          rows_updated?: number
+          run_id?: string
+          source: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          errors?: string[]
+          operation?: string
+          rows_created?: number
+          rows_processed?: number
+          rows_updated?: number
+          run_id?: string
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_pref: {
         Row: {
           countries: string[]
@@ -29,6 +92,27 @@ export type Database = {
           created_at?: string
           regions?: string[]
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
           user_id?: string
         }
         Relationships: []
