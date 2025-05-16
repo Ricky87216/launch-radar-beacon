@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '@/context/DashboardContext';
@@ -29,7 +28,7 @@ type Comment = {
   author_id: string;
   question: string;
   answer: string | null;
-  status: 'OPEN' | 'ANSWERED';
+  status: string; // Changed from 'OPEN' | 'ANSWERED' to string to match Supabase
   created_at: string;
   answered_at: string | null;
   selected?: boolean;

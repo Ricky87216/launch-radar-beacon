@@ -21,7 +21,7 @@ type Comment = {
   author_id: string;
   question: string;
   answer: string | null;
-  status: 'OPEN' | 'ANSWERED';
+  status: string; // Changed from 'OPEN' | 'ANSWERED' to string to match Supabase
   created_at: string;
   answered_at: string | null;
 }
