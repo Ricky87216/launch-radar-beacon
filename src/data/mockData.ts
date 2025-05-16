@@ -59,14 +59,14 @@ export const markets: Market[] = [
 
 // Now let's add additional coverage data for the Latam mega region
 export const products: Product[] = [
-  { id: "p-1", name: "Product Alpha", line_of_business: "Business Services", sub_team: "Core Platform", status: "Active", launch_date: "2023-01-15" },
-  { id: "p-2", name: "Product Beta", line_of_business: "Business Services", sub_team: "Core Platform", status: "Active", launch_date: "2023-02-20" },
-  { id: "p-3", name: "Product Gamma", line_of_business: "Business Services", sub_team: "Mobile", status: "Active", launch_date: "2023-03-10" },
-  { id: "p-4", name: "Product Delta", line_of_business: "Consumer", sub_team: "Mobile", status: "In Development", launch_date: null },
-  { id: "p-5", name: "Product Epsilon", line_of_business: "Consumer", sub_team: "Web", status: "Active", launch_date: "2023-04-05" },
-  { id: "p-6", name: "Product Zeta", line_of_business: "Enterprise", sub_team: "Core Platform", status: "Active", launch_date: "2023-05-12" },
-  { id: "p-7", name: "Product Eta", line_of_business: "Enterprise", sub_team: "Web", status: "In Development", launch_date: null },
-  { id: "p-8", name: "Product Theta", line_of_business: "Business Services", sub_team: "Web", status: "Active", launch_date: "2023-06-18" }
+  { id: "p-1", name: "Product Alpha", line_of_business: "Mobility", sub_team: "Rider", status: "Active", launch_date: "2023-01-15" },
+  { id: "p-2", name: "Product Beta", line_of_business: "Mobility", sub_team: "Earner", status: "Active", launch_date: "2023-02-20" },
+  { id: "p-3", name: "Product Gamma", line_of_business: "Delivery", sub_team: "Delivery Marketplace", status: "Active", launch_date: "2023-03-10" },
+  { id: "p-4", name: "Product Delta", line_of_business: "Core Services", sub_team: "Safety", status: "In Development", launch_date: null },
+  { id: "p-5", name: "Product Epsilon", line_of_business: "Mobility", sub_team: "AV", status: "Active", launch_date: "2023-04-05" },
+  { id: "p-6", name: "Product Zeta", line_of_business: "Delivery", sub_team: "Earner", status: "Active", launch_date: "2023-05-12" },
+  { id: "p-7", name: "Product Eta", line_of_business: "Core Services", sub_team: "GR", status: "In Development", launch_date: null },
+  { id: "p-8", name: "Product Theta", line_of_business: "Mobility", sub_team: "Mobility Marketplace", status: "Active", launch_date: "2023-06-18" }
 ];
 
 // Generate random coverage data
@@ -140,12 +140,12 @@ export const blockers: Blocker[] = [
 
 // Helper function to get all lines of business
 export const getLinesOfBusiness = (): string[] => {
-  return Array.from(new Set(products.map(p => p.line_of_business)));
+  return ["Mobility", "Delivery", "Core Services"];
 };
 
 // Helper function to get all sub teams
 export const getSubTeams = (): string[] => {
-  return Array.from(new Set(products.map(p => p.sub_team)));
+  return ["Earner", "Mobility Marketplace", "Delivery Marketplace", "Rider", "AV", "Safety", "Vehicles", "Hailables", "GR", "Other"];
 };
 
 // Helper function to get all blocker categories
