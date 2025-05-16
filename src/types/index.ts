@@ -1,57 +1,67 @@
+
+// Market dimensions
 export interface Market {
   id: string;
   name: string;
   type: 'mega_region' | 'region' | 'country' | 'city';
   parent_id: string | null;
+  geo_path: string;
 }
 
+// Product dimensions
 export interface Product {
   id: string;
   name: string;
   line_of_business: string;
   sub_team: string;
-  notes: string;
+  status: string;
+  launch_date: string | null;
+  notes?: string; // Added notes field for product status/blockers/next steps
 }
 
+// Coverage fact data
 export interface Coverage {
   product_id: string;
   market_id: string;
   city_percentage: number;
   gb_weighted: number;
-  updated_at: string | null;
+  updated_at: string;
 }
 
+// Blocker data
 export interface Blocker {
   id: string;
   product_id: string;
   market_id: string;
   category: string;
-  note: string;
+  owner: string;
   eta: string;
+  note: string;
+  jira_url: string | null;
+  escalated: boolean;
   created_at: string;
-  updated_at: string | null;
+  updated_at: string;
   resolved: boolean;
+  stale: boolean;
 }
 
+// User type
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'editor' | 'viewer';
+  region: string;
+  country: string;
+  role: 'viewer' | 'editor' | 'admin';
+  canEditStatus: boolean;
 }
 
+// Heatmap Cell type
 export interface HeatmapCell {
   productId: string;
   marketId: string;
   coverage: number;
-  status: 'green' | 'yellow' | 'red' | 'blocked';
+  status: string;
   hasBlocker: boolean;
   blockerId?: string;
-}
-
-export interface DashboardFilters {
-  coverageType: 'city_percentage' | 'gb_weighted' | 'tam_percentage';
-  selectedLOBs: string[];
-  selectedSubTeams: string[];
-  hideFullCoverage: boolean;
 }
