@@ -35,13 +35,16 @@ const BulkEdit = () => {
       for (const product of products.slice(0, 10)) { // Limit for demo purposes
         for (const market of allMarkets.slice(0, 20)) { // Limit for demo
           if (market.type === 'city') {
+            // Find the parent market (country)
+            const parentMarket = allMarkets.find(m => m.id === market.parent_id);
+            
             mockData.push({
               id: `${product.id}-${market.id}`,
               product_id: product.id,
               product_name: product.name,
               market_id: market.id,
               region: allMarkets.find(m => m.id === market.parent_id)?.name || '',
-              country: market.parent_name || '',
+              country: parentMarket ? parentMarket.name : '',
               city: market.name,
               status: Math.random() > 0.7 ? 'NOT_LIVE' : 'LIVE',
               blocker_category: Math.random() > 0.7 ? 'Technical' : null,

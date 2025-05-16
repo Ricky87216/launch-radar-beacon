@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronDown, Menu, Settings, UploadCloud, Grid2x2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from './ui/button';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useDashboard } from '@/context/DashboardContext';
 import { 
   DropdownMenu, 
@@ -16,7 +15,7 @@ import {
 } from './ui/dropdown-menu';
 
 const Header = () => {
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { user } = useDashboard();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
