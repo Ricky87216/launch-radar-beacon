@@ -16,6 +16,7 @@ export interface Product {
   sub_team: string;
   status: string;
   launch_date: string | null;
+  notes?: string; // Added notes field for product status/blockers/next steps
 }
 
 // Coverage fact data

@@ -9,6 +9,7 @@ import { useDashboard } from "../context/DashboardContext";
 import { Market, Product } from "../types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 export default function HeatmapGrid() {
   const { 
@@ -20,7 +21,9 @@ export default function HeatmapGrid() {
     selectedParent,
     setSelectedParent,
     getMarketById,
-    coverageType
+    coverageType,
+    getProductNotes,
+    blockers
   } = useDashboard();
   
   const markets = useMemo(() => getVisibleMarkets(), [getVisibleMarkets]);
@@ -68,6 +71,14 @@ export default function HeatmapGrid() {
     return `${value.toFixed(1)}%`;
   };
   
+  // Get product-specific blockers
+  const getProductBlockers = (productId: string) => {
+    return blockers
+      .filter(blocker => blocker.product_id === productId && !blocker.resolved)
+      .map(blocker => `[${blocker.category}] ${blocker.note} (ETA: ${new Date(blocker.eta).toLocaleDateString()})`)
+      .join('\n');
+  };
+  
   if (markets.length === 0 || products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8">
@@ -102,40 +113,41 @@ export default function HeatmapGrid() {
         
         {/* Heatmap grid */}
         <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse">
-            <thead>
-              <tr>
-                <th className="sticky left-0 bg-white z-10 border-b p-3">Products</th>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="sticky left-0 bg-white z-10 border-b">Products</TableHead>
                 {markets.map(market => (
-                  <th key={market.id} className="border-b p-3">
+                  <TableHead key={market.id} className="border-b">
                     <div className="text-sm font-medium whitespace-nowrap">
                       {market.name}
                     </div>
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+                <TableHead className="border-b min-w-[250px]">Status & Next Steps</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {products.map(product => (
-                <tr key={product.id}>
-                  <td className="sticky left-0 bg-white z-10 border-b p-3">
+                <TableRow key={product.id}>
+                  <TableCell className="sticky left-0 bg-white z-10 border-b">
                     <div className="text-sm font-medium">{product.name}</div>
                     <div className="text-xs text-gray-500">{product.line_of_business} - {product.sub_team}</div>
-                  </td>
+                  </TableCell>
                   
                   {markets.map(market => {
                     const cell = getCoverageCell(product.id, market.id);
                     
                     if (!cell) {
                       return (
-                        <td key={market.id} className="border-b p-3 text-center bg-gray-100">
+                        <TableCell key={market.id} className="border-b text-center bg-gray-100">
                           <span className="text-xs text-gray-400">No data</span>
-                        </td>
+                        </TableCell>
                       );
                     }
                     
                     return (
-                      <td key={market.id} className={`border-b p-3 ${getCellColor(cell.coverage)}`}>
+                      <TableCell key={market.id} className={`border-b ${getCellColor(cell.coverage)}`}>
                         <div className="flex items-center justify-between">
                           <TooltipProvider>
                             <Tooltip>
@@ -184,13 +196,40 @@ export default function HeatmapGrid() {
                             </Button>
                           )}
                         </div>
-                      </td>
+                      </TableCell>
                     );
                   })}
-                </tr>
+                  
+                  {/* Product Status Column */}
+                  <TableCell className="border-b text-sm">
+                    <div className="space-y-2 max-w-md">
+                      <div>
+                        <span className="font-semibold">Status:</span> {product.status || 'N/A'}
+                      </div>
+                      {product.launch_date && (
+                        <div>
+                          <span className="font-semibold">Launch date:</span> {new Date(product.launch_date).toLocaleDateString()}
+                        </div>
+                      )}
+                      {product.notes && (
+                        <div>
+                          <span className="font-semibold">Notes:</span> {product.notes}
+                        </div>
+                      )}
+                      {getProductBlockers(product.id) && (
+                        <div>
+                          <span className="font-semibold text-red-500">Blockers:</span>
+                          <div className="whitespace-pre-line text-xs mt-1">
+                            {getProductBlockers(product.id)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

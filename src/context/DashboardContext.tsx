@@ -43,6 +43,7 @@ interface DashboardContextProps {
   updateCoverage: (productId: string, marketId: string, value: number) => void;
   getVisibleMarkets: () => Market[];
   getFilteredProducts: () => Product[];
+  getProductNotes: (productId: string) => string;
 }
 
 const DashboardContext = createContext<DashboardContextProps | undefined>(undefined);
@@ -160,6 +161,21 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     return filtered;
   };
   
+  // Function to get product notes combined with blocker information
+  const getProductNotes = (productId: string): string => {
+    const product = getProductById(productId);
+    if (!product) return '';
+    
+    const productNotes = product.notes || '';
+    
+    const productBlockers = blockersData
+      .filter(blocker => blocker.product_id === productId && !blocker.resolved)
+      .map(blocker => `[${blocker.category}] ${blocker.note} (ETA: ${new Date(blocker.eta).toLocaleDateString()})`)
+      .join('\n');
+    
+    return [productNotes, productBlockers].filter(Boolean).join('\n\n');
+  };
+  
   return (
     <DashboardContext.Provider
       value={{
@@ -188,7 +204,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         updateBlocker,
         updateCoverage,
         getVisibleMarkets,
-        getFilteredProducts
+        getFilteredProducts,
+        getProductNotes
       }}
     >
       {children}
