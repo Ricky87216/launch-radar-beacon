@@ -19,7 +19,7 @@ const BulkEdit = () => {
     regions: [],
     countries: [],
     cities: [],
-    status: []
+    status: ["LIVE", "NOT_LIVE", "ROLLED_BACK"] // Default to showing all statuses
   });
 
   // Get all available data
@@ -27,66 +27,80 @@ const BulkEdit = () => {
     const loadData = async () => {
       setIsLoading(true);
       
-      // In a real implementation, this would fetch from the database
-      // For now, we'll generate mock data based on products and markets
-      const allMarkets = getAllMarkets();
-      const mockData = [];
-      
-      for (const product of products.slice(0, 10)) { // Limit for demo purposes
-        for (const market of allMarkets.slice(0, 20)) { // Limit for demo
-          if (market.type === 'city') {
-            // Find the parent market (country)
-            const parentMarket = allMarkets.find(m => m.id === market.parent_id);
-            
-            mockData.push({
-              id: `${product.id}-${market.id}`,
-              product_id: product.id,
-              product_name: product.name,
-              market_id: market.id,
-              region: allMarkets.find(m => m.id === market.parent_id)?.name || '',
-              country: parentMarket ? parentMarket.name : '',
-              city: market.name,
-              status: Math.random() > 0.7 ? 'NOT_LIVE' : 'LIVE',
-              blocker_category: Math.random() > 0.7 ? 'Technical' : null,
-              owner: Math.random() > 0.7 ? 'Jane Smith' : null,
-              eta: Math.random() > 0.7 ? new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString() : null,
-              note: Math.random() > 0.8 ? 'Some notes about this entry' : null
-            });
+      try {
+        // In a real implementation, this would fetch from the database
+        // For now, we'll generate mock data based on products and markets
+        const allMarkets = getAllMarkets();
+        const mockData = [];
+        
+        // Generate more data for demo purposes
+        for (const product of products) {
+          for (const market of allMarkets) {
+            if (market.type === 'city') {
+              // Find the parent market (country)
+              const country = allMarkets.find(m => m.id === market.parent_id);
+              // Find the region (parent of country)
+              const region = country ? allMarkets.find(m => m.id === country.parent_id) : null;
+              
+              mockData.push({
+                id: `${product.id}-${market.id}`,
+                product_id: product.id,
+                product_name: product.name,
+                market_id: market.id,
+                region: region ? region.name : 'Unknown Region',
+                country: country ? country.name : 'Unknown Country',
+                city: market.name,
+                status: Math.random() > 0.7 ? 'NOT_LIVE' : 'LIVE',
+                blocker_category: Math.random() > 0.7 ? 'Technical' : null,
+                owner: Math.random() > 0.7 ? 'Jane Smith' : null,
+                eta: Math.random() > 0.7 ? new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString() : null,
+                note: Math.random() > 0.8 ? 'Some notes about this entry' : null
+              });
+            }
           }
         }
+        
+        setData(mockData);
+        console.log(`Generated ${mockData.length} rows of mock data`);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load data. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-      
-      setData(mockData);
-      setIsLoading(false);
     };
     
     loadData();
-  }, [products, getAllMarkets]);
+  }, [products, getAllMarkets, toast]);
   
   // Apply filters to data
   const filteredData = data.filter(item => {
     // Apply product filter
-    if (filters.products.length && !filters.products.includes(item.product_id)) {
+    if (filters.products.length > 0 && !filters.products.includes(item.product_id)) {
       return false;
     }
     
     // Apply region filter
-    if (filters.regions.length && !filters.regions.includes(item.region)) {
+    if (filters.regions.length > 0 && !filters.regions.includes(item.region)) {
       return false;
     }
     
     // Apply country filter
-    if (filters.countries.length && !filters.countries.includes(item.country)) {
+    if (filters.countries.length > 0 && !filters.countries.includes(item.country)) {
       return false;
     }
     
     // Apply city filter
-    if (filters.cities.length && !filters.cities.includes(item.city)) {
+    if (filters.cities.length > 0 && !filters.cities.includes(item.city)) {
       return false;
     }
     
     // Apply status filter
-    if (filters.status.length && !filters.status.includes(item.status)) {
+    if (filters.status.length > 0 && !filters.status.includes(item.status)) {
       return false;
     }
     
@@ -154,6 +168,11 @@ const BulkEdit = () => {
             isLoading={isLoading}
           />
         )}
+        <div className="p-2 flex items-center justify-between bg-muted/10 border-b">
+          <div>
+            {filteredData.length} items {filters.products.length > 0 || filters.regions.length > 0 || filters.countries.length > 0 || filters.cities.length > 0 ? '(filtered)' : ''}
+          </div>
+        </div>
         <BulkEditGrid 
           data={filteredData} 
           isLoading={isLoading} 
