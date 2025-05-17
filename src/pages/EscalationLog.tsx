@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -94,17 +95,34 @@ const EscalationLog = () => {
   const getStatusIcon = (status: EscalationStatus | null) => {
     switch (status) {
       case 'SUBMITTED':
-        return <Shield className="h-4 w-4 text-amber-500" />;
+        return <Shield className="h-4 w-4 text-[var(--uber-yellow)]" />;
       case 'IN_DISCUSSION':
-        return <MessageSquare className="h-4 w-4 text-blue-500" />;
+        return <MessageSquare className="h-4 w-4 text-[var(--uber-gray-60)]" />;
       case 'RESOLVED_BLOCKED':
-        return <ShieldAlert className="h-4 w-4 text-red-500" />;
+        return <ShieldAlert className="h-4 w-4 text-[var(--uber-red)]" />;
       case 'RESOLVED_LAUNCHING':
-        return <ShieldQuestion className="h-4 w-4 text-purple-500" />;
+        return <ShieldQuestion className="h-4 w-4 text-[var(--uber-gray-60)]" />;
       case 'RESOLVED_LAUNCHED':
-        return <ShieldCheck className="h-4 w-4 text-green-500" />;
+        return <ShieldCheck className="h-4 w-4 text-[var(--uber-green)]" />;
       default:
-        return <ShieldOff className="h-4 w-4 text-gray-500" />;
+        return <ShieldOff className="h-4 w-4 text-[var(--uber-gray-30)]" />;
+    }
+  };
+
+  const getStatusBadgeClass = (status: EscalationStatus | null) => {
+    switch (status) {
+      case 'SUBMITTED':
+        return "bg-[var(--uber-yellow)] text-black";
+      case 'IN_DISCUSSION':
+        return "bg-[var(--uber-gray-60)] text-white";
+      case 'RESOLVED_BLOCKED':
+        return "bg-[var(--uber-red)] text-white";
+      case 'RESOLVED_LAUNCHING':
+        return "bg-[var(--uber-gray-30)] text-black";
+      case 'RESOLVED_LAUNCHED':
+        return "bg-[var(--uber-green)] text-black";
+      default:
+        return "bg-[var(--uber-gray-10)] text-black";
     }
   };
 
@@ -122,21 +140,21 @@ const EscalationLog = () => {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold mb-2">Escalation Log</h1>
-        <p className="text-muted-foreground">
+        <p className="text-[var(--uber-gray-60)]">
           History of all escalation status changes and their justifications.
         </p>
       </div>
       
-      <div className="border rounded-lg">
-        <Table>
+      <div className="border rounded-lg bg-white">
+        <Table className="table-striped">
           <TableHeader>
             <TableRow>
-              <TableHead>Date & Time</TableHead>
-              <TableHead>Product</TableHead>
-              <TableHead>Market</TableHead>
-              <TableHead>Status Change</TableHead>
-              <TableHead>User</TableHead>
-              <TableHead>Notes</TableHead>
+              <TableHead className="font-semibold">Date & Time</TableHead>
+              <TableHead className="font-semibold">Product</TableHead>
+              <TableHead className="font-semibold">Market</TableHead>
+              <TableHead className="font-semibold">Status Change</TableHead>
+              <TableHead className="font-semibold">User</TableHead>
+              <TableHead className="font-semibold">Notes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -168,11 +186,11 @@ const EscalationLog = () => {
                           </span>
                         )}
                       </div>
-                      <span className="text-muted-foreground">→</span>
+                      <span className="text-[var(--uber-gray-30)]">→</span>
                       <div className="flex items-center">
                         {getStatusIcon(item.new_status)}
                         <span className="ml-1">
-                          <Badge variant="outline" className="capitalize text-xs">
+                          <Badge variant="outline" className={`capitalize text-xs ${getStatusBadgeClass(item.new_status)}`}>
                             {formatStatusLabel(item.new_status)}
                           </Badge>
                         </span>
