@@ -84,6 +84,7 @@ export type Database = {
           product_id: string
           raised_by: string
           reason: string
+          reason_type: string | null
           region: string | null
           resolved_at: string | null
           scope_level: Database["public"]["Enums"]["scope_level_enum"]
@@ -100,6 +101,7 @@ export type Database = {
           product_id: string
           raised_by: string
           reason: string
+          reason_type?: string | null
           region?: string | null
           resolved_at?: string | null
           scope_level: Database["public"]["Enums"]["scope_level_enum"]
@@ -116,6 +118,7 @@ export type Database = {
           product_id?: string
           raised_by?: string
           reason?: string
+          reason_type?: string | null
           region?: string | null
           resolved_at?: string | null
           scope_level?: Database["public"]["Enums"]["scope_level_enum"]
