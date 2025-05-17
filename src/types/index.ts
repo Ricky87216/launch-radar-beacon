@@ -1,3 +1,4 @@
+
 // Market dimensions
 export interface Market {
   id: string;
@@ -134,6 +135,39 @@ export interface MarketDim {
   gb_weight: number;
   created_at: string;
   updated_at: string;
+  
+  // Adding compatibility properties for older components
+  // These getters provide seamless compatibility with the Market interface
+  get name(): string {
+    return this.country_name || this.city_name || this.region;
+  }
+  
+  get type(): 'mega_region' | 'region' | 'country' | 'city' {
+    if (this.city_name && !this.city_id.includes('region-')) {
+      return 'city';
+    } else if (this.country_name && !this.country_code.includes('region-')) {
+      return 'country'; 
+    }
+    return 'region';
+  }
+  
+  get parent_id(): string | null {
+    if (this.type === 'city') {
+      return this.country_code;
+    } else if (this.type === 'country') {
+      return `region-${this.region}`;
+    }
+    return null;
+  }
+  
+  get geo_path(): string {
+    if (this.type === 'city') {
+      return `${this.region}/${this.country_name}/${this.city_name}`;
+    } else if (this.type === 'country') {
+      return `${this.region}/${this.country_name}`;
+    }
+    return this.region;
+  }
 }
 
 // New type for coverage_fact table
@@ -144,3 +178,19 @@ export interface CoverageFact {
   status: string;
   updated_at: string;
 }
+
+// Helper function to convert MarketDim to Market for full compatibility
+export const marketDimToMarket = (marketDim: MarketDim): Market => {
+  return {
+    id: marketDim.city_id,
+    name: marketDim.name,
+    type: marketDim.type,
+    parent_id: marketDim.parent_id,
+    geo_path: marketDim.geo_path
+  };
+};
+
+// Helper function to convert an array of MarketDim to Market[]
+export const marketDimsToMarkets = (marketDims: MarketDim[]): Market[] => {
+  return marketDims.map(marketDim => marketDimToMarket(marketDim));
+};

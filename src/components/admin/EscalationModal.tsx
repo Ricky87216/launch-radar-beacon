@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Shield } from "lucide-react";
 import { useDashboard } from "@/context/DashboardContext";
 import { loadEscalationHistory } from "@/utils/escalationUtils";
+import { Market, marketDimToMarket } from "@/types";
 
 import {
   Dialog,
@@ -27,7 +28,7 @@ interface EscalationModalProps {
   onClose: () => void;
   productId: string;
   marketId: string;
-  marketType: 'city' | 'country' | 'region';
+  marketType: 'city' | 'country' | 'region' | 'state';
 }
 
 const EscalationModal: React.FC<EscalationModalProps> = ({
@@ -42,7 +43,15 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
   const [history, setHistory] = useState<any[]>([]);
   
   const product = getProductById(productId);
-  const market = getMarketById(marketId);
+  // Convert MarketDim to Market if needed
+  const marketDim = getMarketById(marketId);
+  const market: Market = marketDim ? marketDimToMarket(marketDim) : {
+    id: marketId,
+    name: "Unknown Market",
+    type: marketType as any,
+    parent_id: null,
+    geo_path: ""
+  };
   
   // Load history data when modal opens and tab is history
   useEffect(() => {

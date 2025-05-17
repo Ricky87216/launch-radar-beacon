@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Search, AlertTriangle } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
-import { Market } from "../types";
+import { Market, marketDimsToMarkets } from "../types";
 import { toast } from "@/components/ui/sonner";
 
 interface TamDetailsModalProps {
@@ -25,9 +24,12 @@ export function TamDetailsModal({ isOpen, onClose, productId }: TamDetailsModalP
     getProductTamCities,
     isUserLocationInTam,
     user,
-    markets,
+    getAllMarkets, // This should replace the markets property
     addCellComment
   } = useDashboard();
+  
+  // Convert MarketDim[] to Market[] for compatibility
+  const markets = marketDimsToMarkets(getAllMarkets());
   
   const product = getProductById(productId);
   const [activeTab, setActiveTab] = useState("regions");

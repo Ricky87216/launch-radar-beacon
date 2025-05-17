@@ -1,4 +1,3 @@
-
 import { useMemo, useState, useEffect } from "react";
 import { 
   ChevronRight, 
@@ -552,10 +551,12 @@ export default function HeatmapGrid() {
                           <Progress
                             value={cell ? cell.coverage : 0}
                             className="h-2"
-                            indicatorClassName={
-                              cell && cell.coverage >= 95 ? "bg-green-500" :
-                              cell && cell.coverage >= 70 ? "bg-yellow-500" :
-                              "bg-red-500"
+                            indicator={
+                              <div className={
+                                cell && cell.coverage >= 95 ? "bg-green-500 h-full w-full" :
+                                cell && cell.coverage >= 70 ? "bg-yellow-500 h-full w-full" :
+                                "bg-red-500 h-full w-full"
+                              } style={{width: `${cell ? cell.coverage : 0}%`}}></div>
                             }
                           />
                         </div>

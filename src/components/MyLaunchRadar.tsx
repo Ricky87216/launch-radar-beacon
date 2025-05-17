@@ -110,11 +110,16 @@ export default function MyLaunchRadar() {
       // Get all markets that match the user preferences
       const markets = getAllMarkets();
       const userMarkets = markets.filter(market => {
-        if (regions.includes(market.id)) return true;
-        if (countries.includes(market.id)) return true;
+        // Convert number IDs to strings for comparison
+        const marketId = String(market.city_id);
+        const marketParentId = market.parent_id ? String(market.parent_id) : null;
+        
+        // Check if this market's ID is in the selected regions or countries
+        if (regions.includes(marketId)) return true;
+        if (countries.includes(marketId)) return true;
         
         // Check if this market's parent is in the selected regions
-        if (market.parent_id && regions.includes(market.parent_id)) return true;
+        if (marketParentId && regions.includes(marketParentId)) return true;
         
         return false;
       });
@@ -127,7 +132,7 @@ export default function MyLaunchRadar() {
         // Simulate querying products with blockers in this market
         const { blockers } = useDashboard();
         const marketsBlockers = blockers.filter(b => 
-          b.market_id === market.id && 
+          b.market_id === market.city_id && 
           !b.resolved
         );
         
@@ -169,7 +174,7 @@ export default function MyLaunchRadar() {
             totalCities++;
             
             // Check if there's a blocker for this product in this city
-            const hasBlocker = productData.blockers.some(b => b.market_id === market.id);
+            const hasBlocker = productData.blockers.some(b => b.market_id === market.city_id);
             if (hasBlocker) {
               blockedCities++;
             }
@@ -212,6 +217,11 @@ export default function MyLaunchRadar() {
     if (coverage >= 80) return "bg-green-100 text-green-800";
     if (coverage >= 50) return "bg-yellow-100 text-yellow-800";
     return "bg-red-100 text-red-800";
+  };
+
+  const getMarketName = (id: string) => {
+    const market = getMarketById(id);
+    return market ? market.name : id;
   };
 
   if (loading) {
@@ -350,12 +360,12 @@ export default function MyLaunchRadar() {
           <div className="flex flex-wrap gap-1 mt-1">
             {userPrefs.regions.map(region => (
               <Badge key={region} variant="secondary" className="text-xs">
-                {getMarketById(region)?.name || region}
+                {getMarketName(region)}
               </Badge>
             ))}
             {userPrefs.countries.map(country => (
               <Badge key={country} variant="secondary" className="text-xs">
-                {getMarketById(country)?.name || country}
+                {getMarketName(country)}
               </Badge>
             ))}
           </div>
@@ -431,11 +441,11 @@ export default function MyLaunchRadar() {
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <span className="truncate block max-w-[100px]">
-                                        {getMarketById(blocker.market_id)?.name}
+                                        {getMarketName(blocker.market_id)}
                                       </span>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      {getMarketById(blocker.market_id)?.name}
+                                      {getMarketName(blocker.market_id)}
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>

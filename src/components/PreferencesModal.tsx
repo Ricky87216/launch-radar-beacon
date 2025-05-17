@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useDashboard } from "../context/DashboardContext";
 import { supabase } from "../integrations/supabase/client";
@@ -141,8 +140,8 @@ export default function PreferencesModal({ open, onClose }: PreferencesModalProp
   };
 
   const getMarketName = (id: string) => {
-    const market = markets.find(m => m.id === id);
-    return market ? market.name : id;
+    const market = getMarketById(id);
+    return market ? String(market.name) : id;
   };
 
   return (
