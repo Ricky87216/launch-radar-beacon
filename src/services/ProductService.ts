@@ -8,7 +8,7 @@ export const getProductMeta = async (productId: string): Promise<ProductMeta | n
     .from('product_meta')
     .select('*')
     .eq('product_id', productId)
-    .single();
+    .maybeSingle();
   
   if (error) {
     console.error('Error fetching product metadata:', error);
@@ -102,6 +102,42 @@ export const getUserWatchlist = async (): Promise<WatchlistItem[]> => {
   }
   
   return data;
+};
+
+// Gets the count of unresolved and total blockers for a product
+export const getBlockerCounts = async (productId: string): Promise<{unresolved: number, total: number}> => {
+  // In a real implementation, this would fetch from the blockers table
+  // For mock data, we use random numbers
+  
+  // Mock implementation
+  const total = Math.floor(Math.random() * 15) + 5; // Between 5 and 20
+  const unresolved = Math.floor(Math.random() * (total - 1)) + 1; // Between 1 and total-1
+  
+  return { unresolved, total };
+  
+  // Real implementation would be something like:
+  /*
+  const { data: totalData, error: totalError } = await supabase
+    .from('blockers')
+    .select('count')
+    .eq('product_id', productId);
+    
+  const { data: unresolvedData, error: unresolvedError } = await supabase
+    .from('blockers')
+    .select('count')
+    .eq('product_id', productId)
+    .eq('resolved', false);
+    
+  if (totalError || unresolvedError) {
+    console.error('Error fetching blocker counts:', totalError || unresolvedError);
+    return { unresolved: 0, total: 0 };
+  }
+  
+  return { 
+    total: parseInt(totalData[0]?.count || '0'), 
+    unresolved: parseInt(unresolvedData[0]?.count || '0') 
+  };
+  */
 };
 
 // Mock function to get product status summary
