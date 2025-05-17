@@ -1,4 +1,3 @@
-
 // Market dimensions
 export interface Market {
   id: string;
@@ -123,3 +122,25 @@ export const mapDatabaseStatusToAppStatus = (status: string): EscalationStatus =
       return 'SUBMITTED';
   }
 };
+
+// New type for markets from market_dim table
+export interface MarketDim {
+  id: number;
+  region: string;
+  country_code: string;
+  country_name: string;
+  city_id: string;
+  city_name: string;
+  gb_weight: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// New type for coverage_fact table
+export interface CoverageFact {
+  id: number;
+  product_id: string;
+  city_id: string;
+  status: string;
+  updated_at: string;
+}
