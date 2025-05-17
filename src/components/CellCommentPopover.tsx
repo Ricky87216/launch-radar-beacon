@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { MessageCircle, Check, AlertCircle, Link, Copy, Check as CheckIcon } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
@@ -9,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { toast } from '@/components/ui/sonner';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { getMarketDimName } from '../types';
 
 interface CellCommentProps {
   productId: string;
@@ -211,7 +211,7 @@ export function CellCommentPopover({ productId, marketId, focusCommentId }: Cell
       <PopoverContent className="w-80 max-h-96 overflow-y-auto" align="start">
         <div className="space-y-4">
           <div className="font-semibold text-sm border-b pb-2 flex justify-between items-center">
-            <span>Questions for {product?.name || 'Product'} in {market?.name || 'Location'}</span>
+            <span>Questions for {product?.name || 'Product'} in {market ? getMarketDimName(market) : 'Location'}</span>
           </div>
           
           {loading ? (

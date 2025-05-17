@@ -1,7 +1,10 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../integrations/supabase/client";
-import { Market, Product, Blocker, User, MarketDim, CoverageFact, CellComment, HeatmapCell, marketDimsToMarkets, marketDimToMarket, getMarketDimName, getMarketDimType, getMarketDimParentId } from "../types";
+import { 
+  Market, Product, Blocker, User, MarketDim, CoverageFact, 
+  CellComment, HeatmapCell, marketDimsToMarkets, marketDimToMarket, 
+  getMarketDimName, getMarketDimType, getMarketDimParentId 
+} from "../types";
 
 interface DashboardContextProps {
   user: User;
@@ -92,7 +95,12 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const fetchProducts = async () => {
       try {
-        const { data, error } = await supabase.from('products').select('*');
+        // Use a type assertion for now since the products table might not exist in the Supabase schema
+        const { data, error } = await supabase.from('products').select('*') as unknown as { 
+          data: Product[] | null; 
+          error: any;
+        };
+        
         if (error) throw error;
         
         if (data && data.length > 0) {
@@ -126,7 +134,12 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const fetchBlockers = async () => {
       try {
-        const { data, error } = await supabase.from('blockers').select('*');
+        // Type assertion since blockers table might not be in schema
+        const { data, error } = await supabase.from('blockers').select('*') as unknown as {
+          data: Blocker[] | null;
+          error: any;
+        };
+        
         if (error) throw error;
         setBlockers(data || []);
       } catch (error) {
@@ -195,7 +208,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (!selectedParent) return [];
       // Get countries in the selected region
       return markets.filter(m => m.region === selectedParent && 
-        !getMarketDimType(m).includes('city'));
+        getMarketDimType(m) !== 'city');
     } else if (currentLevel === 'city') {
       if (!selectedParent) return [];
       // Get cities in the selected country
@@ -271,6 +284,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addBlocker = async (blocker: Omit<Blocker, 'id' | 'created_at' | 'updated_at'>): Promise<void> => {
     try {
+      // Type assertion since blockers table might not be in schema
       const { data, error } = await supabase
         .from('blockers')
         .insert({
@@ -285,12 +299,15 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           resolved: blocker.resolved,
           stale: blocker.stale
         })
-        .select();
+        .select() as unknown as {
+          data: Blocker[] | null;
+          error: any;
+        };
       
       if (error) throw error;
       
       if (data) {
-        setBlockers([...blockers, data[0] as Blocker]);
+        setBlockers([...blockers, data[0]]);
       }
     } catch (error) {
       console.error("Error adding blocker:", error);
@@ -300,13 +317,13 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateBlocker = async (blocker: Partial<Blocker> & { id: string }): Promise<void> => {
     try {
+      // Type assertion since blockers table might not be in schema
       const { error } = await supabase
         .from('blockers')
-        .update({
-          ...blocker,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', blocker.id);
+        .update(blocker)
+        .eq('id', blocker.id) as unknown as {
+          error: any;
+        };
       
       if (error) throw error;
       
@@ -333,7 +350,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       .filter(m => getMarketDimType(m) === 'country')
       .filter((_, index) => index % 3 === 0)
       .slice(0, 5);
-    return tamCountries.map(marketDim => marketDimToMarket(marketDim));
+    return marketDimsToMarkets(tamCountries);
   };
 
   const getProductTamCities = (productId: string): Market[] => {
@@ -342,7 +359,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       .filter(m => getMarketDimType(m) === 'city')
       .filter((_, index) => index % 4 === 0)
       .slice(0, 10);
-    return tamCities.map(marketDim => marketDimToMarket(marketDim));
+    return marketDimsToMarkets(tamCities);
   };
 
   const isUserLocationInTam = (productId: string): boolean => {

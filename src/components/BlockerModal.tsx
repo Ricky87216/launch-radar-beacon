@@ -26,6 +26,7 @@ import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { getMarketDimName } from "../types";
 
 interface BlockerModalProps {
   open: boolean;
@@ -94,7 +95,16 @@ export default function BlockerModal({ open, onClose, blockerId, productId, mark
   const handleSubmit = () => {
     if (blockerId) {
       // Update existing blocker
-      updateBlocker(blockerId, formData);
+      updateBlocker({
+        id: blockerId,
+        category: formData.category,
+        owner: formData.owner,
+        eta: formData.eta,
+        note: formData.note,
+        jira_url: formData.jira_url || null,
+        escalated: formData.escalated,
+        resolved: formData.resolved
+      });
     } else if (productId && marketId) {
       // Add new blocker
       addBlocker({
@@ -107,7 +117,6 @@ export default function BlockerModal({ open, onClose, blockerId, productId, mark
         jira_url: formData.jira_url || null,
         escalated: formData.escalated,
         resolved: formData.resolved,
-        updated_at: new Date().toISOString(),
         stale: false
       });
     }
@@ -138,7 +147,7 @@ export default function BlockerModal({ open, onClose, blockerId, productId, mark
           <DialogDescription>
             {product && market ? (
               <>
-                {product.name} in {market.name}
+                {product.name} in {market ? getMarketDimName(market) : "Unknown Location"}
               </>
             ) : (
               "Manage blocker details"

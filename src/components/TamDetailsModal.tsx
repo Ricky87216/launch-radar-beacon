@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Search, AlertTriangle } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
-import { Market, marketDimsToMarkets } from "../types";
+import { Market, marketDimsToMarkets, getMarketDimType, getMarketDimName, getMarketDimParentId } from "../types";
 import { toast } from "@/components/ui/sonner";
 
 interface TamDetailsModalProps {
@@ -24,12 +25,13 @@ export function TamDetailsModal({ isOpen, onClose, productId }: TamDetailsModalP
     getProductTamCities,
     isUserLocationInTam,
     user,
-    getAllMarkets, // This should replace the markets property
+    getAllMarkets, 
     addCellComment
   } = useDashboard();
   
   // Convert MarketDim[] to Market[] for compatibility
-  const markets = marketDimsToMarkets(getAllMarkets());
+  const allMarkets = getAllMarkets();
+  const markets = marketDimsToMarkets(allMarkets);
   
   const product = getProductById(productId);
   const [activeTab, setActiveTab] = useState("regions");
@@ -92,23 +94,29 @@ export function TamDetailsModal({ isOpen, onClose, productId }: TamDetailsModalP
     
     try {
       // Find the user's city or country market ID
-      const userCountry = markets.find(m => m.type === 'country' && m.name === user.country);
+      const userCountry = allMarkets.find(m => 
+        getMarketDimType(m) === 'country' && 
+        getMarketDimName(m) === user.country
+      );
       
       if (userCountry) {
         // We'll use the first city in the user's country for the escalation
-        const userCity = markets.find(m => m.type === 'city' && m.parent_id === userCountry.id);
+        const userCity = allMarkets.find(m => 
+          getMarketDimType(m) === 'city' && 
+          getMarketDimParentId(m) === userCountry.country_code
+        );
         
         if (userCity) {
           // Add a new comment with TAM escalation flag
-          addCellComment({
+          await addCellComment({
             product_id: productId,
-            city_id: userCity.id,
+            city_id: userCity.city_id,
             author_id: user.id,
             question: `TAM Escalation: ${escalationText}`,
             answer: null,
             status: 'OPEN',
             tam_escalation: true,
-            answered_at: null // Adding this field to fix the type error
+            answered_at: null 
           });
           
           toast.success("TAM escalation submitted successfully!");

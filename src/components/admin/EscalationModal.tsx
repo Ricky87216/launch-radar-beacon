@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Shield } from "lucide-react";
 import { useDashboard } from "@/context/DashboardContext";
 import { loadEscalationHistory } from "@/utils/escalationUtils";
-import { Market, marketDimToMarket } from "@/types";
+import { Market, marketDimToMarket, MarketType } from "@/types";
 
 import {
   Dialog,
@@ -28,7 +28,7 @@ interface EscalationModalProps {
   onClose: () => void;
   productId: string;
   marketId: string;
-  marketType: 'city' | 'country' | 'region' | 'state';
+  marketType: MarketType | 'state';  // Including 'state' for backward compatibility
 }
 
 const EscalationModal: React.FC<EscalationModalProps> = ({
@@ -48,7 +48,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
   const market: Market = marketDim ? marketDimToMarket(marketDim) : {
     id: marketId,
     name: "Unknown Market",
-    type: marketType as any,
+    type: marketType as MarketType, // Cast as MarketType for compatibility
     parent_id: null,
     geo_path: ""
   };
@@ -57,7 +57,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
   useEffect(() => {
     if (isOpen && activeTab === "history") {
       const fetchHistory = async () => {
-        const historyData = await loadEscalationHistory(productId, marketId, marketType);
+        const historyData = await loadEscalationHistory(productId, marketId, marketType as MarketType);
         setHistory(historyData);
       };
       fetchHistory();
@@ -87,7 +87,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
             <EscalationForm 
               productId={productId}
               marketId={marketId}
-              marketType={marketType}
+              marketType={marketType as MarketType}
               product={product}
               market={market}
               onClose={onClose}

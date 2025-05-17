@@ -124,6 +124,9 @@ export const mapDatabaseStatusToAppStatus = (status: string): EscalationStatus =
   }
 };
 
+// Define the allowed market types
+export type MarketType = 'mega_region' | 'region' | 'country' | 'city';
+
 // New type for markets from market_dim table
 export interface MarketDim {
   id: number;
@@ -142,7 +145,7 @@ export const getMarketDimName = (marketDim: MarketDim): string => {
   return marketDim.country_name || marketDim.city_name || marketDim.region;
 };
 
-export const getMarketDimType = (marketDim: MarketDim): 'mega_region' | 'region' | 'country' | 'city' => {
+export const getMarketDimType = (marketDim: MarketDim): MarketType => {
   if (marketDim.city_name && !marketDim.city_id.includes('region-')) {
     return 'city';
   } else if (marketDim.country_name && !marketDim.country_code.includes('region-')) {
