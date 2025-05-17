@@ -1,4 +1,3 @@
-
 import { useMemo, useState, useEffect } from "react";
 import { 
   ChevronRight, 
@@ -15,6 +14,7 @@ import { CellCommentPopover } from "./CellCommentPopover";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { TamDetailsModal } from "./TamDetailsModal";
+import ProductNameTrigger from "./ProductNameTrigger";
 
 export default function HeatmapGrid() {
   const { 
@@ -245,7 +245,12 @@ export default function HeatmapGrid() {
                   <TableCell className="sticky left-0 bg-white z-10 border-b">
                     <div className="flex items-center justify-between">
                       <div className="mr-2">
-                        <div className="text-sm font-medium">{product.name}</div>
+                        <div className="text-sm font-medium">
+                          <ProductNameTrigger 
+                            productId={product.id} 
+                            productName={product.name}
+                          />
+                        </div>
                         <div className="text-xs text-gray-500">{product.line_of_business} - {product.sub_team}</div>
                       </div>
                       <button 
