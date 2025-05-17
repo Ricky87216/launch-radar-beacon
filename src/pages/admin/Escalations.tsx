@@ -1,6 +1,15 @@
 
 import { useState, useEffect } from "react";
-import { Shield, ShieldCheck, ShieldOff, ExternalLink, Link as LinkIcon } from "lucide-react";
+import { 
+  Shield, 
+  ShieldCheck, 
+  ShieldAlert,
+  ShieldOff, 
+  ShieldQuestion,
+  MessageSquare,
+  ExternalLink, 
+  Link as LinkIcon 
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboard } from "@/context/DashboardContext";
@@ -46,16 +55,18 @@ interface Escalation {
   poc: string;
   reason: string;
   business_case_url: string | null;
-  status: 'OPEN' | 'ALIGNED' | 'RESOLVED';
+  status: 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
   created_at: string;
   aligned_at: string | null;
   resolved_at: string | null;
 }
 
 const EscalationStatusIcons = {
-  OPEN: Shield,
-  ALIGNED: ShieldCheck,
-  RESOLVED: ShieldOff,
+  SUBMITTED: Shield,
+  IN_DISCUSSION: MessageSquare,
+  RESOLVED_BLOCKED: ShieldAlert,
+  RESOLVED_LAUNCHING: ShieldQuestion,
+  RESOLVED_LAUNCHED: ShieldCheck,
 };
 
 const EscalationsPage = () => {
@@ -69,15 +80,18 @@ const EscalationsPage = () => {
     search: "",
   });
   const [statusCounts, setStatusCounts] = useState({
-    OPEN: 0,
-    ALIGNED: 0,
-    RESOLVED: 0,
+    SUBMITTED: 0,
+    IN_DISCUSSION: 0,
+    RESOLVED_BLOCKED: 0,
+    RESOLVED_LAUNCHING: 0,
+    RESOLVED_LAUNCHED: 0,
     total: 0
   });
   const [medianTimeToAlign, setMedianTimeToAlign] = useState<number | null>(null);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [currentEscalation, setCurrentEscalation] = useState<Escalation | null>(null);
   const [statusChangeNote, setStatusChangeNote] = useState("");
+  const [newStatus, setNewStatus] = useState<'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED' | null>(null);
 
   // Load all escalations when the component mounts
   useEffect(() => {
@@ -90,13 +104,13 @@ const EscalationsPage = () => {
   }, [filter, escalations]);
 
   const calculateMedianTimeToAlign = (allEscalations: Escalation[]) => {
-    const alignedEscalations = allEscalations.filter(
-      (e) => e.status === "ALIGNED" || e.status === "RESOLVED"
+    const resolvedEscalations = allEscalations.filter(
+      (e) => e.status === "RESOLVED_LAUNCHED"
     );
     
-    if (alignedEscalations.length === 0) return null;
+    if (resolvedEscalations.length === 0) return null;
     
-    const times = alignedEscalations
+    const times = resolvedEscalations
       .filter(e => e.aligned_at && e.created_at) // Ensure both dates exist
       .map(e => {
         const createdDate = new Date(e.created_at);
@@ -115,9 +129,11 @@ const EscalationsPage = () => {
 
   const calculateStatusCounts = (allEscalations: Escalation[]) => {
     const counts = {
-      OPEN: 0,
-      ALIGNED: 0,
-      RESOLVED: 0,
+      SUBMITTED: 0,
+      IN_DISCUSSION: 0,
+      RESOLVED_BLOCKED: 0,
+      RESOLVED_LAUNCHING: 0,
+      RESOLVED_LAUNCHED: 0,
       total: allEscalations.length
     };
     
@@ -206,15 +222,12 @@ const EscalationsPage = () => {
     setFilteredEscalations(filtered);
   };
 
-  const handleStatusChange = (escalationId: string, newStatus: 'OPEN' | 'ALIGNED' | 'RESOLVED') => {
+  const handleStatusChange = (escalationId: string, targetStatus: 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED') => {
     const escalation = escalations.find(e => e.esc_id === escalationId);
     if (!escalation) return;
     
     setCurrentEscalation(escalation);
-    
-    if (newStatus === escalation.status) {
-      return; // No change
-    }
+    setNewStatus(targetStatus);
     
     // For simplicity, we prompt for notes on any status change
     setStatusChangeNote("");
@@ -222,27 +235,15 @@ const EscalationsPage = () => {
   };
 
   const confirmStatusChange = async () => {
-    if (!currentEscalation) return;
+    if (!currentEscalation || !newStatus) return;
     
     try {
-      // Get the new status to change to
-      let newStatus: 'OPEN' | 'ALIGNED' | 'RESOLVED';
-      
-      // Logic to determine the next status
-      if (currentEscalation.status === 'OPEN') {
-        newStatus = 'ALIGNED';
-      } else if (currentEscalation.status === 'ALIGNED') {
-        newStatus = 'RESOLVED';
-      } else {
-        newStatus = 'OPEN'; // Reset to open if currently resolved
-      }
-      
       const { error } = await supabase
         .from("escalation")
         .update({ 
           status: newStatus,
-          ...(newStatus === 'ALIGNED' ? { aligned_at: new Date().toISOString() } : {}),
-          ...(newStatus === 'RESOLVED' ? { resolved_at: new Date().toISOString() } : {})
+          ...(newStatus === 'RESOLVED_LAUNCHED' ? { aligned_at: new Date().toISOString() } : {}),
+          ...(newStatus.startsWith('RESOLVED_') ? { resolved_at: new Date().toISOString() } : {})
         })
         .eq("esc_id", currentEscalation.esc_id);
       
@@ -261,7 +262,7 @@ const EscalationsPage = () => {
       
       toast({
         title: "Status updated",
-        description: `Escalation status updated to ${newStatus}.`,
+        description: `Escalation status updated to ${newStatus.replace('_', ' ').toLowerCase()}.`,
       });
       
       // Refresh the data
@@ -277,7 +278,24 @@ const EscalationsPage = () => {
     } finally {
       setNoteDialogOpen(false);
       setCurrentEscalation(null);
+      setNewStatus(null);
     }
+  };
+
+  const getNextStatus = (currentStatus: 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED') => {
+    const statusFlow = {
+      SUBMITTED: 'IN_DISCUSSION',
+      IN_DISCUSSION: 'RESOLVED_LAUNCHED',
+      RESOLVED_BLOCKED: 'IN_DISCUSSION',
+      RESOLVED_LAUNCHING: 'RESOLVED_LAUNCHED',
+      RESOLVED_LAUNCHED: 'SUBMITTED'
+    };
+    
+    return statusFlow[currentStatus] as 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
+  };
+
+  const formatStatusText = (status: string) => {
+    return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   };
 
   return (
@@ -302,20 +320,28 @@ const EscalationsPage = () => {
       </div>
       
       {/* KPI Header */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <div className="border rounded-lg p-4 bg-muted/20">
-          <div className="text-2xl font-bold">{statusCounts.OPEN}</div>
+          <div className="text-2xl font-bold">{statusCounts.SUBMITTED}</div>
           <div className="flex items-center text-sm text-muted-foreground gap-1">
-            <Shield className="h-4 w-4" />
-            <span>Open Escalations</span>
+            <Shield className="h-4 w-4 text-amber-500" />
+            <span>Submitted</span>
           </div>
         </div>
         
         <div className="border rounded-lg p-4 bg-muted/20">
-          <div className="text-2xl font-bold">{statusCounts.ALIGNED}</div>
+          <div className="text-2xl font-bold">{statusCounts.IN_DISCUSSION}</div>
           <div className="flex items-center text-sm text-muted-foreground gap-1">
-            <ShieldCheck className="h-4 w-4" />
-            <span>Aligned (Counting as Launched)</span>
+            <MessageSquare className="h-4 w-4 text-blue-500" />
+            <span>In Discussion</span>
+          </div>
+        </div>
+        
+        <div className="border rounded-lg p-4 bg-muted/20">
+          <div className="text-2xl font-bold">{statusCounts.RESOLVED_LAUNCHED}</div>
+          <div className="flex items-center text-sm text-muted-foreground gap-1">
+            <ShieldCheck className="h-4 w-4 text-green-500" />
+            <span>Resolved - Launched</span>
           </div>
         </div>
         
@@ -324,7 +350,7 @@ const EscalationsPage = () => {
             {medianTimeToAlign !== null ? `${medianTimeToAlign.toFixed(1)} days` : "N/A"}
           </div>
           <div className="flex items-center text-sm text-muted-foreground gap-1">
-            <span>Median Time to Align</span>
+            <span>Median Time to Resolution</span>
           </div>
         </div>
       </div>
@@ -341,9 +367,11 @@ const EscalationsPage = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="OPEN">Open</SelectItem>
-              <SelectItem value="ALIGNED">Aligned</SelectItem>
-              <SelectItem value="RESOLVED">Resolved</SelectItem>
+              <SelectItem value="SUBMITTED">Submitted</SelectItem>
+              <SelectItem value="IN_DISCUSSION">In Discussion</SelectItem>
+              <SelectItem value="RESOLVED_BLOCKED">Resolved - Blocked</SelectItem>
+              <SelectItem value="RESOLVED_LAUNCHING">Resolved - Launching</SelectItem>
+              <SelectItem value="RESOLVED_LAUNCHED">Resolved - Launched</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -375,49 +403,49 @@ const EscalationsPage = () => {
               <TableHead className="w-[200px]">Reason</TableHead>
               <TableHead>POC</TableHead>
               <TableHead>Created</TableHead>
-              <TableHead>Aligned</TableHead>
               <TableHead>Resolved</TableHead>
-              <TableHead>Links</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-10">
+                <TableCell colSpan={9} className="text-center py-10">
                   Loading escalations...
                 </TableCell>
               </TableRow>
             ) : filteredEscalations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-10">
+                <TableCell colSpan={9} className="text-center py-10">
                   No escalations found. Try adjusting your filters.
                 </TableCell>
               </TableRow>
             ) : (
               filteredEscalations.map((escalation) => {
                 const StatusIcon = EscalationStatusIcons[escalation.status];
+                const nextStatus = getNextStatus(escalation.status);
                 
                 return (
                   <TableRow key={escalation.esc_id} className="group">
                     <TableCell>
                       <div className="flex justify-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleStatusChange(escalation.esc_id, escalation.status)}
+                        <Badge
+                          variant={escalation.status.includes('RESOLVED') ? "outline" : "secondary"}
+                          className={`px-2 py-1 ${
+                            escalation.status === "SUBMITTED"
+                              ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                              : escalation.status === "IN_DISCUSSION"
+                              ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                              : escalation.status === "RESOLVED_BLOCKED"
+                              ? "bg-red-100 text-red-700 hover:bg-red-200"
+                              : escalation.status === "RESOLVED_LAUNCHING"
+                              ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                              : "bg-green-100 text-green-700 hover:bg-green-200"
+                          }`}
                         >
-                          <StatusIcon
-                            className={`h-5 w-5 ${
-                              escalation.status === "OPEN"
-                                ? "text-amber-500"
-                                : escalation.status === "ALIGNED"
-                                ? "text-green-500"
-                                : "text-muted-foreground"
-                            }`}
-                          />
-                          <span className="sr-only">Change status</span>
-                        </Button>
+                          <StatusIcon className="h-3 w-3 mr-1 inline" />
+                          {formatStatusText(escalation.status)}
+                        </Badge>
                       </div>
                     </TableCell>
                     <TableCell>{escalation.product_name}</TableCell>
@@ -435,17 +463,25 @@ const EscalationsPage = () => {
                       {new Date(escalation.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      {escalation.aligned_at
-                        ? new Date(escalation.aligned_at).toLocaleDateString()
-                        : "-"}
-                    </TableCell>
-                    <TableCell>
                       {escalation.resolved_at
                         ? new Date(escalation.resolved_at).toLocaleDateString()
                         : "-"}
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-1">
+                        <Select onValueChange={(val) => handleStatusChange(escalation.esc_id, val as any)}>
+                          <SelectTrigger className="h-8 w-28">
+                            <SelectValue placeholder="Change status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="SUBMITTED">Submitted</SelectItem>
+                            <SelectItem value="IN_DISCUSSION">In Discussion</SelectItem>
+                            <SelectItem value="RESOLVED_BLOCKED">Resolved - Blocked</SelectItem>
+                            <SelectItem value="RESOLVED_LAUNCHING">Resolved - Launching</SelectItem>
+                            <SelectItem value="RESOLVED_LAUNCHED">Resolved - Launched</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
                         {escalation.business_case_url && (
                           <Button
                             variant="ghost"
@@ -463,15 +499,6 @@ const EscalationsPage = () => {
                             </a>
                           </Button>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          disabled
-                        >
-                          <LinkIcon className="h-4 w-4" />
-                          <span className="sr-only">View in heatmap</span>
-                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -488,11 +515,7 @@ const EscalationsPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Update Escalation Status</AlertDialogTitle>
             <AlertDialogDescription>
-              {currentEscalation?.status === 'OPEN'
-                ? "Are you sure you want to mark this as ALIGNED? This will count the market as launched in coverage metrics."
-                : currentEscalation?.status === 'ALIGNED'
-                ? "Are you sure you want to resolve this escalation?"
-                : "Are you sure you want to reopen this escalation?"}
+              Are you sure you want to change the status to {newStatus ? formatStatusText(newStatus) : ''}?
             </AlertDialogDescription>
           </AlertDialogHeader>
           

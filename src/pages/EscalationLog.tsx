@@ -12,8 +12,11 @@ import {
 } from "@/components/ui/table";
 import {
   Shield,
+  ShieldAlert,
   ShieldCheck,
   ShieldOff,
+  ShieldQuestion,
+  MessageSquare
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -22,8 +25,8 @@ interface EscalationHistoryItem {
   id: string;
   escalation_id: string;
   user_id: string;
-  old_status: 'OPEN' | 'ALIGNED' | 'RESOLVED' | null;
-  new_status: 'OPEN' | 'ALIGNED' | 'RESOLVED';
+  old_status: 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED' | null;
+  new_status: 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
   notes: string | null;
   changed_at: string;
   product_name?: string;
@@ -85,17 +88,31 @@ const EscalationLog = () => {
     fetchEscalationHistory();
   }, [toast]);
 
-  const getStatusIcon = (status: 'OPEN' | 'ALIGNED' | 'RESOLVED' | null) => {
+  const getStatusIcon = (status: 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED' | null) => {
     switch (status) {
-      case 'OPEN':
+      case 'SUBMITTED':
         return <Shield className="h-4 w-4 text-amber-500" />;
-      case 'ALIGNED':
+      case 'IN_DISCUSSION':
+        return <MessageSquare className="h-4 w-4 text-blue-500" />;
+      case 'RESOLVED_BLOCKED':
+        return <ShieldAlert className="h-4 w-4 text-red-500" />;
+      case 'RESOLVED_LAUNCHING':
+        return <ShieldQuestion className="h-4 w-4 text-purple-500" />;
+      case 'RESOLVED_LAUNCHED':
         return <ShieldCheck className="h-4 w-4 text-green-500" />;
-      case 'RESOLVED':
-        return <ShieldOff className="h-4 w-4 text-gray-500" />;
       default:
-        return null;
+        return <ShieldOff className="h-4 w-4 text-gray-500" />;
     }
+  };
+
+  const formatStatusLabel = (status: string | null) => {
+    if (!status) return "None";
+    
+    return status
+      .toLowerCase()
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   return (
@@ -142,13 +159,18 @@ const EscalationLog = () => {
                     <div className="flex items-center space-x-2">
                       <div className="flex items-center">
                         {getStatusIcon(item.old_status)}
+                        {item.old_status && (
+                          <span className="ml-1 text-xs">
+                            {formatStatusLabel(item.old_status)}
+                          </span>
+                        )}
                       </div>
                       <span className="text-muted-foreground">→</span>
                       <div className="flex items-center">
                         {getStatusIcon(item.new_status)}
                         <span className="ml-1">
-                          <Badge variant="outline" className="ml-1 capitalize text-xs">
-                            {item.new_status.toLowerCase()}
+                          <Badge variant="outline" className="capitalize text-xs">
+                            {formatStatusLabel(item.new_status)}
                           </Badge>
                         </span>
                       </div>

@@ -30,6 +30,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 interface EscalationModalProps {
   isOpen: boolean;
@@ -143,7 +146,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
         poc: formData.poc,
         reason: formData.reason,
         business_case_url: formData.businessCaseUrl || null,
-        status: "OPEN" as "OPEN" | "ALIGNED" | "RESOLVED",
+        status: "SUBMITTED" as "SUBMITTED" | "IN_DISCUSSION" | "RESOLVED_BLOCKED" | "RESOLVED_LAUNCHING" | "RESOLVED_LAUNCHED",
       };
       
       const { data, error } = await supabase
@@ -234,7 +237,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
                 
                 <div>
                   <Label htmlFor="reason" className="text-right">
-                    Escalation Reason <span className="text-red-500">*</span>
+                    Escalation Reason - Will be escalated to Product and Ops VP+ <span className="text-red-500">*</span>
                   </Label>
                   <Textarea
                     id="reason"
