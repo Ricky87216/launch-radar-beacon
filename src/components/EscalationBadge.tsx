@@ -3,6 +3,7 @@ import { Shield, ShieldCheck } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { EscalationStatus } from "@/types";
 
 interface EscalationBadgeProps {
   productId: string;
@@ -15,7 +16,7 @@ const EscalationBadge: React.FC<EscalationBadgeProps> = ({
   marketId,
   marketType,
 }) => {
-  const [escalationStatus, setEscalationStatus] = useState<string | null>(null);
+  const [escalationStatus, setEscalationStatus] = useState<EscalationStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -63,19 +64,19 @@ const EscalationBadge: React.FC<EscalationBadgeProps> = ({
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="inline-flex">
-            {escalationStatus === 'OPEN' ? (
+            {escalationStatus === 'SUBMITTED' || escalationStatus === 'IN_DISCUSSION' ? (
               <Shield className="h-4 w-4 text-amber-500 ml-1" />
-            ) : escalationStatus === 'ALIGNED' ? (
+            ) : escalationStatus.startsWith('RESOLVED_') ? (
               <ShieldCheck className="h-4 w-4 text-green-500 ml-1" />
             ) : null}
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          {escalationStatus === 'OPEN' 
+          {escalationStatus === 'SUBMITTED' || escalationStatus === 'IN_DISCUSSION'
             ? "Escalation pending approval" 
-            : escalationStatus === 'ALIGNED'
-            ? "Counts as launched via escalation" 
-            : ""}
+            : escalationStatus.startsWith('RESOLVED_')
+              ? "Counts as launched via escalation" 
+              : ""}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

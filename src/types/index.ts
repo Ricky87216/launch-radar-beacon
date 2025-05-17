@@ -86,3 +86,6 @@ export interface CellComment {
   answered_at: string | null;
   tam_escalation?: boolean;
 }
+
+// Escalation status type
+export type EscalationStatus = 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';

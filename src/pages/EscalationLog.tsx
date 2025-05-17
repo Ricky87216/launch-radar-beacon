@@ -20,13 +20,14 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { EscalationStatus } from "@/types";
 
 interface EscalationHistoryItem {
   id: string;
   escalation_id: string;
   user_id: string;
-  old_status: 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED' | null;
-  new_status: 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
+  old_status: EscalationStatus | null;
+  new_status: EscalationStatus;
   notes: string | null;
   changed_at: string;
   product_name?: string;
@@ -69,7 +70,7 @@ const EscalationLog = () => {
             ...item,
             product_name: escalation.product_id || 'Unknown product',
             market_name: marketName,
-          };
+          } as EscalationHistoryItem;
         });
         
         setHistoryItems(enrichedData);
@@ -88,7 +89,7 @@ const EscalationLog = () => {
     fetchEscalationHistory();
   }, [toast]);
 
-  const getStatusIcon = (status: 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED' | null) => {
+  const getStatusIcon = (status: EscalationStatus | null) => {
     switch (status) {
       case 'SUBMITTED':
         return <Shield className="h-4 w-4 text-amber-500" />;

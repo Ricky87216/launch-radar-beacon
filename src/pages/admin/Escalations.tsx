@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Shield, 
@@ -14,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboard } from "@/context/DashboardContext";
 import { Badge } from "@/components/ui/badge";
+import { EscalationStatus } from "@/types";
 import {
   Table,
   TableBody,
@@ -55,7 +55,7 @@ interface Escalation {
   poc: string;
   reason: string;
   business_case_url: string | null;
-  status: 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
+  status: EscalationStatus;
   created_at: string;
   aligned_at: string | null;
   resolved_at: string | null;
@@ -91,7 +91,7 @@ const EscalationsPage = () => {
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [currentEscalation, setCurrentEscalation] = useState<Escalation | null>(null);
   const [statusChangeNote, setStatusChangeNote] = useState("");
-  const [newStatus, setNewStatus] = useState<'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED' | null>(null);
+  const [newStatus, setNewStatus] = useState<EscalationStatus | null>(null);
 
   // Load all escalations when the component mounts
   useEffect(() => {
@@ -222,7 +222,7 @@ const EscalationsPage = () => {
     setFilteredEscalations(filtered);
   };
 
-  const handleStatusChange = (escalationId: string, targetStatus: 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED') => {
+  const handleStatusChange = (escalationId: string, targetStatus: EscalationStatus) => {
     const escalation = escalations.find(e => e.esc_id === escalationId);
     if (!escalation) return;
     
@@ -282,16 +282,16 @@ const EscalationsPage = () => {
     }
   };
 
-  const getNextStatus = (currentStatus: 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED') => {
+  const getNextStatus = (currentStatus: EscalationStatus): EscalationStatus => {
     const statusFlow = {
       SUBMITTED: 'IN_DISCUSSION',
       IN_DISCUSSION: 'RESOLVED_LAUNCHED',
       RESOLVED_BLOCKED: 'IN_DISCUSSION',
       RESOLVED_LAUNCHING: 'RESOLVED_LAUNCHED',
       RESOLVED_LAUNCHED: 'SUBMITTED'
-    };
+    } as const;
     
-    return statusFlow[currentStatus] as 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
+    return statusFlow[currentStatus];
   };
 
   const formatStatusText = (status: string) => {
@@ -469,7 +469,7 @@ const EscalationsPage = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-1">
-                        <Select onValueChange={(val) => handleStatusChange(escalation.esc_id, val as any)}>
+                        <Select onValueChange={(val) => handleStatusChange(escalation.esc_id, val as EscalationStatus)}>
                           <SelectTrigger className="h-8 w-28">
                             <SelectValue placeholder="Change status" />
                           </SelectTrigger>
