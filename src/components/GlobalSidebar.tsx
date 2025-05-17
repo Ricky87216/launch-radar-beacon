@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Grid, Star, AlertTriangle, Wrench, Database, Search } from 'lucide-react';
+import { Grid, Star, AlertTriangle, Wrench, Database, Search, ShieldAlert } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
-import { Input } from '@/components/ui/input';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -31,6 +30,12 @@ const GlobalSidebar = () => {
   const menuItems: MenuItem[] = [
     { icon: Grid, label: 'Dashboard', href: '/' },
     { icon: Star, label: 'My Coverage', href: '/my' },
+    { 
+      icon: ShieldAlert, 
+      label: 'Escalations', 
+      href: '/admin/escalations',
+      requiresRole: ['admin', 'can_edit_status']
+    },
     { 
       icon: AlertTriangle, 
       label: 'Escalations Log', 

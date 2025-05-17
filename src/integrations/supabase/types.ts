@@ -72,6 +72,101 @@ export type Database = {
         }
         Relationships: []
       }
+      escalation: {
+        Row: {
+          aligned_at: string | null
+          business_case_url: string | null
+          city_id: string | null
+          country_code: string | null
+          created_at: string
+          esc_id: string
+          poc: string
+          product_id: string
+          raised_by: string
+          reason: string
+          region: string | null
+          resolved_at: string | null
+          scope_level: Database["public"]["Enums"]["scope_level_enum"]
+          status: Database["public"]["Enums"]["escalation_status_enum"]
+        }
+        Insert: {
+          aligned_at?: string | null
+          business_case_url?: string | null
+          city_id?: string | null
+          country_code?: string | null
+          created_at?: string
+          esc_id?: string
+          poc: string
+          product_id: string
+          raised_by: string
+          reason: string
+          region?: string | null
+          resolved_at?: string | null
+          scope_level: Database["public"]["Enums"]["scope_level_enum"]
+          status?: Database["public"]["Enums"]["escalation_status_enum"]
+        }
+        Update: {
+          aligned_at?: string | null
+          business_case_url?: string | null
+          city_id?: string | null
+          country_code?: string | null
+          created_at?: string
+          esc_id?: string
+          poc?: string
+          product_id?: string
+          raised_by?: string
+          reason?: string
+          region?: string | null
+          resolved_at?: string | null
+          scope_level?: Database["public"]["Enums"]["scope_level_enum"]
+          status?: Database["public"]["Enums"]["escalation_status_enum"]
+        }
+        Relationships: []
+      }
+      escalation_history: {
+        Row: {
+          changed_at: string
+          escalation_id: string
+          id: string
+          new_status: Database["public"]["Enums"]["escalation_status_enum"]
+          notes: string | null
+          old_status:
+            | Database["public"]["Enums"]["escalation_status_enum"]
+            | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          escalation_id: string
+          id?: string
+          new_status: Database["public"]["Enums"]["escalation_status_enum"]
+          notes?: string | null
+          old_status?:
+            | Database["public"]["Enums"]["escalation_status_enum"]
+            | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          escalation_id?: string
+          id?: string
+          new_status?: Database["public"]["Enums"]["escalation_status_enum"]
+          notes?: string | null
+          old_status?:
+            | Database["public"]["Enums"]["escalation_status_enum"]
+            | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_history_escalation_id_fkey"
+            columns: ["escalation_id"]
+            isOneToOne: false
+            referencedRelation: "escalation"
+            referencedColumns: ["esc_id"]
+          },
+        ]
+      }
       etl_status: {
         Row: {
           created_at: string
@@ -158,10 +253,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_market_escalated: {
+        Args: { p_product_id: string; p_market_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      escalation_status_enum: "OPEN" | "ALIGNED" | "RESOLVED"
+      scope_level_enum: "CITY" | "COUNTRY" | "REGION"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -276,6 +375,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      escalation_status_enum: ["OPEN", "ALIGNED", "RESOLVED"],
+      scope_level_enum: ["CITY", "COUNTRY", "REGION"],
+    },
   },
 } as const

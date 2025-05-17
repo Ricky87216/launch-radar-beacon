@@ -1,11 +1,16 @@
+
 import { useState } from "react";
+import { Shield } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
+import EscalationModal from "./EscalationModal";
 
 interface BulkEditGridProps {
   data: any[];
@@ -23,6 +28,17 @@ const BulkEditGrid: React.FC<BulkEditGridProps> = ({
   const [editingCell, setEditingCell] = useState<{ rowId: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [showUnselection, setShowUnselection] = useState(false);
+  const [escalationModal, setEscalationModal] = useState<{
+    isOpen: boolean;
+    productId: string;
+    marketId: string;
+    marketType: 'city' | 'country' | 'region';
+  }>({
+    isOpen: false,
+    productId: '',
+    marketId: '',
+    marketType: 'city'
+  });
   
   // Check if all visible rows are selected
   const allSelected = data.length > 0 && data.every(row => selectedRows.includes(row.id));
@@ -54,6 +70,23 @@ const BulkEditGrid: React.FC<BulkEditGridProps> = ({
   const handleCellBlur = () => {
     // In a real implementation, this would update the data
     setEditingCell(null);
+  };
+  
+  const handleStatusClick = (row: any, event: React.MouseEvent) => {
+    if (row.status === 'BLOCKED') {
+      event.stopPropagation();
+      
+      // Open escalation modal
+      setEscalationModal({
+        isOpen: true,
+        productId: row.product_id,
+        marketId: row.market_id,
+        marketType: 'city' // Assuming this is always city level, could be made more dynamic
+      });
+    } else {
+      // Regular editing for non-blocked statuses
+      handleCellClick(row.id, 'status', row.status);
+    }
   };
   
   return (
@@ -121,7 +154,7 @@ const BulkEditGrid: React.FC<BulkEditGridProps> = ({
                   <TableCell>{row.city}</TableCell>
                   <TableCell 
                     className="cursor-pointer"
-                    onClick={() => handleCellClick(row.id, 'status', row.status)}
+                    onClick={(e) => handleStatusClick(row, e)}
                   >
                     {editingCell?.rowId === row.id && editingCell?.field === 'status' ? (
                       <Input 
@@ -132,14 +165,44 @@ const BulkEditGrid: React.FC<BulkEditGridProps> = ({
                         autoFocus
                       />
                     ) : (
-                      <span className={
-                        row.status === 'LIVE' ? 'text-green-600' : 
-                        row.status === 'BLOCKED' ? 'text-red-600 font-medium' :
-                        row.status === 'ROLLED_BACK' ? 'text-red-600' : 
-                        'text-amber-600'
-                      }>
-                        {row.status}
-                      </span>
+                      <div className="flex items-center">
+                        <span className={
+                          row.status === 'LIVE' ? 'text-green-600' : 
+                          row.status === 'BLOCKED' ? 'text-red-600 font-medium' :
+                          row.status === 'ROLLED_BACK' ? 'text-red-600' : 
+                          'text-amber-600'
+                        }>
+                          {row.status}
+                        </span>
+                        
+                        {row.status === 'BLOCKED' && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-5 w-5 p-0 ml-1"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEscalationModal({
+                                      isOpen: true,
+                                      productId: row.product_id,
+                                      marketId: row.market_id,
+                                      marketType: 'city'
+                                    });
+                                  }}
+                                >
+                                  <Shield className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Request escalation</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
                     )}
                   </TableCell>
                   <TableCell
@@ -156,6 +219,22 @@ const BulkEditGrid: React.FC<BulkEditGridProps> = ({
                       />
                     ) : (
                       row.blocker_category || "-"
+                    )}
+                  </TableCell>
+                  <TableCell
+                    className="cursor-pointer"
+                    onClick={() => handleCellClick(row.id, 'owner', row.owner || '')}
+                  >
+                    {editingCell?.rowId === row.id && editingCell?.field === 'owner' ? (
+                      <Input 
+                        value={editValue} 
+                        onChange={e => setEditValue(e.target.value)}
+                        onBlur={handleCellBlur}
+                        className="h-8 w-full"
+                        autoFocus
+                      />
+                    ) : (
+                      row.owner || "-"
                     )}
                   </TableCell>
                   <TableCell className="cursor-pointer">
@@ -208,6 +287,15 @@ const BulkEditGrid: React.FC<BulkEditGridProps> = ({
           </TableBody>
         </Table>
       </div>
+      
+      {/* Escalation Modal */}
+      <EscalationModal 
+        isOpen={escalationModal.isOpen}
+        onClose={() => setEscalationModal(prev => ({ ...prev, isOpen: false }))}
+        productId={escalationModal.productId}
+        marketId={escalationModal.marketId}
+        marketType={escalationModal.marketType}
+      />
     </div>
   );
 };

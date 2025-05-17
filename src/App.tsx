@@ -1,88 +1,56 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 import { DashboardProvider } from "@/context/DashboardContext";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import MyLaunchRadar from "./pages/MyLaunchRadar";
-import AdminDashboard from "./pages/admin";
-import DataSync from "./pages/admin/DataSync";
-import BulkEdit from "./pages/admin/BulkEdit";
-import Logs from "./pages/admin/Logs";
-import AnswerHub from "./pages/admin/AnswerHub";
-import GlobalNavBar from "./components/GlobalNavBar";
-import GlobalSidebar from "./components/GlobalSidebar";
-import { useEffect } from "react";
 
-// Empty placeholder for new Escalations page
-const EscalationsLog = () => (
-  <div className="container p-4">
-    <h1 className="text-2xl font-bold mb-4">Escalations Log</h1>
-    <p>This page is under development.</p>
-  </div>
-);
+// Layout components
+import GlobalSidebar from "@/components/GlobalSidebar";
+import GlobalNavBar from "@/components/GlobalNavBar";
+import GlobalBreadcrumb from "@/components/GlobalBreadcrumb";
 
-// URL Parameter handler component to redirect hash-based URLs to proper React Router routes
-const URLParamHandler = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  
-  useEffect(() => {
-    // Check if there's a hash with parameters
-    if (location.hash && location.hash.includes('?')) {
-      const hashParts = location.hash.split('?');
-      if (hashParts.length > 1) {
-        // Extract path and query parts
-        const path = hashParts[0].replace('#', '');
-        const query = hashParts[1];
-        
-        // Redirect to the proper React Router path with query params
-        navigate({ pathname: path || '/', search: query }, { replace: true });
-      }
-    }
-  }, [location.hash, navigate]);
-  
-  return null;
-};
+// Pages
+import Index from "@/pages/Index";
+import MyLaunchRadar from "@/pages/MyLaunchRadar";
+import NotFound from "@/pages/NotFound";
+import BulkEdit from "@/pages/admin/BulkEdit";
+import Escalations from "@/pages/admin/Escalations";
+import DataSync from "@/pages/admin/DataSync";
+import AnswerHub from "@/pages/admin/AnswerHub";
+import Logs from "@/pages/admin/Logs";
 
+// Create a client
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
       <DashboardProvider>
-        <BrowserRouter>
-          <URLParamHandler />
-          <SidebarProvider>
-            <div className="flex min-h-screen w-full">
-              <GlobalSidebar />
-              <div className="flex flex-col flex-1">
-                <GlobalNavBar />
+        <Router>
+          <div className="flex min-h-screen">
+            <GlobalSidebar />
+            <div className="flex-1 flex flex-col">
+              <GlobalNavBar />
+              <GlobalBreadcrumb />
+              <main className="flex-1 max-h-[calc(100vh-64px-40px)] overflow-hidden">
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/my" element={<MyLaunchRadar />} />
-                  <Route path="/escalations" element={<EscalationsLog />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/admin/data-sync" element={<DataSync />} />
                   <Route path="/admin/bulk-edit" element={<BulkEdit />} />
-                  <Route path="/admin/logs" element={<Logs />} />
+                  <Route path="/admin/data-sync" element={<DataSync />} />
                   <Route path="/admin/answer-hub" element={<AnswerHub />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="/admin/logs" element={<Logs />} />
+                  <Route path="/admin/escalations" element={<Escalations />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </div>
+              </main>
             </div>
-          </SidebarProvider>
-        </BrowserRouter>
+          </div>
+          <Toaster />
+        </Router>
       </DashboardProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </QueryClientProvider>
+  );
+}
 
 export default App;
