@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Shield, XCircle, Link as LinkIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -56,6 +57,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
     poc: "",
     reason: "",
     businessCaseUrl: "",
+    reasonType: "", // New field for the reason type dropdown
   });
   const [history, setHistory] = useState<any[]>([]);
   
@@ -122,7 +124,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.poc.trim() || !formData.reason.trim()) {
+    if (!formData.poc.trim() || !formData.reason.trim() || !formData.reasonType) {
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields.",
@@ -147,6 +149,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
         raised_by: user?.name || "Unknown user",
         poc: formData.poc,
         reason: formData.reason,
+        reason_type: formData.reasonType, // Include the new reason type field
         business_case_url: formData.businessCaseUrl || null,
         status: dbStatus, // Use the database format status
       };
@@ -179,6 +182,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
         poc: "",
         reason: "",
         businessCaseUrl: "",
+        reasonType: "",
       });
     } catch (error) {
       console.error("Error submitting escalation:", error);
@@ -252,6 +256,28 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
                     className="mt-1"
                     rows={4}
                   />
+                </div>
+                
+                <div>
+                  <Label htmlFor="reasonType" className="text-right">
+                    Reason Category <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.reasonType}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, reasonType: value })
+                    }
+                  >
+                    <SelectTrigger id="reasonType" className="mt-1">
+                      <SelectValue placeholder="Select a reason category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Policy Risk">Policy Risk</SelectItem>
+                      <SelectItem value="Negative Business Impact">Negative Business Impact</SelectItem>
+                      <SelectItem value="Legal Risk">Legal Risk</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div>
