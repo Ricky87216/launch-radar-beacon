@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -371,7 +370,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         
         {expandedSections.includes("status") && (
           <div className="space-y-1 pl-1">
-            {["LIVE", "NOT_LIVE", "ROLLED_BACK"].map(status => (
+            {["LIVE", "NOT_LIVE", "BLOCKED", "ROLLED_BACK"].map(status => (
               <div className="flex items-center space-x-2" key={status}>
                 <Checkbox 
                   id={`status-${status}`} 

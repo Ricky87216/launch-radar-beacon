@@ -19,7 +19,7 @@ const BulkEdit = () => {
     regions: [],
     countries: [],
     cities: [],
-    status: ["LIVE", "NOT_LIVE", "ROLLED_BACK"] // Default to showing all statuses
+    status: ["LIVE", "NOT_LIVE", "BLOCKED", "ROLLED_BACK"] // Added BLOCKED to default status filters
   });
 
   // Get all available data
@@ -42,6 +42,19 @@ const BulkEdit = () => {
               // Find the region (parent of country)
               const region = country ? allMarkets.find(m => m.id === country.parent_id) : null;
               
+              // Assign random status, including BLOCKED status
+              const randomValue = Math.random();
+              let status;
+              if (randomValue > 0.8) {
+                status = 'NOT_LIVE';
+              } else if (randomValue > 0.6) {
+                status = 'BLOCKED'; // Add some items with BLOCKED status
+              } else if (randomValue > 0.5) {
+                status = 'ROLLED_BACK';
+              } else {
+                status = 'LIVE';
+              }
+              
               mockData.push({
                 id: `${product.id}-${market.id}`,
                 product_id: product.id,
@@ -50,11 +63,11 @@ const BulkEdit = () => {
                 region: region ? region.name : 'Unknown Region',
                 country: country ? country.name : 'Unknown Country',
                 city: market.name,
-                status: Math.random() > 0.7 ? 'NOT_LIVE' : 'LIVE',
-                blocker_category: Math.random() > 0.7 ? 'Technical' : null,
-                owner: Math.random() > 0.7 ? 'Jane Smith' : null,
-                eta: Math.random() > 0.7 ? new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString() : null,
-                note: Math.random() > 0.8 ? 'Some notes about this entry' : null
+                status: status,
+                blocker_category: status === 'BLOCKED' ? 'Technical' : (Math.random() > 0.7 ? 'Technical' : null),
+                owner: status === 'BLOCKED' ? 'Jane Smith' : (Math.random() > 0.7 ? 'Jane Smith' : null),
+                eta: status === 'BLOCKED' ? new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString() : (Math.random() > 0.7 ? new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString() : null),
+                note: status === 'BLOCKED' ? 'Blocked due to technical issues' : (Math.random() > 0.8 ? 'Some notes about this entry' : null)
               });
             }
           }

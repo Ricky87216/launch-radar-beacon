@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -135,6 +134,7 @@ const BulkEditGrid: React.FC<BulkEditGridProps> = ({
                     ) : (
                       <span className={
                         row.status === 'LIVE' ? 'text-green-600' : 
+                        row.status === 'BLOCKED' ? 'text-red-600 font-medium' :
                         row.status === 'ROLLED_BACK' ? 'text-red-600' : 
                         'text-amber-600'
                       }>
@@ -156,22 +156,6 @@ const BulkEditGrid: React.FC<BulkEditGridProps> = ({
                       />
                     ) : (
                       row.blocker_category || "-"
-                    )}
-                  </TableCell>
-                  <TableCell
-                    className="cursor-pointer"
-                    onClick={() => handleCellClick(row.id, 'owner', row.owner || '')}
-                  >
-                    {editingCell?.rowId === row.id && editingCell?.field === 'owner' ? (
-                      <Input 
-                        value={editValue} 
-                        onChange={e => setEditValue(e.target.value)}
-                        onBlur={handleCellBlur}
-                        className="h-8 w-full"
-                        autoFocus
-                      />
-                    ) : (
-                      row.owner || "-"
                     )}
                   </TableCell>
                   <TableCell className="cursor-pointer">
