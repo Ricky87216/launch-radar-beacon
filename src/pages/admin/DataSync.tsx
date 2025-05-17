@@ -12,7 +12,7 @@ import { Database } from "lucide-react";
 import { toast } from "sonner";
 
 const DataSync = () => {
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const [activeTab, setActiveTab] = useState("upload");
   const [isLoading, setIsLoading] = useState(false);
   const [isSeedingData, setIsSeedingData] = useState(false);
@@ -27,14 +27,14 @@ const DataSync = () => {
       formData.append('fileType', fileType);
       
       // Todo: Implement file upload endpoint
-      toast({
+      uiToast({
         title: "Success!",
         description: "File uploaded successfully. Processing data...",
       });
       
       // Mock successful upload for now
       setTimeout(() => {
-        toast({
+        uiToast({
           title: "Data processed",
           description: `Rows processed: 150 (new: 120, updated: 30)`,
         });
@@ -43,7 +43,7 @@ const DataSync = () => {
 
     } catch (error) {
       console.error("Error uploading file:", error);
-      toast({
+      uiToast({
         title: "Error",
         description: "Failed to upload file. Please try again.",
         variant: "destructive",
@@ -57,14 +57,14 @@ const DataSync = () => {
       setIsLoading(true);
       
       // Todo: Implement API refresh functionality
-      toast({
+      uiToast({
         title: "API Refresh Initiated",
         description: "Fetching data from the API...",
       });
       
       // Mock successful API refresh
       setTimeout(() => {
-        toast({
+        uiToast({
           title: "Data Refreshed",
           description: `Rows processed: 250 (new: 180, updated: 70)`,
         });
@@ -73,7 +73,7 @@ const DataSync = () => {
 
     } catch (error) {
       console.error("Error refreshing API data:", error);
-      toast({
+      uiToast({
         title: "Error",
         description: "Failed to refresh data from API. Please try again.",
         variant: "destructive",

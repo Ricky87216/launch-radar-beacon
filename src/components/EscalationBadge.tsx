@@ -29,6 +29,7 @@ const EscalationBadge: React.FC<EscalationBadgeProps> = ({
         }
       } catch (error) {
         console.error("Error checking escalation status:", error);
+        setEscalationStatus(null);
       } finally {
         setIsLoading(false);
       }
