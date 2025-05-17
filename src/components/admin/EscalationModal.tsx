@@ -75,7 +75,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
         .select("esc_id")
         .eq("product_id", productId)
         .eq(getMarketIdField(), marketId)
-        .eq("scope_level", getScopeLevel().toUpperCase());
+        .eq("scope_level", getScopeLevel());
       
       if (escalations && escalations.length > 0) {
         const escalationId = escalations[0].esc_id;
@@ -109,8 +109,8 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
     }
   };
   
-  const getScopeLevel = (): string => {
-    return marketType.toUpperCase();
+  const getScopeLevel = (): "CITY" | "COUNTRY" | "REGION" => {
+    return marketType.toUpperCase() as "CITY" | "COUNTRY" | "REGION";
   };
   
   const getMarketName = (): string => {
@@ -133,7 +133,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
     
     try {
       // Create the escalation record
-      const { data, error } = await supabase.from("escalation").insert({
+      const insertData = {
         product_id: productId,
         scope_level: getScopeLevel(),
         ...(marketType === 'city' ? { city_id: marketId } : {}),
@@ -143,8 +143,13 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
         poc: formData.poc,
         reason: formData.reason,
         business_case_url: formData.businessCaseUrl || null,
-        status: "OPEN",
-      }).select();
+        status: "OPEN" as "OPEN" | "ALIGNED" | "RESOLVED",
+      };
+      
+      const { data, error } = await supabase
+        .from("escalation")
+        .insert(insertData)
+        .select();
       
       if (error) {
         throw error;

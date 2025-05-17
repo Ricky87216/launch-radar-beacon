@@ -35,7 +35,9 @@ const EscalationBadge: React.FC<EscalationBadgeProps> = ({
           query = query.eq("region", marketId);
         }
         
-        query = query.eq("scope_level", marketType.toUpperCase());
+        // Convert marketType to uppercase to match the enum in the database
+        const scopeLevel = marketType.toUpperCase() as "CITY" | "COUNTRY" | "REGION";
+        query = query.eq("scope_level", scopeLevel);
         
         const { data, error } = await query;
         
