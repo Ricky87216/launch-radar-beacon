@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { EscalationStatus } from "@/types";
+import { EscalationStatus, mapDatabaseStatusToAppStatus } from "@/types";
 
 interface EscalationHistoryItem {
   id: string;
@@ -53,7 +53,7 @@ const EscalationLog = () => {
         if (error) throw error;
         
         // Enrich the data with product and market names
-        const enrichedData = (historyData || []).map((item) => {
+        const enrichedData: EscalationHistoryItem[] = (historyData || []).map((item) => {
           const escalation = item.escalation;
           
           // Determine market name based on scope level
@@ -68,6 +68,9 @@ const EscalationLog = () => {
           
           return {
             ...item,
+            // Convert database statuses to application statuses
+            old_status: item.old_status ? mapDatabaseStatusToAppStatus(item.old_status) : null,
+            new_status: mapDatabaseStatusToAppStatus(item.new_status),
             product_name: escalation.product_id || 'Unknown product',
             market_name: marketName,
           } as EscalationHistoryItem;

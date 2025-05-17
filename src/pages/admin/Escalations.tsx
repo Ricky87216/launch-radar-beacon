@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { 
   Shield, 
@@ -13,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboard } from "@/context/DashboardContext";
 import { Badge } from "@/components/ui/badge";
-import { EscalationStatus } from "@/types";
+import { EscalationStatus, mapDatabaseStatusToAppStatus, mapAppStatusToDatabaseStatus } from "@/types";
 import {
   Table,
   TableBody,
@@ -193,6 +194,8 @@ const EscalationsPage = () => {
       
       return {
         ...item,
+        // Convert database status to application status
+        status: mapDatabaseStatusToAppStatus(item.status),
         product_name: product?.name || 'Unknown product',
         market_name: marketName
       };
@@ -238,10 +241,13 @@ const EscalationsPage = () => {
     if (!currentEscalation || !newStatus) return;
     
     try {
+      // Convert app status to database status for the update
+      const dbStatus = mapAppStatusToDatabaseStatus(newStatus);
+      
       const { error } = await supabase
         .from("escalation")
         .update({ 
-          status: newStatus,
+          status: dbStatus,
           ...(newStatus === 'RESOLVED_LAUNCHED' ? { aligned_at: new Date().toISOString() } : {}),
           ...(newStatus.startsWith('RESOLVED_') ? { resolved_at: new Date().toISOString() } : {})
         })
@@ -251,11 +257,15 @@ const EscalationsPage = () => {
       
       // Add a note to history if provided
       if (statusChangeNote) {
+        // For history, we use database status values
+        const oldDbStatus = mapAppStatusToDatabaseStatus(currentEscalation.status);
+        const newDbStatus = mapAppStatusToDatabaseStatus(newStatus);
+        
         await supabase.from("escalation_history").insert({
           escalation_id: currentEscalation.esc_id,
           user_id: "admin", // Ideally this would be the current user's ID
-          old_status: currentEscalation.status,
-          new_status: newStatus,
+          old_status: oldDbStatus,
+          new_status: newDbStatus,
           notes: statusChangeNote
         });
       }

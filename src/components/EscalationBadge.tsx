@@ -3,7 +3,7 @@ import { Shield, ShieldCheck } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { EscalationStatus } from "@/types";
+import { EscalationStatus, mapDatabaseStatusToAppStatus } from "@/types";
 
 interface EscalationBadgeProps {
   productId: string;
@@ -45,7 +45,8 @@ const EscalationBadge: React.FC<EscalationBadgeProps> = ({
         if (error) throw error;
         
         if (data && data.length > 0) {
-          setEscalationStatus(data[0].status);
+          // Convert database status to application status
+          setEscalationStatus(mapDatabaseStatusToAppStatus(data[0].status));
         }
       } catch (error) {
         console.error("Error checking escalation status:", error);

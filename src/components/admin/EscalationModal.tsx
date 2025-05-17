@@ -4,7 +4,7 @@ import { Shield, XCircle, Link as LinkIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboard } from "@/context/DashboardContext";
-import { Market, Product, EscalationStatus } from "@/types";
+import { Market, Product, EscalationStatus, mapAppStatusToDatabaseStatus } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -136,6 +136,9 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
     
     try {
       // Create the escalation record
+      const appStatus: EscalationStatus = "SUBMITTED";
+      const dbStatus = mapAppStatusToDatabaseStatus(appStatus);
+      
       const insertData = {
         product_id: productId,
         scope_level: getScopeLevel(),
@@ -146,7 +149,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
         poc: formData.poc,
         reason: formData.reason,
         business_case_url: formData.businessCaseUrl || null,
-        status: "SUBMITTED" as EscalationStatus,
+        status: dbStatus, // Use the database format status
       };
       
       const { data, error } = await supabase
