@@ -551,14 +551,13 @@ export default function HeatmapGrid() {
                           <Progress
                             value={cell ? cell.coverage : 0}
                             className="h-2"
-                            indicator={
-                              <div className={
-                                cell && cell.coverage >= 95 ? "bg-green-500 h-full w-full" :
-                                cell && cell.coverage >= 70 ? "bg-yellow-500 h-full w-full" :
-                                "bg-red-500 h-full w-full"
-                              } style={{width: `${cell ? cell.coverage : 0}%`}}></div>
-                            }
-                          />
+                          >
+                            <div className={
+                              cell && cell.coverage >= 95 ? "bg-green-500 h-full w-full" :
+                              cell && cell.coverage >= 70 ? "bg-yellow-500 h-full w-full" :
+                              "bg-red-500 h-full w-full"
+                            } style={{width: `${cell ? cell.coverage : 0}%`}}></div>
+                          </Progress>
                         </div>
                         <ChevronRight className="h-4 w-4 text-gray-400" />
                       </div>

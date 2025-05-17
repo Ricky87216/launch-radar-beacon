@@ -135,40 +135,41 @@ export interface MarketDim {
   gb_weight: number;
   created_at: string;
   updated_at: string;
-  
-  // Adding compatibility properties for older components
-  // These getters provide seamless compatibility with the Market interface
-  get name(): string {
-    return this.country_name || this.city_name || this.region;
-  }
-  
-  get type(): 'mega_region' | 'region' | 'country' | 'city' {
-    if (this.city_name && !this.city_id.includes('region-')) {
-      return 'city';
-    } else if (this.country_name && !this.country_code.includes('region-')) {
-      return 'country'; 
-    }
-    return 'region';
-  }
-  
-  get parent_id(): string | null {
-    if (this.type === 'city') {
-      return this.country_code;
-    } else if (this.type === 'country') {
-      return `region-${this.region}`;
-    }
-    return null;
-  }
-  
-  get geo_path(): string {
-    if (this.type === 'city') {
-      return `${this.region}/${this.country_name}/${this.city_name}`;
-    } else if (this.type === 'country') {
-      return `${this.region}/${this.country_name}`;
-    }
-    return this.region;
-  }
 }
+
+// Add compatibility methods for MarketDim
+export const getMarketDimName = (marketDim: MarketDim): string => {
+  return marketDim.country_name || marketDim.city_name || marketDim.region;
+};
+
+export const getMarketDimType = (marketDim: MarketDim): 'mega_region' | 'region' | 'country' | 'city' => {
+  if (marketDim.city_name && !marketDim.city_id.includes('region-')) {
+    return 'city';
+  } else if (marketDim.country_name && !marketDim.country_code.includes('region-')) {
+    return 'country'; 
+  }
+  return 'region';
+};
+
+export const getMarketDimParentId = (marketDim: MarketDim): string | null => {
+  const type = getMarketDimType(marketDim);
+  if (type === 'city') {
+    return marketDim.country_code;
+  } else if (type === 'country') {
+    return `region-${marketDim.region}`;
+  }
+  return null;
+};
+
+export const getMarketDimGeoPath = (marketDim: MarketDim): string => {
+  const type = getMarketDimType(marketDim);
+  if (type === 'city') {
+    return `${marketDim.region}/${marketDim.country_name}/${marketDim.city_name}`;
+  } else if (type === 'country') {
+    return `${marketDim.region}/${marketDim.country_name}`;
+  }
+  return marketDim.region;
+};
 
 // New type for coverage_fact table
 export interface CoverageFact {
@@ -183,10 +184,10 @@ export interface CoverageFact {
 export const marketDimToMarket = (marketDim: MarketDim): Market => {
   return {
     id: marketDim.city_id,
-    name: marketDim.name,
-    type: marketDim.type,
-    parent_id: marketDim.parent_id,
-    geo_path: marketDim.geo_path
+    name: getMarketDimName(marketDim),
+    type: getMarketDimType(marketDim),
+    parent_id: getMarketDimParentId(marketDim),
+    geo_path: getMarketDimGeoPath(marketDim)
   };
 };
 

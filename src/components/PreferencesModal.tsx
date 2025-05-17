@@ -141,7 +141,7 @@ export default function PreferencesModal({ open, onClose }: PreferencesModalProp
 
   const getMarketName = (id: string) => {
     const market = getMarketById(id);
-    return market ? String(market.name) : id;
+    return market ? getMarketDimName(market) : id;
   };
 
   return (
