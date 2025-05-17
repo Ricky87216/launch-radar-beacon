@@ -2,8 +2,7 @@
 import { Shield, ShieldCheck } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { EscalationStatus, mapDatabaseStatusToAppStatus } from "@/types";
+import { checkEscalationStatus } from "@/services/ProductService";
 
 interface EscalationBadgeProps {
   productId: string;
@@ -16,37 +15,17 @@ const EscalationBadge: React.FC<EscalationBadgeProps> = ({
   marketId,
   marketType,
 }) => {
-  const [escalationStatus, setEscalationStatus] = useState<EscalationStatus | null>(null);
+  const [escalationStatus, setEscalationStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    const checkEscalationStatus = async () => {
+    const checkStatus = async () => {
       try {
-        let query = supabase
-          .from("escalation")
-          .select("status")
-          .eq("product_id", productId);
-          
-        // Apply the correct filter based on market type
-        if (marketType === 'city') {
-          query = query.eq("city_id", marketId);
-        } else if (marketType === 'country') {
-          query = query.eq("country_code", marketId);
-        } else if (marketType === 'region') {
-          query = query.eq("region", marketId);
-        }
-        
-        // Convert marketType to uppercase to match the enum in the database
-        const scopeLevel = marketType.toUpperCase() as "CITY" | "COUNTRY" | "REGION";
-        query = query.eq("scope_level", scopeLevel);
-        
-        const { data, error } = await query;
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          // Convert database status to application status
-          setEscalationStatus(mapDatabaseStatusToAppStatus(data[0].status));
+        const result = await checkEscalationStatus(productId, marketId, marketType);
+        if (result.exists) {
+          setEscalationStatus(result.status);
+        } else {
+          setEscalationStatus(null);
         }
       } catch (error) {
         console.error("Error checking escalation status:", error);
@@ -55,7 +34,7 @@ const EscalationBadge: React.FC<EscalationBadgeProps> = ({
       }
     };
     
-    checkEscalationStatus();
+    checkStatus();
   }, [productId, marketId, marketType]);
   
   if (isLoading || !escalationStatus) return null;
