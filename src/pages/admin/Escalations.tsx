@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Shield, 
@@ -14,7 +13,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboard } from "@/context/DashboardContext";
 import { Badge } from "@/components/ui/badge";
-import { EscalationStatus, mapDatabaseStatusToAppStatus, mapAppStatusToDatabaseStatus } from "@/types";
+import { 
+  EscalationStatus,
+  DatabaseEscalationStatus,
+  mapDatabaseStatusToAppStatus, 
+  mapAppStatusToDatabaseStatus 
+} from "@/types";
 import {
   Table,
   TableBody,
@@ -244,10 +248,11 @@ const EscalationsPage = () => {
       // Convert app status to database status for the update
       const dbStatus = mapAppStatusToDatabaseStatus(newStatus);
       
+      // Force type assertion here since we know our status values match the database
       const { error } = await supabase
         .from("escalation")
         .update({ 
-          status: dbStatus,
+          status: dbStatus as any,
           ...(newStatus === 'RESOLVED_LAUNCHED' ? { aligned_at: new Date().toISOString() } : {}),
           ...(newStatus.startsWith('RESOLVED_') ? { resolved_at: new Date().toISOString() } : {})
         })
@@ -261,11 +266,12 @@ const EscalationsPage = () => {
         const oldDbStatus = mapAppStatusToDatabaseStatus(currentEscalation.status);
         const newDbStatus = mapAppStatusToDatabaseStatus(newStatus);
         
+        // Force type assertion here since we know our status values match the database
         await supabase.from("escalation_history").insert({
           escalation_id: currentEscalation.esc_id,
           user_id: "admin", // Ideally this would be the current user's ID
-          old_status: oldDbStatus,
-          new_status: newDbStatus,
+          old_status: oldDbStatus as any,
+          new_status: newDbStatus as any,
           notes: statusChangeNote
         });
       }

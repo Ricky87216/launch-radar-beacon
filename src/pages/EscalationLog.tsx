@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -53,7 +52,7 @@ const EscalationLog = () => {
         if (error) throw error;
         
         // Enrich the data with product and market names
-        const enrichedData: EscalationHistoryItem[] = (historyData || []).map((item) => {
+        const enrichedData = (historyData || []).map((item) => {
           const escalation = item.escalation;
           
           // Determine market name based on scope level

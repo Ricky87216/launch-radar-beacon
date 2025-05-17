@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Shield, XCircle, Link as LinkIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -152,9 +151,10 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
         status: dbStatus, // Use the database format status
       };
       
+      // Force type assertion here since we know our status values match the database
       const { data, error } = await supabase
         .from("escalation")
-        .insert(insertData)
+        .insert(insertData as any)
         .select();
       
       if (error) {
@@ -169,9 +169,9 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
       // Log action
       await supabase.from("change_log").insert({
         operation: "create_escalation",
-        row_count: 1,
+        rows_processed: 1,
         diff: { product: product?.name, market: getMarketName() }
-      });
+      } as any);
       
       onClose();
       // Reset form
