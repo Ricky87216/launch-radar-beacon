@@ -21,6 +21,7 @@ import AnswerHub from "@/pages/admin/AnswerHub";
 import Logs from "@/pages/admin/Logs";
 import EscalationLog from "@/pages/EscalationLog";
 import ProductMeta from "@/pages/admin/ProductMeta";
+import Analytics from "@/pages/Analytics"; // Add import for Analytics
 
 // Create a client
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/my" element={<MyLaunchRadar />} />
+                    <Route path="/analytics" element={<Analytics />} /> {/* Add Analytics route */}
                     <Route path="/admin/bulk-edit" element={<BulkEdit />} />
                     <Route path="/admin/data-sync" element={<DataSync />} />
                     <Route path="/admin/answer-hub" element={<AnswerHub />} />
