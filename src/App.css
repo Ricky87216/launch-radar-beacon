@@ -25,3 +25,20 @@
   }
 }
 
+/* Product Card Styling */
+.product-name-trigger {
+  cursor: pointer;
+  color: #276EF1; /* Uber Blue */
+  text-decoration: none;
+}
+
+.product-name-trigger:hover {
+  text-decoration: underline;
+}
+
+.product-card-modal {
+  max-width: 520px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: white;
+}

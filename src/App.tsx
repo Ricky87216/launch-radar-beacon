@@ -20,6 +20,7 @@ import DataSync from "@/pages/admin/DataSync";
 import AnswerHub from "@/pages/admin/AnswerHub";
 import Logs from "@/pages/admin/Logs";
 import EscalationLog from "@/pages/EscalationLog";
+import ProductMeta from "@/pages/admin/ProductMeta";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ function App() {
                     <Route path="/admin/answer-hub" element={<AnswerHub />} />
                     <Route path="/admin/logs" element={<Logs />} />
                     <Route path="/admin/escalations" element={<Escalations />} />
+                    <Route path="/admin/product-meta" element={<ProductMeta />} />
                     <Route path="/escalations" element={<EscalationLog />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

@@ -203,6 +203,45 @@ export type Database = {
         }
         Relationships: []
       }
+      product_meta: {
+        Row: {
+          company_priority: string | null
+          description: string | null
+          launch_date: string | null
+          newsletter_url: string | null
+          pm_poc: string | null
+          prd_link: string | null
+          prod_ops_poc: string | null
+          product_id: string
+          screenshot_url: string | null
+          xp_plan: string | null
+        }
+        Insert: {
+          company_priority?: string | null
+          description?: string | null
+          launch_date?: string | null
+          newsletter_url?: string | null
+          pm_poc?: string | null
+          prd_link?: string | null
+          prod_ops_poc?: string | null
+          product_id: string
+          screenshot_url?: string | null
+          xp_plan?: string | null
+        }
+        Update: {
+          company_priority?: string | null
+          description?: string | null
+          launch_date?: string | null
+          newsletter_url?: string | null
+          pm_poc?: string | null
+          prd_link?: string | null
+          prod_ops_poc?: string | null
+          product_id?: string
+          screenshot_url?: string | null
+          xp_plan?: string | null
+        }
+        Relationships: []
+      }
       user_pref: {
         Row: {
           countries: string[]
@@ -244,6 +283,24 @@ export type Database = {
           created_at?: string
           id?: string
           role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_watchlist: {
+        Row: {
+          created_at: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          product_id?: string
           user_id?: string
         }
         Relationships: []

@@ -20,6 +20,8 @@ const badgeVariants = cva(
           "border-transparent bg-[var(--uber-green)] text-black",
         warning:
           "border-transparent bg-[var(--uber-yellow)] text-black",
+        priority:
+          "border-transparent bg-[#276EF1] text-white", // Uber blue for priorities
       },
     },
     defaultVariants: {
