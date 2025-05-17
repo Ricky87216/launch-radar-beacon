@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { DashboardProvider } from "@/context/DashboardContext";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 // Layout components
 import GlobalSidebar from "@/components/GlobalSidebar";
@@ -27,26 +28,28 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <DashboardProvider>
         <Router>
-          <div className="flex min-h-screen">
-            <GlobalSidebar />
-            <div className="flex-1 flex flex-col">
-              <GlobalNavBar />
-              <GlobalBreadcrumb />
-              <main className="flex-1 max-h-[calc(100vh-64px-40px)] overflow-hidden">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/my" element={<MyLaunchRadar />} />
-                  <Route path="/admin/bulk-edit" element={<BulkEdit />} />
-                  <Route path="/admin/data-sync" element={<DataSync />} />
-                  <Route path="/admin/answer-hub" element={<AnswerHub />} />
-                  <Route path="/admin/logs" element={<Logs />} />
-                  <Route path="/admin/escalations" element={<Escalations />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
+          <SidebarProvider>
+            <div className="flex min-h-screen w-full">
+              <GlobalSidebar />
+              <div className="flex-1 flex flex-col">
+                <GlobalNavBar />
+                <GlobalBreadcrumb />
+                <main className="flex-1 max-h-[calc(100vh-64px-40px)] overflow-hidden">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/my" element={<MyLaunchRadar />} />
+                    <Route path="/admin/bulk-edit" element={<BulkEdit />} />
+                    <Route path="/admin/data-sync" element={<DataSync />} />
+                    <Route path="/admin/answer-hub" element={<AnswerHub />} />
+                    <Route path="/admin/logs" element={<Logs />} />
+                    <Route path="/admin/escalations" element={<Escalations />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </div>
             </div>
-          </div>
-          <Toaster />
+            <Toaster />
+          </SidebarProvider>
         </Router>
       </DashboardProvider>
     </QueryClientProvider>
