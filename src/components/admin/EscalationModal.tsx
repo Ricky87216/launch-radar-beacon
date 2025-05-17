@@ -248,7 +248,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
                     onChange={(e) =>
                       setFormData({ ...formData, reason: e.target.value })
                     }
-                    placeholder="Explain why this market should count as launched despite being blocked"
+                    placeholder="Explain the rationale for why we should not rollout the product here. Please remember, we aim to rollout globally by default so there should be a high bar for opting out of product launch"
                     className="mt-1"
                     rows={4}
                   />
