@@ -64,9 +64,9 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				heatmap: {
-					green: '#F2FCE2',
-					yellow: '#FEF7CD',
-					red: '#ea384c',
+					green: '#06C167',
+					yellow: '#FFB424',
+					red: '#E11900',
 				}
 			},
 			borderRadius: {

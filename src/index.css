@@ -13,8 +13,8 @@
     --uber-gray-60: #666666;
     --uber-gray-30: #AAAAAA;
     --uber-gray-10: #F6F6F6;
-    --uber-green: #17C17B;
-    --uber-yellow: #FFC043;
+    --uber-green: #06C167;
+    --uber-yellow: #FFB424;
     --uber-red: #E11900;
 
     /* Typography */
@@ -169,7 +169,7 @@
 /* Badge colors */
 .badge-status-green {
   background-color: var(--uber-green);
-  color: black;
+  color: white;
 }
 
 .badge-status-yellow {

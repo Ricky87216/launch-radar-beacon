@@ -14,12 +14,12 @@ const badgeVariants = cva(
         secondary:
           "border-transparent bg-secondary text-secondary-foreground",
         destructive:
-          "border-transparent bg-[var(--uber-red)] text-white",
+          "border-transparent bg-[#E11900] text-white",
         outline: "text-foreground",
         success: 
-          "border-transparent bg-[var(--uber-green)] text-black",
+          "border-transparent bg-[#06C167] text-white",
         warning:
-          "border-transparent bg-[var(--uber-yellow)] text-black",
+          "border-transparent bg-[#FFB424] text-black",
         priority:
           "border-transparent bg-[#276EF1] text-white", // Uber blue for priorities
       },
