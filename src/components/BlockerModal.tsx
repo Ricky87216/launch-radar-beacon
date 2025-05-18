@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useDashboard } from "../context/DashboardContext";
@@ -7,14 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Dialog, 
-  DialogHeader,
-  DialogTitle, 
-  DialogDescription,
-  DialogContent, 
-  DialogFooter 
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { 
   Select, 
   SelectContent, 
@@ -128,144 +120,138 @@ export default function BlockerModal({ open, onClose, blockerId, productId, mark
     setCalendarOpen(false);
   };
   
+  // Prepare the dialog footer component
+  const dialogFooter = (
+    <>
+      <Button variant="outline" onClick={onClose}>
+        Cancel
+      </Button>
+      <Button onClick={handleSubmit} disabled={!canSave}>
+        {isNew ? "Create Blocker" : "Update Blocker"}
+      </Button>
+    </>
+  );
+  
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>
-            {isNew ? "Add New Blocker" : "Edit Blocker"}
-          </DialogTitle>
-          <DialogDescription>
-            {product && market ? (
-              <>
-                {product.name} in {market.name}
-              </>
-            ) : (
-              "Manage blocker details"
-            )}
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => handleChange("category", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="owner">Owner</Label>
-              <Select
-                value={formData.owner}
-                onValueChange={(value) => handleChange("owner", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select owner" />
-                </SelectTrigger>
-                <SelectContent>
-                  {owners.map((owner) => (
-                    <SelectItem key={owner} value={owner}>
-                      {owner}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="eta">Expected Resolution Date</Label>
-              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.eta || "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.eta ? new Date(formData.eta) : undefined}
-                    onSelect={handleEtaSelect}
-                    disabled={(date) => date < new Date()}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="jira_url">Jira Link</Label>
-              <Input
-                id="jira_url"
-                value={formData.jira_url}
-                onChange={(e) => handleChange("jira_url", e.target.value)}
-                placeholder="https://jira.example.com/issue/LAR-123"
-              />
-            </div>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={(open) => !open && onClose()}
+      title={isNew ? "Add New Blocker" : "Edit Blocker"}
+      description={product && market ? `${product.name} in ${market.name}` : "Manage blocker details"}
+      footer={dialogFooter}
+      className="sm:max-w-[600px]"
+    >
+      <div className="grid gap-4 py-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select
+              value={formData.category}
+              onValueChange={(value) => handleChange("category", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="note">Notes</Label>
-            <Textarea
-              id="note"
-              value={formData.note}
-              onChange={(e) => handleChange("note", e.target.value)}
-              rows={4}
-              placeholder="Provide details about this blocker..."
-            />
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="escalated"
-                checked={formData.escalated}
-                onCheckedChange={(checked) => handleChange("escalated", checked)}
-              />
-              <Label htmlFor="escalated">Escalated</Label>
-            </div>
-            
-            {!isNew && (
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="resolved"
-                  checked={formData.resolved}
-                  onCheckedChange={(checked) => handleChange("resolved", checked)}
-                />
-                <Label htmlFor="resolved">Resolved</Label>
-              </div>
-            )}
+            <Label htmlFor="owner">Owner</Label>
+            <Select
+              value={formData.owner}
+              onValueChange={(value) => handleChange("owner", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select owner" />
+              </SelectTrigger>
+              <SelectContent>
+                {owners.map((owner) => (
+                  <SelectItem key={owner} value={owner}>
+                    {owner}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={!canSave}>
-            {isNew ? "Create Blocker" : "Update Blocker"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="eta">Expected Resolution Date</Label>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.eta || "Pick a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.eta ? new Date(formData.eta) : undefined}
+                  onSelect={handleEtaSelect}
+                  disabled={(date) => date < new Date()}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="jira_url">Jira Link</Label>
+            <Input
+              id="jira_url"
+              value={formData.jira_url}
+              onChange={(e) => handleChange("jira_url", e.target.value)}
+              placeholder="https://jira.example.com/issue/LAR-123"
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="note">Notes</Label>
+          <Textarea
+            id="note"
+            value={formData.note}
+            onChange={(e) => handleChange("note", e.target.value)}
+            rows={4}
+            placeholder="Provide details about this blocker..."
+          />
+        </div>
+        
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:space-x-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="escalated"
+              checked={formData.escalated}
+              onCheckedChange={(checked) => handleChange("escalated", checked)}
+            />
+            <Label htmlFor="escalated">Escalated</Label>
+          </div>
+          
+          {!isNew && (
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="resolved"
+                checked={formData.resolved}
+                onCheckedChange={(checked) => handleChange("resolved", checked)}
+              />
+              <Label htmlFor="resolved">Resolved</Label>
+            </div>
+          )}
+        </div>
+      </div>
+    </ResponsiveDialog>
   );
 }
