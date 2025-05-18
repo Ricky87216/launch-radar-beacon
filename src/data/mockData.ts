@@ -57,7 +57,6 @@ export const markets: Market[] = [
   { id: "city-12", name: "Sydney", type: "city", parent_id: "c-10", geo_path: "/APAC/Oceania/Australia/Sydney" }
 ];
 
-// Now let's add additional coverage data for the Latam mega region
 export const products: Product[] = [
   { id: "p-1", name: "Product Alpha", line_of_business: "Mobility", sub_team: "Rider", status: "Active", launch_date: "2023-01-15" },
   { id: "p-2", name: "Product Beta", line_of_business: "Mobility", sub_team: "Earner", status: "Active", launch_date: "2023-02-20" },
@@ -69,7 +68,7 @@ export const products: Product[] = [
   { id: "p-8", name: "Product Theta", line_of_business: "Mobility", sub_team: "Mobility Marketplace", status: "Active", launch_date: "2023-06-18" }
 ];
 
-// Generate random coverage data
+// Generate coverage data for mega regions, regions and countries
 export const coverageData: Coverage[] = [];
 
 // For each product and mega region/region combination
@@ -91,7 +90,27 @@ products.forEach(product => {
   });
 });
 
-// Mock TAM Scope Data - Generate some random TAM data
+// Generate city-level coverage data with binary 0% or 100% values
+markets.filter(m => m.type === "city").forEach(city => {
+  products.forEach(product => {
+    // Randomly assign either 0% or 100% coverage for each city and product
+    const isCovered = Math.random() >= 0.5; // 50% chance of being covered
+    const cityPercentage = isCovered ? 100 : 0;
+    const gbWeighted = isCovered ? 100 : 0;
+    const tamPercentage = isCovered ? 100 : 0;
+    
+    coverageData.push({
+      product_id: product.id,
+      market_id: city.id,
+      city_percentage: cityPercentage,
+      gb_weighted: gbWeighted,
+      tam_percentage: tamPercentage,
+      updated_at: new Date().toISOString()
+    });
+  });
+});
+
+// TAM Scope Data
 export const tamScopeData: TamScope[] = [];
 
 // Add cities to TAM for each product (not all cities, just a selection)
@@ -169,6 +188,32 @@ export const blockers: Blocker[] = [
     stale: false
   }
 ];
+
+// Add some city-level blockers
+products.forEach((product, idx) => {
+  // Only add city-level blockers for some products
+  if (idx % 3 === 0) {
+    // Find some cities to add blockers for
+    const cities = markets.filter(m => m.type === "city");
+    const selectedCity = cities[idx % cities.length];
+    
+    blockers.push({
+      id: `b-city-${idx}`,
+      product_id: product.id,
+      market_id: selectedCity.id,
+      category: "Technical",
+      owner: "City Support Team",
+      eta: "2023-12-30",
+      note: `Technical integration required for ${product.name} in ${selectedCity.name}`,
+      jira_url: `https://jira.example.com/issue/LAR-${1000 + idx}`,
+      escalated: idx % 2 === 0,
+      created_at: "2023-11-01T10:00:00Z",
+      updated_at: "2023-11-10T15:30:00Z",
+      resolved: false,
+      stale: false
+    });
+  }
+});
 
 // Helper function to get all lines of business
 export const getLinesOfBusiness = (): string[] => {

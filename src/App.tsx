@@ -22,6 +22,7 @@ import Logs from "@/pages/admin/Logs";
 import EscalationLog from "@/pages/EscalationLog";
 import ProductMeta from "@/pages/admin/ProductMeta";
 import Analytics from "@/pages/Analytics";
+import Dashboard from "@/components/Dashboard";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -39,7 +40,7 @@ function App() {
                 <GlobalBreadcrumb />
                 <main className="flex-1 overflow-y-auto">
                   <Routes>
-                    <Route path="/" element={<Index />} />
+                    <Route path="/" element={<Dashboard />} />
                     <Route path="/my" element={<MyLaunchRadar />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/admin/bulk-edit" element={<BulkEdit />} />
@@ -49,6 +50,7 @@ function App() {
                     <Route path="/admin/escalations" element={<Escalations />} />
                     <Route path="/admin/product-meta" element={<ProductMeta />} />
                     <Route path="/escalations" element={<EscalationLog />} />
+                    <Route path="/index" element={<Index />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
