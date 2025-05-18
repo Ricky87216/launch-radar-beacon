@@ -1,8 +1,6 @@
 
 import { useState } from "react";
 import { useDashboard } from "../context/DashboardContext";
-import Header from "./Header";
-import Sidebar from "./Sidebar";
 import HeatmapGrid from "./HeatmapGrid";
 import BlockerModal from "./BlockerModal";
 
@@ -27,14 +25,10 @@ export default function Dashboard() {
   };
   
   return (
-    <div className="flex flex-col h-screen">
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-hidden">
-          <HeatmapGrid />
-        </main>
-      </div>
+    <div className="flex flex-col h-full">
+      <main className="flex-1 overflow-hidden">
+        <HeatmapGrid />
+      </main>
       
       {blockerModalOpen && (
         <BlockerModal

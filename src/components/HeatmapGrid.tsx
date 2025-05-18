@@ -1,9 +1,11 @@
+
 import { useMemo, useState, useEffect } from "react";
 import { 
   ChevronRight, 
   AlertTriangle, 
   Info,
-  Flag
+  Flag,
+  ChevronDown
 } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
 import { Market, Product } from "../types";
@@ -17,6 +19,7 @@ import { TamDetailsModal } from "./TamDetailsModal";
 import ProductNameTrigger from "./ProductNameTrigger";
 import EscalationModal from "./admin/EscalationModal";
 import EscalationBadge from "./EscalationBadge";
+import { ScrollArea } from "./ui/scroll-area";
 
 export default function HeatmapGrid() {
   const { 
@@ -143,12 +146,15 @@ export default function HeatmapGrid() {
     if (currentLevel === 'mega_region') {
       setCurrentLevel('region');
       setSelectedParent(market.id);
+      toast.info(`Drilling down to regions in ${market.name}`);
     } else if (currentLevel === 'region') {
       setCurrentLevel('country');
       setSelectedParent(market.id);
+      toast.info(`Drilling down to countries in ${market.name}`);
     } else if (currentLevel === 'country') {
       setCurrentLevel('city');
       setSelectedParent(market.id);
+      toast.info(`Drilling down to cities in ${market.name}`);
     }
   };
   
@@ -158,13 +164,16 @@ export default function HeatmapGrid() {
       setCurrentLevel('country');
       const currentMarket = getMarketById(selectedParent || "");
       setSelectedParent(currentMarket?.parent_id || null);
+      toast.info("Going back to country view");
     } else if (currentLevel === 'country') {
       setCurrentLevel('region');
       const currentMarket = getMarketById(selectedParent || "");
       setSelectedParent(currentMarket?.parent_id || null);
+      toast.info("Going back to region view");
     } else if (currentLevel === 'region') {
       setCurrentLevel('mega_region');
       setSelectedParent(null);
+      toast.info("Going back to mega region view");
     }
   };
   
@@ -211,22 +220,66 @@ export default function HeatmapGrid() {
     );
   }
   
+  // Function to navigate directly to city level
+  const jumpToCityLevel = () => {
+    if (currentLevel === 'mega_region') {
+      // Choose the first mega region
+      const megaRegion = markets[0];
+      // First to region
+      setCurrentLevel('region');
+      setSelectedParent(megaRegion.id);
+      
+      // Get first region
+      setTimeout(() => {
+        const regions = getVisibleMarkets();
+        if (regions.length > 0) {
+          // Then to country
+          setCurrentLevel('country');
+          setSelectedParent(regions[0].id);
+          
+          // Get first country
+          setTimeout(() => {
+            const countries = getVisibleMarkets();
+            if (countries.length > 0) {
+              // Finally to city
+              setCurrentLevel('city');
+              setSelectedParent(countries[0].id);
+            }
+          }, 100);
+        }
+      }, 100);
+    }
+  };
+  
   return (
-    <div className="overflow-auto h-full">
+    <ScrollArea className="h-full">
       <div className="p-4">
         {/* Breadcrumb navigation */}
         <div className="flex items-center mb-4">
           {currentLevel !== 'mega_region' && (
             <Button variant="ghost" onClick={handleDrillUp} className="text-sm text-gray-500">
+              <ChevronDown className="mr-1 h-4 w-4" />
               Back to {currentLevel === 'city' ? 'Countries' : currentLevel === 'country' ? 'Regions' : 'Mega Regions'}
             </Button>
           )}
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 ml-2">
             {currentLevel === 'mega_region' && 'Viewing Mega Regions'}
             {currentLevel === 'region' && `Viewing Regions in ${getMarketById(selectedParent || "")?.name || ""}`}
             {currentLevel === 'country' && `Viewing Countries in ${getMarketById(selectedParent || "")?.name || ""}`}
             {currentLevel === 'city' && `Viewing Cities in ${getMarketById(selectedParent || "")?.name || ""}`}
           </span>
+          
+          {/* Quick navigation buttons */}
+          {currentLevel !== 'city' && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={jumpToCityLevel} 
+              className="ml-4 text-xs"
+            >
+              Jump to City Level
+            </Button>
+          )}
           
           {/* TAM Mode Pill - shown when TAM filter is active */}
           {useTam && (
@@ -239,12 +292,22 @@ export default function HeatmapGrid() {
         </div>
         
         {/* Coverage type indicator */}
-        <div className="text-sm text-gray-500 mb-4">
-          Showing: {
-            coverageType === 'city_percentage' ? 'City Coverage %' : 
-            coverageType === 'gb_weighted' ? 'GB-Weighted Coverage %' : 
-            'TAM Coverage %'
-          }
+        <div className="text-sm text-gray-500 mb-4 flex items-center">
+          <span className="mr-2">
+            Showing: {
+              coverageType === 'city_percentage' ? 'City Coverage %' : 
+              coverageType === 'gb_weighted' ? 'GB-Weighted Coverage %' : 
+              'TAM Coverage %'
+            }
+          </span>
+          
+          {/* Drill-down instructions help */}
+          {currentLevel !== 'city' && (
+            <div className="ml-4 text-xs bg-blue-50 p-1 rounded flex items-center">
+              <Info className="h-3 w-3 mr-1 text-blue-500" />
+              <span>Use <ChevronRight className="inline h-3 w-3" /> to drill down to city-level data</span>
+            </div>
+          )}
         </div>
         
         {/* Heatmap grid */}
@@ -378,14 +441,15 @@ export default function HeatmapGrid() {
                               </TooltipProvider>
                             )}
                             
+                            {/* Drill down button with improved visibility */}
                             {currentLevel !== 'city' && (
                               <Button 
                                 variant="ghost" 
                                 size="icon"
                                 onClick={() => handleDrillDown(market)}
-                                className="h-5 w-5 ml-1"
+                                className="h-5 w-5 ml-1 bg-blue-50 hover:bg-blue-100 rounded-full"
                               >
-                                <ChevronRight className="h-4 w-4" />
+                                <ChevronRight className="h-4 w-4 text-blue-600" />
                               </Button>
                             )}
                           </div>
@@ -444,6 +508,6 @@ export default function HeatmapGrid() {
         marketId={escalationModal.marketId}
         marketType={escalationModal.marketType}
       />
-    </div>
+    </ScrollArea>
   );
 }
