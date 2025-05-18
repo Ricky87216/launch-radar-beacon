@@ -49,7 +49,7 @@ export default function Dashboard() {
         />
       </main>
       
-      {blockerModalOpen && (
+      {blockerModalOpen && selectedProductId && selectedMarketId && (
         <BlockerModal
           open={blockerModalOpen}
           onClose={closeBlockerModal}

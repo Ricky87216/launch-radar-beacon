@@ -208,7 +208,7 @@ export default function HeatmapGrid({ onEscalate, onShowBlocker }: HeatmapGridPr
   
   const openEscalationModal = (productId: string, marketId: string, marketType: 'city' | 'country' | 'region') => {
     // If the parent component has provided an onEscalate handler, use it
-    if (onEscalate && marketType === 'city') {
+    if (onEscalate) {
       onEscalate(productId, marketId);
     } else {
       // Otherwise use the internal state
