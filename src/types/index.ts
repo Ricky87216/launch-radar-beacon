@@ -90,14 +90,24 @@ export interface CellComment {
 // Escalation status type - our updated application type
 export type EscalationStatus = 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
 
-// Database status type - for compatibility with Supabase database
-export type DatabaseEscalationStatus = 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
+// Database status type - the actual statuses in the Supabase database
+export type DatabaseEscalationStatus = 'OPEN' | 'ALIGNED' | 'RESOLVED';
 
 // Map between app status and database status for backward compatibility
 export const mapAppStatusToDatabaseStatus = (status: EscalationStatus): DatabaseEscalationStatus => {
-  // Since we've updated the database to use the same status values as our app,
-  // we can directly return the same status
-  return status;
+  // Map our app statuses to database statuses
+  switch (status) {
+    case 'SUBMITTED':
+      return 'OPEN';
+    case 'IN_DISCUSSION':
+      return 'ALIGNED';
+    case 'RESOLVED_BLOCKED':
+    case 'RESOLVED_LAUNCHING':
+    case 'RESOLVED_LAUNCHED':
+      return 'RESOLVED';
+    default:
+      return 'OPEN';
+  }
 };
 
 // Map between database status and app status
@@ -111,7 +121,7 @@ export const mapDatabaseStatusToAppStatus = (status: string): EscalationStatus =
     return status as EscalationStatus;
   }
   
-  // Handle legacy statuses if any
+  // Handle legacy statuses
   switch (status) {
     case 'OPEN':
       return 'SUBMITTED';
@@ -123,3 +133,4 @@ export const mapDatabaseStatusToAppStatus = (status: string): EscalationStatus =
       return 'SUBMITTED';
   }
 };
+

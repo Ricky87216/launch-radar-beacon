@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { EscalationStatus, mapDatabaseStatusToAppStatus, mapAppStatusToDatabaseStatus } from "@/types";
+import { EscalationStatus, DatabaseEscalationStatus, mapDatabaseStatusToAppStatus, mapAppStatusToDatabaseStatus } from "@/types";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EscalationHistoryItem } from "@/utils/escalationUtils";
@@ -154,12 +154,15 @@ const EscalationDetail: React.FC = () => {
     try {
       setSubmittingComment(true);
       
+      // Get the database status value
+      const dbStatus = mapAppStatusToDatabaseStatus(escalation.status);
+      
       // Add a note with the comment to escalation history
       const { error } = await supabase.from("escalation_history").insert({
         escalation_id: escalation.esc_id,
         user_id: "Current User", // Ideally this would be the current user's ID
-        old_status: mapAppStatusToDatabaseStatus(escalation.status),
-        new_status: mapAppStatusToDatabaseStatus(escalation.status),
+        old_status: dbStatus,
+        new_status: dbStatus,
         notes: comment,
       });
       
@@ -198,12 +201,13 @@ const EscalationDetail: React.FC = () => {
       
       // Convert app status to database status for the update
       const dbStatus = mapAppStatusToDatabaseStatus(newStatus);
+      const currentDbStatus = mapAppStatusToDatabaseStatus(escalation.status);
       
       // Update the escalation status
       const { error } = await supabase
         .from("escalation")
         .update({ 
-          status: dbStatus as any,
+          status: dbStatus,
           ...(newStatus === 'RESOLVED_LAUNCHED' ? { aligned_at: new Date().toISOString() } : {}),
           ...(newStatus.startsWith('RESOLVED_') ? { resolved_at: new Date().toISOString() } : {})
         })
@@ -215,7 +219,7 @@ const EscalationDetail: React.FC = () => {
       await supabase.from("escalation_history").insert({
         escalation_id: escalation.esc_id,
         user_id: "Current User", // Ideally this would be the current user's ID
-        old_status: mapAppStatusToDatabaseStatus(escalation.status),
+        old_status: currentDbStatus,
         new_status: dbStatus,
         notes: statusNote || `Status changed from ${escalation.status} to ${newStatus}`,
       });

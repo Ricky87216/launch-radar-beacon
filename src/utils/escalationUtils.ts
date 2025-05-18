@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { EscalationStatus, mapAppStatusToDatabaseStatus, mapDatabaseStatusToAppStatus } from "@/types";
+import { EscalationStatus, DatabaseEscalationStatus, mapAppStatusToDatabaseStatus, mapDatabaseStatusToAppStatus } from "@/types";
 
 export type MarketType = 'city' | 'country' | 'region';
 
@@ -24,8 +24,8 @@ export interface EscalationHistoryItem {
   id: string;
   escalation_id: string;
   user_id: string;
-  old_status?: string | null;
-  new_status?: string;
+  old_status?: DatabaseEscalationStatus | null;
+  new_status?: DatabaseEscalationStatus;
   notes?: string | null;
   changed_at: string;
 }
