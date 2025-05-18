@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import UberAppInterface from "@/assets/uber-app-interface.jpg";
 
 interface ProductCardModalProps {
   productId: string;
@@ -24,8 +26,8 @@ interface ProductCardModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Default mock screenshot URL - this represents a real Uber app interface
-const DEFAULT_SCREENSHOT = "https://media.wired.com/photos/59fb679f8e9fc3082ad64894/master/w_2560%2Cc_limit/uber-TA.jpg";
+// Using local image file instead of remote URL
+const DEFAULT_SCREENSHOT = UberAppInterface;
 
 const ProductCardModal = ({ 
   productId, 
@@ -96,21 +98,35 @@ const ProductCardModal = ({
   // Get screenshot URL from meta or use the default
   const getScreenshotUrl = () => {
     if (screenshotError) {
-      // If there was an error loading the image, use the stylized mockup instead
       return null;
     }
     return productMeta?.screenshot_url || DEFAULT_SCREENSHOT;
   };
 
-  // Function to render a stylized mockup if no screenshot or on error
-  const renderMockScreenshot = () => {
+  // Function to render the screenshot
+  const renderScreenshot = () => {
+    const screenshotUrl = getScreenshotUrl();
+    
+    if (!screenshotUrl) {
+      // This is now a fallback in case even the local image fails
+      return (
+        <div className="border border-gray-200 rounded-md shadow-md overflow-hidden mb-4 bg-gray-100 flex items-center justify-center h-40">
+          <span className="text-gray-500">Screenshot unavailable</span>
+        </div>
+      );
+    }
+    
+    // Use the local image or metadata image
     return (
       <div className="border border-gray-200 rounded-md shadow-md overflow-hidden mb-4">
         <img 
-          src={DEFAULT_SCREENSHOT}
-          alt="Uber app interface"
-          className="w-full h-auto rounded-md shadow-inner"
-          onError={() => setScreenshotError(true)}
+          src={screenshotUrl} 
+          alt={`${productName} screenshot`}
+          className="w-full h-auto rounded-md shadow-inner" 
+          onError={() => {
+            console.log("Image failed to load, showing fallback");
+            setScreenshotError(true);
+          }}
         />
       </div>
     );
@@ -133,20 +149,7 @@ const ProductCardModal = ({
         ) : (
           <>
             {/* Hero Image */}
-            {getScreenshotUrl() ? (
-              <div className="mb-4">
-                <img 
-                  src={getScreenshotUrl()} 
-                  alt={`${productName} screenshot`}
-                  className="w-full h-auto rounded-md shadow-md" 
-                  onError={(e) => {
-                    setScreenshotError(true);
-                  }}
-                />
-              </div>
-            ) : (
-              renderMockScreenshot()
-            )}
+            {renderScreenshot()}
 
             {/* Basic Info */}
             <div className="mb-4">
