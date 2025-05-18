@@ -17,7 +17,6 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import UberAppInterface from "@/assets/uber-app-interface.jpg";
 
 interface ProductCardModalProps {
   productId: string;
@@ -26,8 +25,8 @@ interface ProductCardModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Using local image file instead of remote URL
-const DEFAULT_SCREENSHOT = UberAppInterface;
+// Using GIF URL instead of local image
+const DEFAULT_SCREENSHOT = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExanFobWZ5OXJ5ZjZ3ODk4Nzhwb2t0eTN0ZnQ2Nzc5bmwwZDBiZXJ5YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/7TkoMPUaLNwwo/giphy.gif";
 
 const ProductCardModal = ({ 
   productId, 
@@ -100,7 +99,8 @@ const ProductCardModal = ({
     if (screenshotError) {
       return null;
     }
-    return productMeta?.screenshot_url || DEFAULT_SCREENSHOT;
+    // Always prioritize the default GIF over any metadata screenshot
+    return DEFAULT_SCREENSHOT;
   };
 
   // Function to render the screenshot
@@ -108,7 +108,7 @@ const ProductCardModal = ({
     const screenshotUrl = getScreenshotUrl();
     
     if (!screenshotUrl) {
-      // This is now a fallback in case even the local image fails
+      // This is now a fallback in case even the GIF fails
       return (
         <div className="border border-gray-200 rounded-md shadow-md overflow-hidden mb-4 bg-gray-100 flex items-center justify-center h-40">
           <span className="text-gray-500">Screenshot unavailable</span>
@@ -116,15 +116,15 @@ const ProductCardModal = ({
       );
     }
     
-    // Use the local image or metadata image
+    // Use the GIF
     return (
       <div className="border border-gray-200 rounded-md shadow-md overflow-hidden mb-4">
         <img 
           src={screenshotUrl} 
-          alt={`${productName} screenshot`}
+          alt={`${productName} animation`}
           className="w-full h-auto rounded-md shadow-inner" 
           onError={() => {
-            console.log("Image failed to load, showing fallback");
+            console.log("GIF failed to load, showing fallback");
             setScreenshotError(true);
           }}
         />
