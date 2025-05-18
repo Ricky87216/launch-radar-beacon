@@ -7,4 +7,8 @@ import './styles/dashboard.css' // Import our dashboard styles
 
 import App from './App.tsx'
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);

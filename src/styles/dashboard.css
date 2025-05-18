@@ -45,3 +45,37 @@
   background-color: #e2e8f0;
   width: 100%;
 }
+
+/* Breadcrumb styling */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  margin-bottom: 16px;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  content: "/";
+  padding: 0 8px;
+  color: #9ca3af;
+}
+
+.breadcrumb-link {
+  color: #4b5563;
+  text-decoration: none;
+}
+
+.breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb-active {
+  color: #111827;
+  font-weight: 500;
+}

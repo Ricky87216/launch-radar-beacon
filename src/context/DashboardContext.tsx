@@ -19,10 +19,21 @@ interface DashboardContextProps {
   getVisibleMarkets: () => MarketDim[];
   getFilteredProducts: () => Product[];
   getCoverageCell: (productId: string, marketId: string) => HeatmapCell | undefined;
+  
+  // Drill level navigation
+  drillLevel: 0 | 1 | 2; // 0 = Region, 1 = Country/State, 2 = City
+  setDrillLevel: (level: 0 | 1 | 2) => void;
+  selectedRegion: string | null;
+  setSelectedRegion: (region: string | null) => void;
+  selectedCountry: string | null;
+  setSelectedCountry: (country: string | null) => void;
+  
+  // Replacing the old navigation
   currentLevel: 'region' | 'country' | 'city';
   setCurrentLevel: (level: 'region' | 'country' | 'city') => void;
   selectedParent: string | null;
   setSelectedParent: (parent: string | null) => void;
+  
   coverageType: 'city_percentage' | 'gb_weighted' | 'tam_percentage';
   setCoverageType: (type: 'city_percentage' | 'gb_weighted' | 'tam_percentage') => void;
   getProductNotes: (productId: string) => string;
@@ -46,6 +57,11 @@ interface DashboardContextProps {
   getProductTamCities: (productId: string) => Market[];
   isUserLocationInTam: (productId: string) => boolean;
   addCellComment: (comment: Omit<CellComment, 'comment_id' | 'created_at'>) => Promise<void>;
+  
+  // Navigation helper methods
+  resetToLevel: (level: 0 | 1 | 2) => void;
+  getColumnsForCurrentLevel: () => string[];
+  handleCellClick: (geoKey: string) => void;
 }
 
 const DashboardContext = createContext<DashboardContextProps | undefined>(undefined);
@@ -65,13 +81,87 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [markets, setMarkets] = useState<MarketDim[]>([]);
   const [coverageFacts, setCoverageFacts] = useState<CoverageFact[]>([]);
   const [loadingState, setLoadingState] = useState<boolean>(true);
+  
+  // New drill-down navigation states
+  const [drillLevel, setDrillLevel] = useState<0 | 1 | 2>(0);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  
+  // Keep old navigation variables for compatibility
   const [currentLevel, setCurrentLevel] = useState<'region' | 'country' | 'city'>('region');
   const [selectedParent, setSelectedParent] = useState<string | null>(null);
+  
   const [coverageType, setCoverageType] = useState<'city_percentage' | 'gb_weighted' | 'tam_percentage'>('city_percentage');
   const [selectedLOBs, setSelectedLOBs] = useState<string[]>([]);
   const [selectedSubTeams, setSelectedSubTeams] = useState<string[]>([]);
   const [hideFullCoverage, setHideFullCoverage] = useState<boolean>(false);
   const [useTam, setUseTam] = useState<boolean>(false);
+
+  // Sync old and new navigation systems
+  useEffect(() => {
+    // Map drillLevel to currentLevel
+    if (drillLevel === 0) setCurrentLevel('region');
+    else if (drillLevel === 1) setCurrentLevel('country');
+    else if (drillLevel === 2) setCurrentLevel('city');
+    
+    // Map selectedRegion/Country to selectedParent
+    if (drillLevel === 1 && selectedRegion) {
+      setSelectedParent(selectedRegion);
+    } else if (drillLevel === 2 && selectedCountry) {
+      setSelectedParent(selectedCountry);
+    } else if (drillLevel === 0) {
+      setSelectedParent(null);
+    }
+  }, [drillLevel, selectedRegion, selectedCountry]);
+
+  // Reset to a specific navigation level
+  const resetToLevel = (level: 0 | 1 | 2) => {
+    setDrillLevel(level);
+    
+    // Clear deeper selectors
+    if (level === 0) {
+      setSelectedRegion(null);
+      setSelectedCountry(null);
+    } else if (level === 1) {
+      setSelectedCountry(null);
+    }
+  };
+  
+  // Get columns for the current drill level
+  const getColumnsForCurrentLevel = (): string[] => {
+    if (drillLevel === 0) {
+      return ['US/CAN', 'EMEA', 'APAC', 'LATAM'];
+    } else if (drillLevel === 1 && selectedRegion) {
+      // Get countries for the selected region
+      const countriesInRegion = Array.from(new Set(
+        markets
+          .filter(m => m.region === selectedRegion && m.country_code)
+          .map(m => m.country_code)
+      ));
+      return countriesInRegion;
+    } else if (drillLevel === 2 && selectedCountry) {
+      // Get top 5 cities for the selected country
+      const citiesInCountry = Array.from(new Set(
+        markets
+          .filter(m => m.country_code === selectedCountry && m.city_id && m.city_name)
+          .map(m => m.city_id)
+      )).slice(0, 5);
+      return citiesInCountry;
+    }
+    return [];
+  };
+  
+  // Handle click on a cell to drill down
+  const handleCellClick = (geoKey: string) => {
+    if (drillLevel === 0) {
+      setSelectedRegion(geoKey);
+      setDrillLevel(1);
+    } else if (drillLevel === 1) {
+      setSelectedCountry(geoKey);
+      setDrillLevel(2);
+    }
+    // No action for level 2 (city level)
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -349,25 +439,26 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   
   const getAllMarkets = () => markets;
 
-  // Return visible markets based on current level and selected parent
+  // Return visible markets based on current drill level
   const getVisibleMarkets = () => {
-    if (currentLevel === 'region') {
+    if (drillLevel === 0) {
       // Get unique regions
       const uniqueRegions = Array.from(new Set(markets.map(m => m.region)));
       return uniqueRegions.map(region => {
         const firstMarketInRegion = markets.find(m => m.region === region);
         return firstMarketInRegion || markets[0]; // Fallback to first market if none found
       });
-    } else if (currentLevel === 'country') {
-      if (!selectedParent) return [];
+    } else if (drillLevel === 1) {
+      if (!selectedRegion) return [];
       // Get countries in the selected region
-      return markets.filter(m => m.region === selectedParent && 
+      return markets.filter(m => m.region === selectedRegion && 
         getMarketDimType(m) !== 'city');
-    } else if (currentLevel === 'city') {
-      if (!selectedParent) return [];
-      // Get cities in the selected country
-      return markets.filter(m => m.country_code === selectedParent &&
-        getMarketDimType(m) === 'city');
+    } else if (drillLevel === 2) {
+      if (!selectedCountry) return [];
+      // Get cities in the selected country (limit to top 5)
+      return markets
+        .filter(m => m.country_code === selectedCountry && getMarketDimType(m) === 'city')
+        .slice(0, 5);
     }
     return [];
   };
@@ -608,10 +699,21 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         getVisibleMarkets,
         getFilteredProducts,
         getCoverageCell,
+        
+        // New drill-down navigation
+        drillLevel,
+        setDrillLevel,
+        selectedRegion,
+        setSelectedRegion,
+        selectedCountry,
+        setSelectedCountry,
+        
+        // Keep old navigation for compatibility
         currentLevel,
         setCurrentLevel,
         selectedParent,
         setSelectedParent,
+        
         coverageType,
         setCoverageType,
         getProductNotes,
@@ -634,7 +736,12 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         getProductTamCountries,
         getProductTamCities,
         isUserLocationInTam,
-        addCellComment
+        addCellComment,
+        
+        // New helper methods
+        resetToLevel,
+        getColumnsForCurrentLevel,
+        handleCellClick
       }}
     >
       {children}
