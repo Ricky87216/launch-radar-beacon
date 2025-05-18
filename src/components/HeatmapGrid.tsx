@@ -1,4 +1,3 @@
-
 import { useMemo, useState, useEffect } from "react";
 import { 
   ChevronRight, 
@@ -15,6 +14,7 @@ import { CellCommentPopover } from "./CellCommentPopover";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { TamDetailsModal } from "./TamDetailsModal";
+import { ProductDetailsCard } from "./ProductDetailsCard";
 
 export default function HeatmapGrid() {
   const { 
@@ -48,6 +48,10 @@ export default function HeatmapGrid() {
   // State for TAM details modal
   const [isTamModalOpen, setIsTamModalOpen] = useState(false);
   const [selectedProductForTam, setSelectedProductForTam] = useState<string | null>(null);
+  
+  // State for Product Details Card
+  const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
+  const [selectedProductForDetails, setSelectedProductForDetails] = useState<string | null>(null);
 
   // Parse URL parameters on component mount and when location changes
   useEffect(() => {
@@ -178,6 +182,16 @@ export default function HeatmapGrid() {
     setIsTamModalOpen(true);
   };
   
+  const handleOpenProductDetails = (productId: string) => {
+    setSelectedProductForDetails(productId);
+    setIsProductDetailsOpen(true);
+  };
+  
+  const handleCloseProductDetails = () => {
+    setIsProductDetailsOpen(false);
+    setSelectedProductForDetails(null);
+  };
+  
   if (markets.length === 0 || products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8">
@@ -245,7 +259,12 @@ export default function HeatmapGrid() {
                   <TableCell className="sticky left-0 bg-white z-10 border-b">
                     <div className="flex items-center justify-between">
                       <div className="mr-2">
-                        <div className="text-sm font-medium">{product.name}</div>
+                        <button 
+                          className="text-sm font-medium hover:text-blue-600 hover:underline text-left"
+                          onClick={() => handleOpenProductDetails(product.id)}
+                        >
+                          {product.name}
+                        </button>
                         <div className="text-xs text-gray-500">{product.line_of_business} - {product.sub_team}</div>
                       </div>
                       <button 
@@ -375,6 +394,15 @@ export default function HeatmapGrid() {
           isOpen={isTamModalOpen}
           onClose={() => setIsTamModalOpen(false)}
           productId={selectedProductForTam}
+        />
+      )}
+      
+      {/* Product Details Card */}
+      {selectedProductForDetails && (
+        <ProductDetailsCard
+          productId={selectedProductForDetails}
+          isOpen={isProductDetailsOpen}
+          onClose={handleCloseProductDetails}
         />
       )}
     </div>

@@ -72,6 +72,38 @@ export type Database = {
         }
         Relationships: []
       }
+      coverage_fact: {
+        Row: {
+          city_id: string
+          id: number
+          product_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          city_id: string
+          id?: number
+          product_id: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          city_id?: string
+          id?: number
+          product_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coverage_fact_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "market_dim"
+            referencedColumns: ["city_id"]
+          },
+        ]
+      }
       escalation: {
         Row: {
           aligned_at: string | null
@@ -84,6 +116,7 @@ export type Database = {
           product_id: string
           raised_by: string
           reason: string
+          reason_type: string | null
           region: string | null
           resolved_at: string | null
           scope_level: Database["public"]["Enums"]["scope_level_enum"]
@@ -100,6 +133,7 @@ export type Database = {
           product_id: string
           raised_by: string
           reason: string
+          reason_type?: string | null
           region?: string | null
           resolved_at?: string | null
           scope_level: Database["public"]["Enums"]["scope_level_enum"]
@@ -116,6 +150,7 @@ export type Database = {
           product_id?: string
           raised_by?: string
           reason?: string
+          reason_type?: string | null
           region?: string | null
           resolved_at?: string | null
           scope_level?: Database["public"]["Enums"]["scope_level_enum"]
@@ -203,6 +238,81 @@ export type Database = {
         }
         Relationships: []
       }
+      market_dim: {
+        Row: {
+          city_id: string
+          city_name: string
+          country_code: string
+          country_name: string
+          created_at: string
+          gb_weight: number
+          id: number
+          region: string
+          updated_at: string
+        }
+        Insert: {
+          city_id: string
+          city_name: string
+          country_code: string
+          country_name: string
+          created_at?: string
+          gb_weight: number
+          id?: number
+          region: string
+          updated_at?: string
+        }
+        Update: {
+          city_id?: string
+          city_name?: string
+          country_code?: string
+          country_name?: string
+          created_at?: string
+          gb_weight?: number
+          id?: number
+          region?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      product_meta: {
+        Row: {
+          company_priority: string | null
+          description: string | null
+          launch_date: string | null
+          newsletter_url: string | null
+          pm_poc: string | null
+          prd_link: string | null
+          prod_ops_poc: string | null
+          product_id: string
+          screenshot_url: string | null
+          xp_plan: string | null
+        }
+        Insert: {
+          company_priority?: string | null
+          description?: string | null
+          launch_date?: string | null
+          newsletter_url?: string | null
+          pm_poc?: string | null
+          prd_link?: string | null
+          prod_ops_poc?: string | null
+          product_id: string
+          screenshot_url?: string | null
+          xp_plan?: string | null
+        }
+        Update: {
+          company_priority?: string | null
+          description?: string | null
+          launch_date?: string | null
+          newsletter_url?: string | null
+          pm_poc?: string | null
+          prd_link?: string | null
+          prod_ops_poc?: string | null
+          product_id?: string
+          screenshot_url?: string | null
+          xp_plan?: string | null
+        }
+        Relationships: []
+      }
       user_pref: {
         Row: {
           countries: string[]
@@ -248,6 +358,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_watchlist: {
+        Row: {
+          created_at: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -260,7 +388,7 @@ export type Database = {
     }
     Enums: {
       escalation_status_enum: "OPEN" | "ALIGNED" | "RESOLVED"
-      scope_level_enum: "CITY" | "COUNTRY" | "REGION"
+      scope_level_enum: "CITY" | "COUNTRY" | "STATE" | "REGION"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -377,7 +505,7 @@ export const Constants = {
   public: {
     Enums: {
       escalation_status_enum: ["OPEN", "ALIGNED", "RESOLVED"],
-      scope_level_enum: ["CITY", "COUNTRY", "REGION"],
+      scope_level_enum: ["CITY", "COUNTRY", "STATE", "REGION"],
     },
   },
 } as const

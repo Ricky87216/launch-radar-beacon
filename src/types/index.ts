@@ -6,6 +6,7 @@ export interface Market {
   type: 'mega_region' | 'region' | 'country' | 'city';
   parent_id: string | null;
   geo_path: string;
+  gb_weight?: number;
 }
 
 // Product dimensions
@@ -16,7 +17,21 @@ export interface Product {
   sub_team: string;
   status: string;
   launch_date: string | null;
-  notes?: string; // Added notes field for product status/blockers/next steps
+  notes?: string;
+}
+
+// Product metadata
+export interface ProductMeta {
+  product_id: string;
+  description?: string;
+  pm_poc?: string;
+  prod_ops_poc?: string;
+  prd_link?: string;
+  launch_date?: Date | null;
+  xp_plan?: string;
+  newsletter_url?: string;
+  company_priority?: string;
+  screenshot_url?: string;
 }
 
 // Coverage fact data
@@ -25,7 +40,7 @@ export interface Coverage {
   market_id: string;
   city_percentage: number;
   gb_weighted: number;
-  tam_percentage?: number; // Added TAM percentage field
+  tam_percentage?: number;
   updated_at: string;
 }
 
@@ -85,4 +100,41 @@ export interface CellComment {
   created_at: string;
   answered_at: string | null;
   tam_escalation?: boolean;
+}
+
+// Database escalation status enum
+export type DatabaseEscalationStatus = 'OPEN' | 'ALIGNED' | 'RESOLVED';
+
+// Function to map app status to database status
+export const mapAppStatusToDatabaseStatus = (status: string): DatabaseEscalationStatus => {
+  switch (status) {
+    case 'Open':
+      return 'OPEN';
+    case 'Aligned':
+      return 'ALIGNED';
+    case 'Resolved':
+      return 'RESOLVED';
+    default:
+      return 'OPEN';
+  }
+};
+
+// Function to map database status to app status
+export const mapDatabaseStatusToAppStatus = (status: DatabaseEscalationStatus): string => {
+  switch (status) {
+    case 'OPEN':
+      return 'Open';
+    case 'ALIGNED':
+      return 'Aligned';
+    case 'RESOLVED':
+      return 'Resolved';
+    default:
+      return 'Open';
+  }
+};
+
+// User watchlist item
+export interface UserWatchlistItem {
+  product_id: string;
+  created_at: string;
 }

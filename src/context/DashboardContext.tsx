@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { 
   Market, 
@@ -8,7 +7,9 @@ import {
   User, 
   HeatmapCell,
   TamScope,
-  CellComment
+  CellComment,
+  ProductMeta,
+  UserWatchlistItem
 } from "../types";
 import { 
   markets, 
@@ -16,7 +17,9 @@ import {
   coverageData, 
   blockers, 
   currentUser,
-  tamScopeData
+  tamScopeData,
+  productMetaData,
+  userWatchlist
 } from "../data/mockData";
 
 interface DashboardContextProps {
@@ -57,6 +60,12 @@ interface DashboardContextProps {
   isUserLocationInTam: (productId: string) => boolean;
   addCellComment: (comment: Omit<CellComment, "comment_id" | "created_at">) => void;
   updateCellComment: (commentId: string, updates: Partial<CellComment>) => void;
+  getProductMeta: (productId: string) => ProductMeta | undefined;
+  updateProductMeta: (productId: string, updates: Partial<ProductMeta>) => void;
+  watchProduct: (productId: string) => void;
+  unwatchProduct: (productId: string) => void;
+  isProductWatched: (productId: string) => boolean;
+  getWatchedProducts: () => Product[];
 }
 
 const DashboardContext = createContext<DashboardContextProps | undefined>(undefined);
@@ -80,6 +89,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   // State for drill-down navigation
   const [currentLevel, setCurrentLevel] = useState<'mega_region' | 'region' | 'country' | 'city'>('mega_region');
   const [selectedParent, setSelectedParent] = useState<string | null>(null);
+  
+  // State for product metadata and user watchlist
+  const [productMetaState, setProductMetaState] = useState<ProductMeta[]>(productMetaData || []);
+  const [userWatchlistState, setUserWatchlistState] = useState<UserWatchlistItem[]>(userWatchlist || []);
   
   // Function to check if a market is in TAM scope for a product
   const isMarketInTam = (productId: string, marketId: string): boolean => {
@@ -332,6 +345,59 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     return marketsData;
   };
   
+  // Function to get product metadata
+  const getProductMeta = (productId: string): ProductMeta | undefined => {
+    return productMetaState.find(meta => meta.product_id === productId);
+  };
+  
+  // Function to update product metadata
+  const updateProductMeta = (productId: string, updates: Partial<ProductMeta>) => {
+    setProductMetaState(prev => {
+      const existingIndex = prev.findIndex(meta => meta.product_id === productId);
+      if (existingIndex >= 0) {
+        // Update existing metadata
+        const newArray = [...prev];
+        newArray[existingIndex] = { ...newArray[existingIndex], ...updates };
+        return newArray;
+      } else {
+        // Create new metadata entry
+        return [...prev, { product_id: productId, ...updates }];
+      }
+    });
+  };
+  
+  // Function to add product to user watchlist
+  const watchProduct = (productId: string) => {
+    if (!isProductWatched(productId)) {
+      setUserWatchlistState(prev => [
+        ...prev,
+        {
+          product_id: productId,
+          created_at: new Date().toISOString()
+        }
+      ]);
+    }
+  };
+  
+  // Function to remove product from user watchlist
+  const unwatchProduct = (productId: string) => {
+    setUserWatchlistState(prev => prev.filter(
+      item => item.product_id !== productId
+    ));
+  };
+  
+  // Function to check if a product is in user watchlist
+  const isProductWatched = (productId: string): boolean => {
+    return userWatchlistState.some(item => item.product_id === productId);
+  };
+  
+  // Function to get all watched products
+  const getWatchedProducts = (): Product[] => {
+    return productsData.filter(product => 
+      userWatchlistState.some(item => item.product_id === product.id)
+    );
+  };
+  
   return (
     <DashboardContext.Provider
       value={{
@@ -371,7 +437,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         getProductTamRegions,
         isUserLocationInTam,
         addCellComment,
-        updateCellComment
+        updateCellComment,
+        getProductMeta,
+        updateProductMeta,
+        watchProduct,
+        unwatchProduct,
+        isProductWatched,
+        getWatchedProducts
       }}
     >
       {children}
