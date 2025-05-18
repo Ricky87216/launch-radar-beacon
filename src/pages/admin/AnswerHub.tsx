@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '@/context/DashboardContext';
@@ -475,7 +476,7 @@ export default function AnswerHub() {
             <SelectContent>
               <SelectItem value="all">All Regions</SelectItem>
               {regions.map(region => (
-                <SelectItem key={region.id} value={region.id}>{region.name}</SelectItem>
+                <SelectItem key={region.city_id} value={region.city_id}>{getMarketDimName(region)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -487,7 +488,7 @@ export default function AnswerHub() {
             <SelectContent>
               <SelectItem value="all">All Countries</SelectItem>
               {countries.map(country => (
-                <SelectItem key={country.id} value={country.id}>{country.name}</SelectItem>
+                <SelectItem key={country.city_id} value={country.city_id}>{getMarketDimName(country)}</SelectItem>
               ))}
             </SelectContent>
           </Select>

@@ -58,10 +58,18 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
     if (isOpen && activeTab === "history") {
       const fetchHistory = async () => {
         // Ensure we're using compatible types for the utils function
-        // Convert 'mega_region' to 'region' for compatibility with escalationUtils
-        const compatibleType = marketType === 'mega_region' ? 'region' : 
-                             (marketType === 'state' ? 'country' : marketType);
-        const historyData = await loadEscalationHistory(productId, marketId, compatibleType as 'region' | 'country' | 'city');
+        // Convert 'mega_region' to 'region' and 'state' to 'country' for compatibility with escalationUtils
+        let compatibleType: 'region' | 'country' | 'city';
+        
+        if (marketType === 'mega_region' || marketType === 'region') {
+          compatibleType = 'region';
+        } else if (marketType === 'state' || marketType === 'country') {
+          compatibleType = 'country';
+        } else {
+          compatibleType = 'city';
+        }
+        
+        const historyData = await loadEscalationHistory(productId, marketId, compatibleType);
         setHistory(historyData);
       };
       fetchHistory();
@@ -69,9 +77,15 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
   }, [isOpen, activeTab, productId, marketId, marketType]);
   
   // Convert marketType for proper form handling
-  // Convert 'mega_region' to 'region' for compatibility with EscalationForm
-  const safeMarketType = (marketType === 'mega_region' ? 'region' :
-                        (marketType === 'state' ? 'country' : marketType)) as 'region' | 'country' | 'city';
+  // Convert 'mega_region' to 'region' and 'state' to 'country' for compatibility with EscalationForm
+  let safeMarketType: 'region' | 'country' | 'city';
+  if (marketType === 'mega_region' || marketType === 'region') {
+    safeMarketType = 'region';
+  } else if (marketType === 'state' || marketType === 'country') {
+    safeMarketType = 'country';
+  } else {
+    safeMarketType = 'city';
+  }
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
