@@ -514,33 +514,37 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     let hasAnyBlocker = false;
     let blockerId: string | undefined = undefined;
     
-    if (getMarketDimType(market) === 'region') {
-      // For regions, aggregate from countries in this region
-      markets.forEach(m => {
-        if (m.region === market.region && getMarketDimType(m) === 'city') {
-          totalMarkets++;
-          const cityCell = getCoverageCell(productId, m.city_id);
-          if (cityCell) {
-            coverage += cityCell.coverage;
-            if (cityCell.hasBlocker) {
-              hasAnyBlocker = true;
-              if (!blockerId) blockerId = cityCell.blockerId;
-            }
-          }
-        }
-      });
-    } else if (getMarketDimType(market) === 'country') {
-      // For countries, aggregate from cities in this country
-      markets.forEach(m => {
-        if (m.country_code === market.country_code && getMarketDimType(m) === 'city') {
-          totalMarkets++;
-          const cityCell = getCoverageCell(productId, m.city_id);
-          if (cityCell) {
-            coverage += cityCell.coverage;
-            if (cityCell.hasBlocker) {
-              hasAnyBlocker = true;
-              if (!blockerId) blockerId = cityCell.blockerId;
-            }
+    // Get all markets that should be included in the calculation
+    const getRelevantMarkets = () => {
+      if (getMarketDimType(market) === 'region') {
+        // For regions, get countries in this region
+        return markets.filter(m => 
+          m.region === market.region && 
+          getMarketDimType(m) === 'city' && 
+          (!useTam || isMarketInTam(m.city_id, productId))
+        );
+      } else if (getMarketDimType(market) === 'country') {
+        // For countries, get cities in this country
+        return markets.filter(m => 
+          m.country_code === market.country_code && 
+          getMarketDimType(m) === 'city' && 
+          (!useTam || isMarketInTam(m.city_id, productId))
+        );
+      }
+      return [];
+    };
+    
+    const relevantMarkets = getRelevantMarkets();
+    
+    if (getMarketDimType(market) === 'region' || getMarketDimType(market) === 'country') {
+      relevantMarkets.forEach(m => {
+        totalMarkets++;
+        const cityCell = getCoverageCell(productId, m.city_id);
+        if (cityCell) {
+          coverage += cityCell.coverage;
+          if (cityCell.hasBlocker) {
+            hasAnyBlocker = true;
+            if (!blockerId) blockerId = cityCell.blockerId;
           }
         }
       });
@@ -549,6 +553,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const seed = (parseInt(productId.replace(/\D/g, '')) + parseInt(marketId.replace(/\D/g, '')) || 1) % 100;
       coverage = Math.min(100, Math.max(0, seed)); // 0-100%
       
+      // Determine if this city-product pair has a blocker
       hasAnyBlocker = blockers.some(b => 
         b.product_id === productId && 
         b.market_id === marketId &&
@@ -558,6 +563,11 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       blockerId = hasAnyBlocker ? 
         blockers.find(b => b.product_id === productId && b.market_id === marketId && !b.resolved)?.id : 
         undefined;
+        
+      // If TAM Only is selected and this city isn't in TAM, return undefined
+      if (useTam && !isMarketInTam(marketId, productId)) {
+        return undefined;
+      }
     }
     
     // Calculate average coverage for aggregated markets
@@ -573,6 +583,18 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       hasBlocker: hasAnyBlocker,
       blockerId
     };
+  };
+  
+  // Helper function to determine if a market is in the TAM for a product
+  const isMarketInTam = (marketId: string, productId: string): boolean => {
+    // Simulate TAM logic - in a real app, this would check against tam_scope table
+    // For now, let's simulate that ~60% of markets are in TAM for each product
+    const hash = (marketId + productId).split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
+    return Math.abs(hash % 100) < 60;
   };
 
   const getProductNotes = (productId: string): string => {
@@ -741,7 +763,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         // New helper methods
         resetToLevel,
         getColumnsForCurrentLevel,
-        handleCellClick
+        handleCellClick,
+        
+        // Add the new helper function to the context
+        isMarketInTam
       }}
     >
       {children}

@@ -1,14 +1,13 @@
-
-// Market dimensions
-export interface Market {
+export interface User {
   id: string;
   name: string;
-  type: 'mega_region' | 'region' | 'country' | 'city';
-  parent_id: string | null;
-  geo_path: string;
+  email: string;
+  region: string;
+  country: string;
+  role: string;
+  canEditStatus: boolean;
 }
 
-// Product dimensions
 export interface Product {
   id: string;
   name: string;
@@ -16,26 +15,38 @@ export interface Product {
   sub_team: string;
   status: string;
   launch_date: string | null;
-  notes?: string; // Added notes field for product status/blockers/next steps
+  notes: string;
 }
 
-// Coverage fact data
-export interface Coverage {
-  product_id: string;
-  market_id: string;
-  city_percentage: number;
-  gb_weighted: number;
-  tam_percentage?: number; // Added TAM percentage field
-  updated_at: string;
+export interface Market {
+  id: string;
+  name: string;
+  type: 'mega_region' | 'region' | 'country' | 'city';
+  parent_id: string | null;
+  geo_path: string;
+  gb_weight: number;
 }
 
-// TAM scope data
-export interface TamScope {
-  product_id: string;
+export interface MarketDim {
+  id: number;
   city_id: string;
+  gb_weight: number;
+  created_at: string;
+  updated_at: string;
+  country_name: string;
+  city_name: string;
+  region: string;
+  country_code: string;
 }
 
-// Blocker data
+export interface CoverageFact {
+  id: number;
+  updated_at: string;
+  status: string;
+  city_id: string;
+  product_id: string;
+}
+
 export interface Blocker {
   id: string;
   product_id: string;
@@ -52,18 +63,19 @@ export interface Blocker {
   stale: boolean;
 }
 
-// User type
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  region: string;
-  country: string;
-  role: 'viewer' | 'editor' | 'admin';
-  canEditStatus: boolean;
+export interface CellComment {
+  comment_id: string;
+  product_id: string;
+  city_id: string;
+  author_id: string;
+  question: string;
+  answer: string;
+  status: string;
+  created_at: string;
+  answered_at: string | null;
+  tam_escalation: boolean;
 }
 
-// Heatmap Cell type
 export interface HeatmapCell {
   productId: string;
   marketId: string;
@@ -73,130 +85,110 @@ export interface HeatmapCell {
   blockerId?: string;
 }
 
-// Cell comment type
-export interface CellComment {
-  comment_id: string;
-  product_id: string;
-  city_id: string;
-  author_id: string;
-  question: string;
-  answer: string | null;
-  status: 'OPEN' | 'ANSWERED';
-  created_at: string;
-  answered_at: string | null;
-  tam_escalation?: boolean;
-}
+export const marketDimToMarket = (marketDim: MarketDim): Market => ({
+  id: marketDim.city_id,
+  name: marketDim.city_name || marketDim.country_name || marketDim.region,
+  type: getMarketDimType(marketDim),
+  parent_id: getMarketDimParentId(marketDim),
+  geo_path: getMarketDimGeoPath(marketDim),
+  gb_weight: marketDim.gb_weight
+});
 
-// Escalation status type - our updated application type
-export type EscalationStatus = 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
-
-// Database status type - for compatibility with Supabase database
-export type DatabaseEscalationStatus = 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
-
-// Map between app status and database status for backward compatibility
-export const mapAppStatusToDatabaseStatus = (status: EscalationStatus): DatabaseEscalationStatus => {
-  // Since we've updated the database to use the same status values as our app,
-  // we can directly return the same status
-  return status;
+export const marketDimsToMarkets = (marketDims: MarketDim[]): Market[] => {
+  return marketDims.map(marketDimToMarket);
 };
 
-// Map between database status and app status
-export const mapDatabaseStatusToAppStatus = (status: string): EscalationStatus => {
-  // Check if the status is already one of our valid EscalationStatus values
-  const validStatuses: EscalationStatus[] = [
-    'SUBMITTED', 'IN_DISCUSSION', 'RESOLVED_BLOCKED', 'RESOLVED_LAUNCHING', 'RESOLVED_LAUNCHED'
-  ];
-  
-  if (validStatuses.includes(status as EscalationStatus)) {
-    return status as EscalationStatus;
-  }
-  
-  // Handle legacy statuses if any
-  switch (status) {
-    case 'OPEN':
-      return 'SUBMITTED';
-    case 'ALIGNED':
-      return 'IN_DISCUSSION';
-    case 'RESOLVED':
-      return 'RESOLVED_LAUNCHED';
-    default:
-      return 'SUBMITTED';
-  }
-};
-
-// Define the allowed market types
-export type MarketType = 'mega_region' | 'region' | 'country' | 'city';
-
-// New type for markets from market_dim table
-export interface MarketDim {
-  id: number;
-  region: string;
-  country_code: string;
-  country_name: string;
-  city_id: string;
-  city_name: string;
-  gb_weight: number;
-  created_at: string;
-  updated_at: string;
-}
-
-// Add compatibility functions for MarketDim
-export const getMarketDimName = (marketDim: MarketDim): string => {
-  return marketDim.country_name || marketDim.city_name || marketDim.region;
-};
-
-export const getMarketDimType = (marketDim: MarketDim): MarketType => {
-  if (marketDim.city_name && !marketDim.city_id.includes('region-')) {
+export const getMarketDimType = (marketDim: MarketDim): Market['type'] => {
+  if (marketDim.city_name) {
     return 'city';
-  } else if (marketDim.country_name && !marketDim.country_code.includes('region-')) {
-    return 'country'; 
-  } else if (marketDim.region && marketDim.region.toLowerCase().includes('mega')) {
-    return 'mega_region';
+  } else if (marketDim.country_code) {
+    return 'country';
+  } else {
+    return 'region';
   }
-  return 'region';
+};
+
+export const getMarketDimName = (marketDim: MarketDim): string => {
+  return marketDim.city_name || marketDim.country_name || marketDim.region;
 };
 
 export const getMarketDimParentId = (marketDim: MarketDim): string | null => {
-  const type = getMarketDimType(marketDim);
-  if (type === 'city') {
-    return marketDim.country_code;
-  } else if (type === 'country') {
-    return `region-${marketDim.region}`;
+  if (marketDim.city_name) {
+    return marketDim.country_code; // Country is parent of city
+  } else if (marketDim.country_code) {
+    return `region-${marketDim.region}`; // Region is parent of country
+  } else {
+    return null; // Mega-region has no parent
   }
-  return null;
 };
 
 export const getMarketDimGeoPath = (marketDim: MarketDim): string => {
-  const type = getMarketDimType(marketDim);
-  if (type === 'city') {
-    return `${marketDim.region}/${marketDim.country_name}/${marketDim.city_name}`;
-  } else if (type === 'country') {
-    return `${marketDim.region}/${marketDim.country_name}`;
+  if (marketDim.city_name) {
+    return `${marketDim.region}/${marketDim.country_code}/${marketDim.city_name}`;
+  } else if (marketDim.country_code) {
+    return `${marketDim.region}/${marketDim.country_code}`;
+  } else {
+    return marketDim.region;
   }
-  return marketDim.region;
 };
 
-// New type for coverage_fact table
-export interface CoverageFact {
-  id: number;
-  product_id: string;
-  city_id: string;
-  status: string;
-  updated_at: string;
+interface DashboardContextProps {
+  user: User;
+  products: Product[];
+  blockers: Blocker[];
+  markets: MarketDim[];
+  getProductById: (id: string) => Product | undefined;
+  getMarketById: (id: string) => MarketDim | undefined;
+  getAllMarkets: () => MarketDim[];
+  
+  // Additional methods needed by components
+  getVisibleMarkets: () => MarketDim[];
+  getFilteredProducts: () => Product[];
+  getCoverageCell: (productId: string, marketId: string) => HeatmapCell | undefined;
+  
+  // Drill level navigation
+  drillLevel: 0 | 1 | 2; // 0 = Region, 1 = Country/State, 2 = City
+  setDrillLevel: (level: 0 | 1 | 2) => void;
+  selectedRegion: string | null;
+  setSelectedRegion: (region: string | null) => void;
+  selectedCountry: string | null;
+  setSelectedCountry: (country: string | null) => void;
+  
+  // Replacing the old navigation
+  currentLevel: 'region' | 'country' | 'city';
+  setCurrentLevel: (level: 'region' | 'country' | 'city') => void;
+  selectedParent: string | null;
+  setSelectedParent: (parent: string | null) => void;
+  
+  coverageType: 'city_percentage' | 'gb_weighted';
+  setCoverageType: (type: 'city_percentage' | 'gb_weighted') => void;
+  getProductNotes: (productId: string) => string;
+  selectedLOBs: string[];
+  setSelectedLOBs: (lobs: string[]) => void;
+  selectedSubTeams: string[];
+  setSelectedSubTeams: (teams: string[]) => void;
+  hideFullCoverage: boolean;
+  setHideFullCoverage: (hide: boolean) => void;
+  useTam: boolean;
+  setUseTam: (useTam: boolean) => void;
+  getMarketsForRegion: (region: string) => MarketDim[];
+  getMarketsForCountry: (countryCode: string) => MarketDim[];
+  getCoverageStatusForCityProduct: (cityId: string, productId: string) => string;
+  loadingState: boolean;
+  getBlockerById: (blockerId: string) => Blocker | undefined;
+  addBlocker: (blocker: Omit<Blocker, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updateBlocker: (blocker: Partial<Blocker> & { id: string }) => Promise<void>;
+  getProductTamRegions: (productId: string) => Market[];
+  getProductTamCountries: (productId: string) => Market[];
+  getProductTamCities: (productId: string) => Market[];
+  isUserLocationInTam: (productId: string) => boolean;
+  addCellComment: (comment: Omit<CellComment, 'comment_id' | 'created_at'>) => Promise<void>;
+  
+  // Navigation helper methods
+  resetToLevel: (level: 0 | 1 | 2) => void;
+  getColumnsForCurrentLevel: () => string[];
+  handleCellClick: (geoKey: string) => void;
+  
+  // Add isMarketInTam to the interface
+  isMarketInTam: (marketId: string, productId: string) => boolean;
 }
-
-// Helper function to convert MarketDim to Market for full compatibility
-export const marketDimToMarket = (marketDim: MarketDim): Market => {
-  return {
-    id: marketDim.city_id,
-    name: getMarketDimName(marketDim),
-    type: getMarketDimType(marketDim),
-    parent_id: getMarketDimParentId(marketDim),
-    geo_path: getMarketDimGeoPath(marketDim)
-  };
-};
-
-// Helper function to convert an array of MarketDim to Market[]
-export const marketDimsToMarkets = (marketDims: MarketDim[]): Market[] => {
-  return marketDims.map(marketDim => marketDimToMarket(marketDim));
-};

@@ -1,4 +1,3 @@
-
 import { useMemo, useState, useEffect } from "react";
 import { 
   ChevronRight, 
@@ -208,6 +207,13 @@ export default function HeatmapGrid() {
     );
   }
   
+  // Update how we display the coverage type text
+  const getCoverageTypeLabel = () => {
+    if (coverageType === 'city_percentage') return 'City Coverage %';
+    if (coverageType === 'gb_weighted') return 'GB-Weighted Coverage %';
+    return '';
+  };
+  
   return (
     <div className="overflow-auto h-full">
       <div className="p-4">
@@ -218,18 +224,14 @@ export default function HeatmapGrid() {
         {useTam && (
           <div className="mb-4">
             <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-              TAM Mode Active
+              TAM Mode Active - Higher % due to smaller market selection
             </span>
           </div>
         )}
         
         {/* Coverage type indicator */}
         <div className="text-sm text-gray-500 mb-4">
-          Showing: {
-            coverageType === 'city_percentage' ? 'City Coverage %' : 
-            coverageType === 'gb_weighted' ? 'GB-Weighted Coverage %' : 
-            'TAM Coverage %'
-          }
+          Showing: {getCoverageTypeLabel()}
         </div>
         
         {/* Heatmap grid */}
