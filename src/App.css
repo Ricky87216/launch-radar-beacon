@@ -89,3 +89,32 @@
 .pointer-events-auto {
   pointer-events: auto !important;
 }
+
+/* Additional mobile optimizations */
+@media screen and (max-width: 640px) {
+  /* Improved scrolling for mobile sheets and modals */
+  .scrollable-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; 
+  }
+  
+  /* Increase form spacing on mobile */
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  /* Better touch targets for form elements */
+  input,
+  select,
+  textarea,
+  .button {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    padding: 0.75rem;
+  }
+  
+  /* Stacked form layouts on mobile */
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}

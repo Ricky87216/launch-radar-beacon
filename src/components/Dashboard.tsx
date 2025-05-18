@@ -4,12 +4,14 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useDashboard } from "../context/DashboardContext";
 import HeatmapGrid from "./HeatmapGrid";
 import BlockerModal from "./BlockerModal";
+import EscalationModal from "./admin/EscalationModal";
 
 export default function Dashboard() {
   const [blockerModalOpen, setBlockerModalOpen] = useState(false);
   const [selectedBlockerId, setSelectedBlockerId] = useState<string | undefined>(undefined);
   const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
   const [selectedMarketId, setSelectedMarketId] = useState<string | undefined>(undefined);
+  const [escalationModalOpen, setEscalationModalOpen] = useState(false);
   const isMobile = useIsMobile();
   
   const openBlockerModal = (productId: string, marketId: string, blockerId?: string) => {
@@ -26,10 +28,22 @@ export default function Dashboard() {
     setSelectedMarketId(undefined);
   };
   
+  const openEscalationModal = (productId: string, marketId: string) => {
+    setSelectedProductId(productId);
+    setSelectedMarketId(marketId);
+    setEscalationModalOpen(true);
+  };
+  
+  const closeEscalationModal = () => {
+    setEscalationModalOpen(false);
+    setSelectedProductId(undefined);
+    setSelectedMarketId(undefined);
+  };
+  
   return (
     <div className={`flex flex-col h-full ${isMobile ? 'pb-16' : ''}`}>
       <main className="flex-1 overflow-hidden">
-        <HeatmapGrid />
+        <HeatmapGrid onEscalate={openEscalationModal} onShowBlocker={openBlockerModal} />
       </main>
       
       {blockerModalOpen && (
@@ -39,6 +53,22 @@ export default function Dashboard() {
           blockerId={selectedBlockerId}
           productId={selectedProductId}
           marketId={selectedMarketId}
+          onEscalate={() => {
+            closeBlockerModal();
+            if (selectedProductId && selectedMarketId) {
+              openEscalationModal(selectedProductId, selectedMarketId);
+            }
+          }}
+        />
+      )}
+      
+      {escalationModalOpen && selectedProductId && selectedMarketId && (
+        <EscalationModal
+          isOpen={escalationModalOpen}
+          onClose={closeEscalationModal}
+          productId={selectedProductId}
+          marketId={selectedMarketId}
+          marketType="city"
         />
       )}
     </div>

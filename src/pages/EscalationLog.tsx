@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   Table, 
   TableBody, 
@@ -26,6 +27,7 @@ import { format } from "date-fns";
 import { EscalationStatus, mapDatabaseStatusToAppStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Select,
   SelectContent,
@@ -52,6 +54,7 @@ const EscalationLog = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { id: selectedEscalationId } = useParams<{ id: string }>();
+  const isMobile = useIsMobile();
   
   const [isLoading, setIsLoading] = useState(true);
   const [historyItems, setHistoryItems] = useState<EscalationHistoryItem[]>([]);
@@ -81,10 +84,11 @@ const EscalationLog = () => {
     try {
       setIsLoading(true);
       
-      // Get the escalation history
+      // Get the escalation history with a LEFT JOIN to get all history items
+      // (previously used INNER JOIN which was filtering out some records)
       const { data: historyData, error } = await supabase
         .from("escalation_history")
-        .select("*, escalation!inner(*)")
+        .select("*, escalation:escalation_id(*)")
         .order("changed_at", { ascending: false });
           
       if (error) throw error;
@@ -111,10 +115,10 @@ const EscalationLog = () => {
       // Calculate statistics
       const total = validStatuses.length;
       const pending = validStatuses.filter(
-        status => ["OPEN", "ALIGNED"].includes(status.status)
+        status => ["OPEN", "ALIGNED"].includes(status?.status)
       ).length;
       const resolved = validStatuses.filter(
-        status => ["RESOLVED"].includes(status.status)
+        status => ["RESOLVED"].includes(status?.status)
       ).length;
       
       setStats({
@@ -126,6 +130,7 @@ const EscalationLog = () => {
       // Enrich the data with product and market names
       const enrichedData = (historyData || []).map((item) => {
         const escalation = item.escalation;
+        if (!escalation) return null;
         
         // Determine market name based on scope level
         let marketName = 'Unknown';
@@ -146,7 +151,7 @@ const EscalationLog = () => {
           market_name: marketName,
           impact_type: escalation.reason_type,
         } as EscalationHistoryItem;
-      });
+      }).filter(Boolean) as EscalationHistoryItem[];
       
       setHistoryItems(enrichedData);
     } catch (error) {
@@ -236,8 +241,66 @@ const EscalationLog = () => {
     return <EscalationDetail />;
   }
 
+  const renderMobileCard = (item: EscalationHistoryItem) => (
+    <Card 
+      key={item.id} 
+      className="mb-3 cursor-pointer hover:shadow-md transition-shadow"
+      onClick={() => handleEscalationClick(item.escalation_id)}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start gap-1">
+          <CardTitle className="text-sm font-medium">
+            {item.product_name} - {item.market_name}
+          </CardTitle>
+          <div>
+            <Badge className={`capitalize text-xs ${getStatusBadgeClass(item.new_status)}`}>
+              {formatStatusLabel(item.new_status)}
+            </Badge>
+          </div>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {format(new Date(item.changed_at), "MMM d, yyyy h:mm a")}
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0 pb-3">
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="flex items-center">
+            {getStatusIcon(item.old_status)}
+            {item.old_status && (
+              <span className="ml-1 text-xs">
+                {formatStatusLabel(item.old_status)}
+              </span>
+            )}
+          </div>
+          <span className="text-[var(--uber-gray-30)]">→</span>
+          <div className="flex items-center">
+            {getStatusIcon(item.new_status)}
+            <span className="ml-1 text-xs">{formatStatusLabel(item.new_status)}</span>
+          </div>
+        </div>
+        {item.notes && (
+          <p className="text-xs truncate" title={item.notes}>
+            {item.notes}
+          </p>
+        )}
+        <div className="mt-2 flex justify-between items-center">
+          <span className="text-xs font-mono text-muted-foreground">
+            {typeof item.user_id === 'string' ? 
+              item.user_id.substring(0, 8) : 
+              'Unknown'}
+          </span>
+          {item.impact_type && (
+            <Badge variant="outline" className="text-xs">
+              {item.impact_type}
+            </Badge>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
       <div>
         <h1 className="text-2xl font-bold mb-2">Escalation Log</h1>
         <p className="text-[var(--uber-gray-60)]">
@@ -318,88 +381,105 @@ const EscalationLog = () => {
         </Button>
       </div>
       
-      <div className="border rounded-lg bg-white">
-        <Table className="table-striped">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="font-semibold">Date & Time</TableHead>
-              <TableHead className="font-semibold">Product</TableHead>
-              <TableHead className="font-semibold">Market</TableHead>
-              <TableHead className="font-semibold">Type</TableHead>
-              <TableHead className="font-semibold">Status Change</TableHead>
-              <TableHead className="font-semibold">User</TableHead>
-              <TableHead className="font-semibold">Notes</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+      {/* Mobile card view or desktop table */}
+      {isMobile ? (
+        <div className="space-y-2">
+          {isLoading ? (
+            <div className="text-center py-10">
+              Loading escalation history...
+            </div>
+          ) : filteredItems.length === 0 ? (
+            <div className="text-center py-10">
+              No escalation history found.
+            </div>
+          ) : (
+            filteredItems.map(renderMobileCard)
+          )}
+        </div>
+      ) : (
+        <div className="border rounded-lg bg-white">
+          <Table className="table-striped">
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10">
-                  Loading escalation history...
-                </TableCell>
+                <TableHead className="font-semibold">Date & Time</TableHead>
+                <TableHead className="font-semibold">Product</TableHead>
+                <TableHead className="font-semibold">Market</TableHead>
+                <TableHead className="font-semibold">Type</TableHead>
+                <TableHead className="font-semibold">Status Change</TableHead>
+                <TableHead className="font-semibold">User</TableHead>
+                <TableHead className="font-semibold">Notes</TableHead>
               </TableRow>
-            ) : filteredItems.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-10">
-                  No escalation history found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredItems.map((item) => (
-                <TableRow 
-                  key={item.id} 
-                  className="cursor-pointer hover:bg-[var(--uber-gray-10)]"
-                  onClick={() => handleEscalationClick(item.escalation_id)}
-                >
-                  <TableCell>{format(new Date(item.changed_at), "MMM d, yyyy h:mm a")}</TableCell>
-                  <TableCell>{item.product_name}</TableCell>
-                  <TableCell>{item.market_name}</TableCell>
-                  <TableCell>
-                    {item.impact_type ? (
-                      <Badge variant="outline" className="text-xs">
-                        {item.impact_type}
-                      </Badge>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <div className="flex items-center">
-                        {getStatusIcon(item.old_status)}
-                        {item.old_status && (
-                          <span className="ml-1 text-xs">
-                            {formatStatusLabel(item.old_status)}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[var(--uber-gray-30)]">→</span>
-                      <div className="flex items-center">
-                        {getStatusIcon(item.new_status)}
-                        <span className="ml-1">
-                          <Badge variant="outline" className={`capitalize text-xs ${getStatusBadgeClass(item.new_status)}`}>
-                            {formatStatusLabel(item.new_status)}
-                          </Badge>
-                        </span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-xs font-mono">
-                      {typeof item.user_id === 'string' ? 
-                        item.user_id.substring(0, 8) : 
-                        'Unknown'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate" title={item.notes || ""}>
-                    {item.notes || "-"}
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-10">
+                    Loading escalation history...
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : filteredItems.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-10">
+                    No escalation history found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredItems.map((item) => (
+                  <TableRow 
+                    key={item.id} 
+                    className="cursor-pointer hover:bg-[var(--uber-gray-10)]"
+                    onClick={() => handleEscalationClick(item.escalation_id)}
+                  >
+                    <TableCell>{format(new Date(item.changed_at), "MMM d, yyyy h:mm a")}</TableCell>
+                    <TableCell>{item.product_name}</TableCell>
+                    <TableCell>{item.market_name}</TableCell>
+                    <TableCell>
+                      {item.impact_type ? (
+                        <Badge variant="outline" className="text-xs">
+                          {item.impact_type}
+                        </Badge>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center">
+                          {getStatusIcon(item.old_status)}
+                          {item.old_status && (
+                            <span className="ml-1 text-xs">
+                              {formatStatusLabel(item.old_status)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[var(--uber-gray-30)]">→</span>
+                        <div className="flex items-center">
+                          {getStatusIcon(item.new_status)}
+                          <span className="ml-1">
+                            <Badge variant="outline" className={`capitalize text-xs ${getStatusBadgeClass(item.new_status)}`}>
+                              {formatStatusLabel(item.new_status)}
+                            </Badge>
+                          </span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs font-mono">
+                        {typeof item.user_id === 'string' ? 
+                          item.user_id.substring(0, 8) : 
+                          'Unknown'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate" title={item.notes || ""}>
+                      {item.notes || "-"}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 };

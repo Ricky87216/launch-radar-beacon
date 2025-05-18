@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { EscalationStatus, DatabaseEscalationStatus, mapAppStatusToDatabaseStatus, mapDatabaseStatusToAppStatus } from "@/types";
 
@@ -83,33 +82,59 @@ export const submitEscalation = async (
   marketType: MarketType, 
   userName: string
 ) => {
-  // Create the escalation record
-  const appStatus: EscalationStatus = "SUBMITTED";
-  const dbStatus = mapAppStatusToDatabaseStatus(appStatus);
-  
-  const insertData = {
-    product_id: productId,
-    scope_level: getScopeLevel(marketType),
-    ...(marketType === 'city' ? { city_id: marketId } : {}),
-    ...(marketType === 'country' ? { country_code: marketId } : {}),
-    ...(marketType === 'region' ? { region: marketId } : {}),
-    raised_by: userName,
-    poc: formData.poc,
-    reason: formData.reason,
-    reason_type: formData.reasonType,
-    business_case_url: formData.businessCaseUrl || null,
-    tech_poc: formData.techPoc || null,
-    tech_sponsor: formData.techSponsor || null,
-    ops_poc: formData.opsPoc || null,
-    ops_sponsor: formData.opsSponsor || null,
-    additional_stakeholders: formData.additionalStakeholders || null,
-    status: dbStatus,
-  };
-  
-  return await supabase
-    .from("escalation")
-    .insert(insertData as any)
-    .select();
+  try {
+    // Create the escalation record
+    const appStatus: EscalationStatus = "SUBMITTED";
+    const dbStatus = mapAppStatusToDatabaseStatus(appStatus);
+    
+    const insertData = {
+      product_id: productId,
+      scope_level: getScopeLevel(marketType),
+      ...(marketType === 'city' ? { city_id: marketId } : {}),
+      ...(marketType === 'country' ? { country_code: marketId } : {}),
+      ...(marketType === 'region' ? { region: marketId } : {}),
+      raised_by: userName,
+      poc: formData.poc,
+      reason: formData.reason,
+      reason_type: formData.reasonType,
+      business_case_url: formData.businessCaseUrl || null,
+      tech_poc: formData.techPoc || null,
+      tech_sponsor: formData.techSponsor || null,
+      ops_poc: formData.opsPoc || null,
+      ops_sponsor: formData.opsSponsor || null,
+      additional_stakeholders: formData.additionalStakeholders || null,
+      status: dbStatus,
+    };
+    
+    // Insert the escalation
+    const { data, error } = await supabase
+      .from("escalation")
+      .insert(insertData as any)
+      .select();
+      
+    if (error) throw error;
+    
+    // Create initial history record (important for showing in the log)
+    if (data && data.length > 0) {
+      const escalationId = data[0].esc_id;
+      
+      // Add initial history record
+      await supabase
+        .from("escalation_history")
+        .insert({
+          escalation_id: escalationId,
+          user_id: userName,
+          old_status: null,
+          new_status: dbStatus,
+          notes: `Escalation created: ${formData.reason.substring(0, 50)}${formData.reason.length > 50 ? '...' : ''}`
+        });
+    }
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error("Error submitting escalation:", error);
+    return { data: null, error };
+  }
 };
 
 export const updateEscalationStatus = async (
