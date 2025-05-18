@@ -106,6 +106,19 @@ const TableCaption = React.forwardRef<
 ))
 TableCaption.displayName = "TableCaption"
 
+// New component specifically for product columns
+const ProductColumn = React.forwardRef<
+  HTMLTableCellElement,
+  React.TdHTMLAttributes<HTMLTableCellElement>
+>(({ className, ...props }, ref) => (
+  <td
+    ref={ref}
+    className={cn("p-4 align-middle product-column", className)}
+    {...props}
+  />
+))
+ProductColumn.displayName = "ProductColumn"
+
 export {
   Table,
   TableHeader,
@@ -115,4 +128,5 @@ export {
   TableRow,
   TableCell,
   TableCaption,
+  ProductColumn,
 }
