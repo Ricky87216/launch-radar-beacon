@@ -58,8 +58,10 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
     if (isOpen && activeTab === "history") {
       const fetchHistory = async () => {
         // Ensure we're using compatible types for the utils function
-        const targetType = marketType === 'state' ? 'country' as MarketType : marketType as MarketType;
-        const historyData = await loadEscalationHistory(productId, marketId, targetType);
+        // Convert 'mega_region' to 'region' for compatibility with escalationUtils
+        const compatibleType = marketType === 'mega_region' ? 'region' : 
+                             (marketType === 'state' ? 'country' : marketType);
+        const historyData = await loadEscalationHistory(productId, marketId, compatibleType as 'region' | 'country' | 'city');
         setHistory(historyData);
       };
       fetchHistory();
@@ -67,7 +69,9 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
   }, [isOpen, activeTab, productId, marketId, marketType]);
   
   // Convert marketType for proper form handling
-  const safeMarketType = (marketType === 'state' ? 'country' : marketType) as MarketType;
+  // Convert 'mega_region' to 'region' for compatibility with EscalationForm
+  const safeMarketType = (marketType === 'mega_region' ? 'region' :
+                        (marketType === 'state' ? 'country' : marketType)) as 'region' | 'country' | 'city';
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

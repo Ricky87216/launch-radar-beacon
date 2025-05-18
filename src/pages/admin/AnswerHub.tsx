@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '@/context/DashboardContext';
@@ -22,6 +21,7 @@ import { toast } from '@/components/ui/sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { getMarketDimName, getMarketDimType, getMarketDimParentId, marketDimToMarket } from '@/types';
 
 type Comment = {
   comment_id: string;
@@ -61,9 +61,13 @@ export default function AnswerHub() {
   // Get unique products, regions, countries
   const products = useDashboard().products;
   const allMarkets = getAllMarkets();
-  const regions = allMarkets.filter(m => m.type === 'region');
-  const countries = allMarkets.filter(m => m.type === 'country' && 
-    (selectedRegion === 'all' || getMarketById(m.parent_id || '')?.id === selectedRegion));
+  const regions = allMarkets.filter(m => getMarketDimType(m) === 'region');
+  const countries = allMarkets.filter(m => {
+    const type = getMarketDimType(m);
+    const parentId = getMarketDimParentId(m);
+    return type === 'country' && 
+      (selectedRegion === 'all' || (parentId && getMarketById(parentId)?.city_id === selectedRegion));
+  });
   
   // Calculate metrics
   const openQuestions = comments.filter(c => c.status === 'OPEN').length;
@@ -126,16 +130,20 @@ export default function AnswerHub() {
       const citiesInRegion = allMarkets
         .filter(m => {
           // Find cities that have a parent country that belongs to the selected region
-          if (m.type === 'city') {
-            const country = getMarketById(m.parent_id || '');
-            if (country) {
-              const region = getMarketById(country.parent_id || '');
-              return region?.id === selectedRegion;
+          if (getMarketDimType(m) === 'city') {
+            const parentId = getMarketDimParentId(m);
+            if (parentId) {
+              const country = getMarketById(parentId);
+              if (country) {
+                const countryParentId = getMarketDimParentId(country);
+                const region = countryParentId ? getMarketById(countryParentId) : null;
+                return region && region.city_id === selectedRegion;
+              }
             }
           }
           return false;
         })
-        .map(m => m.id);
+        .map(m => m.city_id);
       
       filtered = filtered.filter(c => citiesInRegion.includes(c.city_id));
     }
@@ -143,8 +151,8 @@ export default function AnswerHub() {
     // Country filter
     if (selectedCountry !== 'all') {
       const citiesInCountry = allMarkets
-        .filter(m => m.type === 'city' && m.parent_id === selectedCountry)
-        .map(m => m.id);
+        .filter(m => getMarketDimType(m) === 'city' && getMarketDimParentId(m) === selectedCountry)
+        .map(m => m.city_id);
       
       filtered = filtered.filter(c => citiesInCountry.includes(c.city_id));
     }
@@ -367,13 +375,15 @@ export default function AnswerHub() {
     const city = getMarketById(cityId);
     if (!city) return { city: 'Unknown', country: 'Unknown', region: 'Unknown' };
     
-    const country = getMarketById(city.parent_id || '');
-    const region = country ? getMarketById(country.parent_id || '') : null;
+    const parentId = getMarketDimParentId(city);
+    const country = parentId ? getMarketById(parentId) : null;
+    const regionParentId = country ? getMarketDimParentId(country) : null;
+    const region = regionParentId ? getMarketById(regionParentId) : null;
     
     return {
-      city: city.name || 'Unknown',
-      country: country?.name || 'Unknown',
-      region: region?.name || 'Unknown'
+      city: getMarketDimName(city) || 'Unknown',
+      country: country ? getMarketDimName(country) : 'Unknown',
+      region: region ? getMarketDimName(region) : 'Unknown'
     };
   };
 

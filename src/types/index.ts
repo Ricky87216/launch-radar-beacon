@@ -140,7 +140,7 @@ export interface MarketDim {
   updated_at: string;
 }
 
-// Add compatibility methods for MarketDim
+// Add compatibility functions for MarketDim
 export const getMarketDimName = (marketDim: MarketDim): string => {
   return marketDim.country_name || marketDim.city_name || marketDim.region;
 };

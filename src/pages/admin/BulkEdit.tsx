@@ -6,6 +6,7 @@ import BulkEditGrid from "@/components/admin/BulkEditGrid";
 import FilterPanel from "@/components/admin/FilterPanel";
 import BulkActionToolbar from "@/components/admin/BulkActionToolbar";
 import { useDashboard } from "@/context/DashboardContext";
+import { getMarketDimName, getMarketDimType, getMarketDimParentId, marketDimsToMarkets } from "@/types";
 
 const BulkEdit = () => {
   const { toast } = useToast();
@@ -36,11 +37,11 @@ const BulkEdit = () => {
         // Generate more data for demo purposes
         for (const product of products) {
           for (const market of allMarkets) {
-            if (market.type === 'city') {
+            if (getMarketDimType(market) === 'city') {
               // Find the parent market (country)
-              const country = allMarkets.find(m => m.id === market.parent_id);
+              const country = allMarkets.find(m => m.city_id === getMarketDimParentId(market));
               // Find the region (parent of country)
-              const region = country ? allMarkets.find(m => m.id === country.parent_id) : null;
+              const region = country ? allMarkets.find(m => m.city_id === getMarketDimParentId(country)) : null;
               
               // Assign random status, including BLOCKED status
               const randomValue = Math.random();
@@ -56,13 +57,13 @@ const BulkEdit = () => {
               }
               
               mockData.push({
-                id: `${product.id}-${market.id}`,
+                id: `${product.id}-${market.city_id}`,
                 product_id: product.id,
                 product_name: product.name,
-                market_id: market.id,
-                region: region ? region.name : 'Unknown Region',
-                country: country ? country.name : 'Unknown Country',
-                city: market.name,
+                market_id: market.city_id,
+                region: region ? getMarketDimName(region) : 'Unknown Region',
+                country: country ? getMarketDimName(country) : 'Unknown Country',
+                city: getMarketDimName(market),
                 status: status,
                 blocker_category: status === 'BLOCKED' ? 'Technical' : (Math.random() > 0.7 ? 'Technical' : null),
                 owner: status === 'BLOCKED' ? 'Jane Smith' : (Math.random() > 0.7 ? 'Jane Smith' : null),
@@ -169,7 +170,7 @@ const BulkEdit = () => {
     <div className="flex h-[calc(100vh-64px)]">
       <FilterPanel 
         products={products} 
-        markets={getAllMarkets()} 
+        markets={marketDimsToMarkets(getAllMarkets())} 
         onFilterChange={setFilters} 
         currentFilters={filters} 
       />

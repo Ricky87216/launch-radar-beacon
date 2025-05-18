@@ -17,7 +17,8 @@ import {
   EscalationStatus,
   DatabaseEscalationStatus,
   mapDatabaseStatusToAppStatus, 
-  mapAppStatusToDatabaseStatus 
+  mapAppStatusToDatabaseStatus,
+  getMarketDimName
 } from "@/types";
 import {
   Table,
@@ -189,7 +190,7 @@ const EscalationsPage = () => {
       let marketName = 'Unknown';
       if (item.scope_level === 'CITY' && item.city_id) {
         const market = getMarketById(item.city_id);
-        marketName = market?.name || 'Unknown city';
+        marketName = market ? getMarketDimName(market) : 'Unknown city';
       } else if (item.scope_level === 'COUNTRY' && item.country_code) {
         marketName = item.country_code;
       } else if (item.scope_level === 'REGION' && item.region) {
