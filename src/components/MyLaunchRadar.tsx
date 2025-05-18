@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; 
 import PreferencesModal from "./PreferencesModal";
+import { getMarketDimName, getMarketDimParentId, getMarketDimType } from "@/types";
 
 import type { Blocker } from "../types";
 
@@ -112,7 +113,7 @@ export default function MyLaunchRadar() {
       const userMarkets = markets.filter(market => {
         // Convert number IDs to strings for comparison
         const marketId = String(market.city_id);
-        const marketParentId = market.parent_id ? String(market.parent_id) : null;
+        const marketParentId = getMarketDimParentId(market);
         
         // Check if this market's ID is in the selected regions or countries
         if (regions.includes(marketId)) return true;
@@ -170,7 +171,7 @@ export default function MyLaunchRadar() {
         let totalCities = 0;
         
         userMarkets.forEach(market => {
-          if (market.type === 'city') {
+          if (getMarketDimType(market) === 'city') {
             totalCities++;
             
             // Check if there's a blocker for this product in this city
@@ -221,7 +222,7 @@ export default function MyLaunchRadar() {
 
   const getMarketName = (id: string) => {
     const market = getMarketById(id);
-    return market ? market.name : id;
+    return market ? getMarketDimName(market) : id;
   };
 
   if (loading) {

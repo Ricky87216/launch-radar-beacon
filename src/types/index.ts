@@ -150,6 +150,8 @@ export const getMarketDimType = (marketDim: MarketDim): MarketType => {
     return 'city';
   } else if (marketDim.country_name && !marketDim.country_code.includes('region-')) {
     return 'country'; 
+  } else if (marketDim.region && marketDim.region.toLowerCase().includes('mega')) {
+    return 'mega_region';
   }
   return 'region';
 };

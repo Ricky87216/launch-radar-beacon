@@ -1,9 +1,10 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../integrations/supabase/client";
 import { 
   Market, Product, Blocker, User, MarketDim, CoverageFact, 
   CellComment, HeatmapCell, marketDimsToMarkets, marketDimToMarket, 
-  getMarketDimName, getMarketDimType, getMarketDimParentId 
+  getMarketDimName, getMarketDimType, getMarketDimParentId, getMarketDimGeoPath
 } from "../types";
 
 interface DashboardContextProps {
@@ -95,31 +96,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const fetchProducts = async () => {
       try {
-        // Use a type assertion for now since the products table might not exist in the Supabase schema
-        const { data, error } = await supabase.from('products').select('*') as unknown as { 
-          data: Product[] | null; 
-          error: any;
-        };
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          setProducts(data as Product[]);
-        } else {
-          // Generate mock products if none exist
-          const mockProducts: Product[] = Array.from({ length: 30 }, (_, i) => ({
-            id: `prod_${String(i + 1).padStart(3, '0')}`,
-            name: `Product ${i + 1}`,
-            line_of_business: ['Mobility', 'Restaurant', 'Grocery'][i % 3],
-            sub_team: ['Core', 'Growth', 'Infrastructure'][Math.floor(i / 10)],
-            status: ['Launched', 'In Development', 'Planned'][i % 3],
-            launch_date: i % 3 === 0 ? new Date().toISOString() : null
-          }));
-          setProducts(mockProducts);
-        }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        // Fallback to mock data
+        // Generate mock products since the products table doesn't exist in Supabase
         const mockProducts: Product[] = Array.from({ length: 30 }, (_, i) => ({
           id: `prod_${String(i + 1).padStart(3, '0')}`,
           name: `Product ${i + 1}`,
@@ -129,21 +106,34 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           launch_date: i % 3 === 0 ? new Date().toISOString() : null
         }));
         setProducts(mockProducts);
+      } catch (error) {
+        console.error("Error creating mock products:", error);
+        // Fallback to empty products array
+        setProducts([]);
       }
     };
 
     const fetchBlockers = async () => {
       try {
-        // Type assertion since blockers table might not be in schema
-        const { data, error } = await supabase.from('blockers').select('*') as unknown as {
-          data: Blocker[] | null;
-          error: any;
-        };
-        
-        if (error) throw error;
-        setBlockers(data || []);
+        // Generate mock blockers since the blockers table doesn't exist in Supabase
+        const mockBlockers: Blocker[] = Array.from({ length: 15 }, (_, i) => ({
+          id: `blocker_${String(i + 1).padStart(3, '0')}`,
+          product_id: `prod_${String((i % 10) + 1).padStart(3, '0')}`,
+          market_id: `market_${String((i % 5) + 1).padStart(3, '0')}`,
+          category: ['Technical', 'Legal', 'Business', 'Resource'][i % 4],
+          owner: ['John Doe', 'Jane Smith', 'Bob Jones'][i % 3],
+          eta: new Date(Date.now() + (i * 86400000)).toISOString(), // i days from now
+          note: `Blocker note ${i + 1}`,
+          jira_url: i % 2 === 0 ? `https://jira.example.com/ticket-${i+1}` : null,
+          escalated: i % 3 === 0,
+          created_at: new Date(Date.now() - (i * 86400000)).toISOString(), // i days ago
+          updated_at: new Date().toISOString(),
+          resolved: i % 4 === 0,
+          stale: i % 5 === 0
+        }));
+        setBlockers(mockBlockers);
       } catch (error) {
-        console.error("Error fetching blockers:", error);
+        console.error("Error creating mock blockers:", error);
         setBlockers([]);
       }
     };
@@ -284,31 +274,16 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addBlocker = async (blocker: Omit<Blocker, 'id' | 'created_at' | 'updated_at'>): Promise<void> => {
     try {
-      // Type assertion since blockers table might not be in schema
-      const { data, error } = await supabase
-        .from('blockers')
-        .insert({
-          product_id: blocker.product_id,
-          market_id: blocker.market_id,
-          category: blocker.category,
-          owner: blocker.owner,
-          eta: blocker.eta,
-          note: blocker.note,
-          jira_url: blocker.jira_url,
-          escalated: blocker.escalated,
-          resolved: blocker.resolved,
-          stale: blocker.stale
-        })
-        .select() as unknown as {
-          data: Blocker[] | null;
-          error: any;
-        };
+      // Since the 'blockers' table doesn't exist in Supabase, we'll simulate adding a blocker
+      const newBlocker: Blocker = {
+        ...blocker,
+        id: `blocker_${Date.now()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
       
-      if (error) throw error;
-      
-      if (data) {
-        setBlockers([...blockers, data[0]]);
-      }
+      setBlockers([...blockers, newBlocker]);
+      console.log("Added new blocker:", newBlocker);
     } catch (error) {
       console.error("Error adding blocker:", error);
       throw error;
@@ -317,18 +292,13 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateBlocker = async (blocker: Partial<Blocker> & { id: string }): Promise<void> => {
     try {
-      // Type assertion since blockers table might not be in schema
-      const { error } = await supabase
-        .from('blockers')
-        .update(blocker)
-        .eq('id', blocker.id) as unknown as {
-          error: any;
-        };
+      // Since the 'blockers' table doesn't exist in Supabase, we'll simulate updating a blocker
+      const updatedBlockers = blockers.map(b => 
+        b.id === blocker.id ? { ...b, ...blocker, updated_at: new Date().toISOString() } : b
+      );
       
-      if (error) throw error;
-      
-      // Update the blocker in the local state
-      setBlockers(blockers.map(b => b.id === blocker.id ? { ...b, ...blocker } : b));
+      setBlockers(updatedBlockers);
+      console.log("Updated blocker:", blocker.id);
     } catch (error) {
       console.error("Error updating blocker:", error);
       throw error;

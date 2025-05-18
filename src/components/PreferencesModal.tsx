@@ -23,7 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
-import { getMarketDimType, getMarketDimName } from "../types";
+import { getMarketDimName, getMarketDimType } from "../types";
 
 interface PreferencesModalProps {
   open: boolean;
