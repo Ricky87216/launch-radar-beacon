@@ -67,16 +67,19 @@ const EscalationForm: React.FC<EscalationFormProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Extract the core escalation data
-      const coreEscalationData: EscalationFormData = {
-        poc: formData.poc,
-        reason: formData.reason,
-        businessCaseUrl: formData.businessCaseUrl,
-        reasonType: formData.reasonType
-      };
-      
+      // Extract the core escalation data plus extended fields for stakeholder info
       const { data, error } = await submitEscalation(
-        coreEscalationData,
+        {
+          poc: formData.poc,
+          reason: formData.reason,
+          businessCaseUrl: formData.businessCaseUrl,
+          reasonType: formData.reasonType,
+          techPoc: formData.techPoc,
+          techSponsor: formData.techSponsor,
+          opsPoc: formData.opsPoc,
+          opsSponsor: formData.opsSponsor,
+          additionalStakeholders: formData.additionalStakeholders
+        },
         productId,
         marketId,
         marketType,
@@ -86,9 +89,6 @@ const EscalationForm: React.FC<EscalationFormProps> = ({
       if (error) {
         throw error;
       }
-      
-      // Store extended POC information in additional storage if needed
-      // This would be implemented later with a separate table for stakeholders
       
       toast({
         title: "Escalation submitted",
@@ -101,9 +101,10 @@ const EscalationForm: React.FC<EscalationFormProps> = ({
         market?.name || "Unknown market"
       );
       
-      // Redirect to escalation log
+      // Close modal and redirect directly to escalation log
       onClose();
       navigate("/escalations");
+      
     } catch (error) {
       console.error("Error submitting escalation:", error);
       toast({

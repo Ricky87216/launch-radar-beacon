@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,7 +84,6 @@ const EscalationLog = () => {
       setIsLoading(true);
       
       // Get the escalation history with a LEFT JOIN to get all history items
-      // (previously used INNER JOIN which was filtering out some records)
       const { data: historyData, error } = await supabase
         .from("escalation_history")
         .select("*, escalation:escalation_id(*)")

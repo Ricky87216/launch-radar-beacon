@@ -59,6 +59,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
     // Automatically close after 3 seconds
     setTimeout(() => {
       onClose();
+      // Redirect to escalation log
       navigate("/escalations");
     }, 3000);
   };
