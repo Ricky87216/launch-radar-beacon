@@ -11,6 +11,7 @@ export default function Dashboard() {
   const [selectedBlockerId, setSelectedBlockerId] = useState<string | undefined>(undefined);
   const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
   const [selectedMarketId, setSelectedMarketId] = useState<string | undefined>(undefined);
+  const { loadingState } = useDashboard();
   
   const openBlockerModal = (productId: string, marketId: string, blockerId?: string) => {
     setSelectedProductId(productId);

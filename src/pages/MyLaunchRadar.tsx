@@ -1,13 +1,13 @@
 
 import { DashboardProvider } from "../context/DashboardContext";
-import Dashboard from "../components/Dashboard";
+import MyLaunchRadarContent from "../components/MyLaunchRadar";
 
-const MyCoveragePage = () => {
+const MyLaunchRadarPage = () => {
   return (
     <DashboardProvider>
-      <Dashboard />
+      <MyLaunchRadarContent />
     </DashboardProvider>
   );
 };
 
-export default MyCoveragePage;
+export default MyLaunchRadarPage;

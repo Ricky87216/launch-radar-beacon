@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../integrations/supabase/client";
 import { 
@@ -94,46 +93,197 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     };
 
-    const fetchProducts = async () => {
+    const fetchMockData = async () => {
       try {
-        // Generate mock products since the products table doesn't exist in Supabase
+        // Generate mock markets since the market_dim table is empty
+        const mockMarkets: MarketDim[] = [
+          {
+            city_id: "region-EMEA",
+            id: 1,
+            gb_weight: 1.0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            country_name: "",
+            city_name: "",
+            region: "EMEA",
+            country_code: ""
+          },
+          {
+            city_id: "region-APAC",
+            id: 2,
+            gb_weight: 1.0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            country_name: "",
+            city_name: "",
+            region: "APAC",
+            country_code: ""
+          },
+          {
+            city_id: "region-LATAM",
+            id: 3,
+            gb_weight: 1.0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            country_name: "",
+            city_name: "",
+            region: "LATAM",
+            country_code: ""
+          },
+          {
+            city_id: "region-NA",
+            id: 4,
+            gb_weight: 1.0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            country_name: "",
+            city_name: "",
+            region: "NA",
+            country_code: ""
+          },
+          // Countries
+          {
+            city_id: "country-DE",
+            id: 5,
+            gb_weight: 0.8,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            country_name: "Germany",
+            city_name: "",
+            region: "EMEA",
+            country_code: "DE"
+          },
+          {
+            city_id: "country-FR",
+            id: 6,
+            gb_weight: 0.7,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            country_name: "France",
+            city_name: "",
+            region: "EMEA",
+            country_code: "FR"
+          },
+          {
+            city_id: "country-JP",
+            id: 7,
+            gb_weight: 0.9,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            country_name: "Japan",
+            city_name: "",
+            region: "APAC",
+            country_code: "JP"
+          },
+          // Cities
+          {
+            city_id: "city-berlin",
+            id: 8,
+            gb_weight: 0.5,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            country_name: "Germany",
+            city_name: "Berlin",
+            region: "EMEA",
+            country_code: "DE"
+          },
+          {
+            city_id: "city-munich",
+            id: 9,
+            gb_weight: 0.4,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            country_name: "Germany",
+            city_name: "Munich",
+            region: "EMEA",
+            country_code: "DE"
+          },
+          {
+            city_id: "city-paris",
+            id: 10,
+            gb_weight: 0.6,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            country_name: "France",
+            city_name: "Paris",
+            region: "EMEA",
+            country_code: "FR"
+          },
+          {
+            city_id: "city-tokyo",
+            id: 11,
+            gb_weight: 0.8,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            country_name: "Japan",
+            city_name: "Tokyo",
+            region: "APAC",
+            country_code: "JP"
+          }
+        ];
+        
+        setMarkets(mockMarkets);
+
+        // Generate mock coverage facts
+        const mockCoverageFacts: CoverageFact[] = [];
+        mockMarkets.forEach(market => {
+          if (market.city_id.startsWith('city-')) {
+            for (let i = 1; i <= 10; i++) {
+              mockCoverageFacts.push({
+                id: mockCoverageFacts.length + 1,
+                updated_at: new Date().toISOString(),
+                status: Math.random() > 0.3 ? 'LIVE' : 'NOT_LIVE', // 70% chance of being LIVE
+                city_id: market.city_id,
+                product_id: `prod_${String(i).padStart(3, '0')}`
+              });
+            }
+          }
+        });
+        
+        setCoverageFacts(mockCoverageFacts);
+
+        // Generate mock products
         const mockProducts: Product[] = Array.from({ length: 30 }, (_, i) => ({
           id: `prod_${String(i + 1).padStart(3, '0')}`,
           name: `Product ${i + 1}`,
           line_of_business: ['Mobility', 'Restaurant', 'Grocery'][i % 3],
           sub_team: ['Core', 'Growth', 'Infrastructure'][Math.floor(i / 10)],
           status: ['Launched', 'In Development', 'Planned'][i % 3],
-          launch_date: i % 3 === 0 ? new Date().toISOString() : null
+          launch_date: i % 3 === 0 ? new Date().toISOString() : null,
+          notes: i % 5 === 0 ? `Notes for product ${i + 1}` : ''
         }));
         setProducts(mockProducts);
-      } catch (error) {
-        console.error("Error creating mock products:", error);
-        // Fallback to empty products array
-        setProducts([]);
-      }
-    };
 
-    const fetchBlockers = async () => {
-      try {
-        // Generate mock blockers since the blockers table doesn't exist in Supabase
-        const mockBlockers: Blocker[] = Array.from({ length: 15 }, (_, i) => ({
-          id: `blocker_${String(i + 1).padStart(3, '0')}`,
-          product_id: `prod_${String((i % 10) + 1).padStart(3, '0')}`,
-          market_id: `market_${String((i % 5) + 1).padStart(3, '0')}`,
-          category: ['Technical', 'Legal', 'Business', 'Resource'][i % 4],
-          owner: ['John Doe', 'Jane Smith', 'Bob Jones'][i % 3],
-          eta: new Date(Date.now() + (i * 86400000)).toISOString(), // i days from now
-          note: `Blocker note ${i + 1}`,
-          jira_url: i % 2 === 0 ? `https://jira.example.com/ticket-${i+1}` : null,
-          escalated: i % 3 === 0,
-          created_at: new Date(Date.now() - (i * 86400000)).toISOString(), // i days ago
-          updated_at: new Date().toISOString(),
-          resolved: i % 4 === 0,
-          stale: i % 5 === 0
-        }));
+        // Generate mock blockers
+        const mockBlockers: Blocker[] = [];
+        for (let i = 0; i < 25; i++) {
+          const productIndex = i % 10;
+          const marketIndex = i % mockMarkets.length;
+          
+          mockBlockers.push({
+            id: `blocker_${String(i + 1).padStart(3, '0')}`,
+            product_id: `prod_${String(productIndex + 1).padStart(3, '0')}`,
+            market_id: mockMarkets[marketIndex].city_id,
+            category: ['Technical', 'Legal', 'Business', 'Resource'][i % 4],
+            owner: ['John Doe', 'Jane Smith', 'Bob Jones'][i % 3],
+            eta: new Date(Date.now() + (i * 86400000)).toISOString(), // i days from now
+            note: `Blocker note ${i + 1}: ${['API integration issue', 'Regulatory approval pending', 'Resource allocation', 'Contract negotiation'][i % 4]}`,
+            jira_url: i % 2 === 0 ? `https://jira.example.com/ticket-${i+1}` : null,
+            escalated: i % 3 === 0,
+            created_at: new Date(Date.now() - (i * 86400000)).toISOString(), // i days ago
+            updated_at: new Date().toISOString(),
+            resolved: i % 4 === 0,
+            stale: i % 5 === 0
+          });
+        }
+        
         setBlockers(mockBlockers);
       } catch (error) {
-        console.error("Error creating mock blockers:", error);
+        console.error("Error generating mock data:", error);
+        // Set default empty arrays if mock generation fails
+        setMarkets([]);
+        setCoverageFacts([]);
+        setProducts([]);
         setBlockers([]);
       }
     };
@@ -142,10 +292,15 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       try {
         const { data, error } = await supabase.from('market_dim').select('*');
         if (error) throw error;
-        setMarkets(data || []);
+        
+        if (data && data.length > 0) {
+          setMarkets(data);
+        } else {
+          console.log("No markets found in database, using mock data");
+          // Will use mock data
+        }
       } catch (error) {
         console.error("Error fetching markets:", error);
-        setMarkets([]);
       }
     };
 
@@ -153,10 +308,15 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       try {
         const { data, error } = await supabase.from('coverage_fact').select('*');
         if (error) throw error;
-        setCoverageFacts(data || []);
+        
+        if (data && data.length > 0) {
+          setCoverageFacts(data);
+        } else {
+          console.log("No coverage facts found in database, using mock data");
+          // Will use mock data
+        }
       } catch (error) {
         console.error("Error fetching coverage facts:", error);
-        setCoverageFacts([]);
       }
     };
 
@@ -164,11 +324,15 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setLoadingState(true);
       await Promise.all([
         fetchUser(),
-        fetchProducts(),
-        fetchBlockers(),
         fetchMarkets(),
         fetchCoverageFacts()
       ]);
+      
+      // If no real data was loaded, use mock data
+      if (markets.length === 0 || coverageFacts.length === 0) {
+        await fetchMockData();
+      }
+      
       setLoadingState(false);
     };
 
@@ -223,29 +387,99 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return filtered;
   };
 
-  // Get coverage cell data
+  // Get coverage cell data - updating to provide realistic data
   const getCoverageCell = (productId: string, marketId: string): HeatmapCell | undefined => {
     const market = getMarketById(marketId);
     if (!market) return undefined;
     
-    // For this example, we'll generate synthetic coverage data
-    const coverage = Math.floor(Math.random() * 100); // 0-100%
-    const hasBlocker = blockers.some(b => 
-      b.product_id === productId && 
-      b.market_id === marketId &&
-      !b.resolved
-    );
+    // First check if we have real coverage data
+    if (coverageFacts.length > 0) {
+      const fact = coverageFacts.find(cf => cf.product_id === productId && cf.city_id === marketId);
+      if (fact) {
+        const hasBlocker = blockers.some(b => 
+          b.product_id === productId && 
+          b.market_id === marketId &&
+          !b.resolved
+        );
+        
+        const blockerId = hasBlocker ? 
+          blockers.find(b => b.product_id === productId && b.market_id === marketId && !b.resolved)?.id : 
+          undefined;
+        
+        return {
+          productId,
+          marketId,
+          coverage: fact.status === 'LIVE' ? 100 : 0,
+          status: fact.status,
+          hasBlocker,
+          blockerId
+        };
+      }
+    }
     
-    const blockerId = hasBlocker ? 
-      blockers.find(b => b.product_id === productId && b.market_id === marketId && !b.resolved)?.id : 
-      undefined;
+    // For regions and countries, aggregate coverage from child markets
+    let coverage = 0;
+    let totalMarkets = 0;
+    let hasAnyBlocker = false;
+    let blockerId: string | undefined = undefined;
+    
+    if (getMarketDimType(market) === 'region') {
+      // For regions, aggregate from countries in this region
+      markets.forEach(m => {
+        if (m.region === market.region && getMarketDimType(m) === 'city') {
+          totalMarkets++;
+          const cityCell = getCoverageCell(productId, m.city_id);
+          if (cityCell) {
+            coverage += cityCell.coverage;
+            if (cityCell.hasBlocker) {
+              hasAnyBlocker = true;
+              if (!blockerId) blockerId = cityCell.blockerId;
+            }
+          }
+        }
+      });
+    } else if (getMarketDimType(market) === 'country') {
+      // For countries, aggregate from cities in this country
+      markets.forEach(m => {
+        if (m.country_code === market.country_code && getMarketDimType(m) === 'city') {
+          totalMarkets++;
+          const cityCell = getCoverageCell(productId, m.city_id);
+          if (cityCell) {
+            coverage += cityCell.coverage;
+            if (cityCell.hasBlocker) {
+              hasAnyBlocker = true;
+              if (!blockerId) blockerId = cityCell.blockerId;
+            }
+          }
+        }
+      });
+    } else {
+      // For cities, generate a synthetic coverage value if we don't have real data
+      const seed = (parseInt(productId.replace(/\D/g, '')) + parseInt(marketId.replace(/\D/g, '')) || 1) % 100;
+      coverage = Math.min(100, Math.max(0, seed)); // 0-100%
+      
+      hasAnyBlocker = blockers.some(b => 
+        b.product_id === productId && 
+        b.market_id === marketId &&
+        !b.resolved
+      );
+      
+      blockerId = hasAnyBlocker ? 
+        blockers.find(b => b.product_id === productId && b.market_id === marketId && !b.resolved)?.id : 
+        undefined;
+    }
+    
+    // Calculate average coverage for aggregated markets
+    if (totalMarkets > 0) {
+      coverage = coverage / totalMarkets;
+    }
     
     return {
       productId,
       marketId,
       coverage,
       status: coverage >= 90 ? 'LIVE' : 'NOT_LIVE',
-      hasBlocker,
+      hasBlocker: hasAnyBlocker,
       blockerId
     };
   };

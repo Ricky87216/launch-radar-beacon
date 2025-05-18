@@ -57,6 +57,7 @@ export default function HeatmapGrid() {
     loadingState
   } = useDashboard();
   
+  // Use memo to prevent unnecessary recalculations
   const markets = useMemo(() => getVisibleMarkets(), [getVisibleMarkets, selectedParent, currentLevel]);
   const products = useMemo(() => getFilteredProducts(), [getFilteredProducts]);
   
@@ -108,7 +109,7 @@ export default function HeatmapGrid() {
     productId: ''
   });
 
-  // Parse URL parameters on component mount and when location changes
+  // Parse URL parameters on component mount
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const focusComment = searchParams.get('focusComment');
@@ -129,6 +130,9 @@ export default function HeatmapGrid() {
     
     // If we have a focused comment and market/product, but they're not visible with current filters
     if (focusComment && product && market) {
+      // Temporarily log to check
+      console.log("Focusing on comment:", { focusComment, product, market });
+      
       // Check if product and market are in the current visible set
       const isProductVisible = products.some(p => p.id === product);
       const isMarketVisible = markets.some(m => m.city_id === market);
@@ -228,6 +232,15 @@ export default function HeatmapGrid() {
       productId
     });
   };
+  
+  // Logging to debug
+  useEffect(() => {
+    console.log("HeatmapGrid render state:", {
+      markets: markets.length,
+      products: products.length,
+      loadingState
+    });
+  }, [markets.length, products.length, loadingState]);
   
   if (loadingState) {
     return (
@@ -551,13 +564,7 @@ export default function HeatmapGrid() {
                           <Progress
                             value={cell ? cell.coverage : 0}
                             className="h-2"
-                          >
-                            <div className={
-                              cell && cell.coverage >= 95 ? "bg-green-500 h-full w-full" :
-                              cell && cell.coverage >= 70 ? "bg-yellow-500 h-full w-full" :
-                              "bg-red-500 h-full w-full"
-                            } style={{width: `${cell ? cell.coverage : 0}%`}}></div>
-                          </Progress>
+                          />
                         </div>
                         <ChevronRight className="h-4 w-4 text-gray-400" />
                       </div>
