@@ -72,38 +72,6 @@ export type Database = {
         }
         Relationships: []
       }
-      coverage_fact: {
-        Row: {
-          city_id: string
-          id: number
-          product_id: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          city_id: string
-          id?: number
-          product_id: string
-          status: string
-          updated_at?: string
-        }
-        Update: {
-          city_id?: string
-          id?: number
-          product_id?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "coverage_fact_city_id_fkey"
-            columns: ["city_id"]
-            isOneToOne: false
-            referencedRelation: "market_dim"
-            referencedColumns: ["city_id"]
-          },
-        ]
-      }
       escalation: {
         Row: {
           aligned_at: string | null
@@ -238,42 +206,6 @@ export type Database = {
         }
         Relationships: []
       }
-      market_dim: {
-        Row: {
-          city_id: string
-          city_name: string
-          country_code: string
-          country_name: string
-          created_at: string
-          gb_weight: number
-          id: number
-          region: string
-          updated_at: string
-        }
-        Insert: {
-          city_id: string
-          city_name: string
-          country_code: string
-          country_name: string
-          created_at?: string
-          gb_weight: number
-          id?: number
-          region: string
-          updated_at?: string
-        }
-        Update: {
-          city_id?: string
-          city_name?: string
-          country_code?: string
-          country_name?: string
-          created_at?: string
-          gb_weight?: number
-          id?: number
-          region?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       product_meta: {
         Row: {
           company_priority: string | null
@@ -388,7 +320,7 @@ export type Database = {
     }
     Enums: {
       escalation_status_enum: "OPEN" | "ALIGNED" | "RESOLVED"
-      scope_level_enum: "CITY" | "COUNTRY" | "STATE" | "REGION"
+      scope_level_enum: "CITY" | "COUNTRY" | "REGION"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -505,7 +437,7 @@ export const Constants = {
   public: {
     Enums: {
       escalation_status_enum: ["OPEN", "ALIGNED", "RESOLVED"],
-      scope_level_enum: ["CITY", "COUNTRY", "STATE", "REGION"],
+      scope_level_enum: ["CITY", "COUNTRY", "REGION"],
     },
   },
 } as const

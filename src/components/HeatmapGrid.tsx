@@ -3,7 +3,7 @@ import {
   ChevronRight, 
   AlertTriangle, 
   Info,
-  Tag
+  Flag
 } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
 import { Market, Product } from "../types";
@@ -14,7 +14,9 @@ import { CellCommentPopover } from "./CellCommentPopover";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { TamDetailsModal } from "./TamDetailsModal";
-import { ProductDetailsCard } from "./ProductDetailsCard";
+import ProductNameTrigger from "./ProductNameTrigger";
+import EscalationModal from "./admin/EscalationModal";
+import EscalationBadge from "./EscalationBadge";
 
 export default function HeatmapGrid() {
   const { 
@@ -49,9 +51,18 @@ export default function HeatmapGrid() {
   const [isTamModalOpen, setIsTamModalOpen] = useState(false);
   const [selectedProductForTam, setSelectedProductForTam] = useState<string | null>(null);
   
-  // State for Product Details Card
-  const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
-  const [selectedProductForDetails, setSelectedProductForDetails] = useState<string | null>(null);
+  // State for Escalation modal
+  const [escalationModal, setEscalationModal] = useState<{
+    isOpen: boolean;
+    productId: string;
+    marketId: string;
+    marketType: 'city' | 'country' | 'region';
+  }>({
+    isOpen: false,
+    productId: '',
+    marketId: '',
+    marketType: 'city'
+  });
 
   // Parse URL parameters on component mount and when location changes
   useEffect(() => {
@@ -182,14 +193,13 @@ export default function HeatmapGrid() {
     setIsTamModalOpen(true);
   };
   
-  const handleOpenProductDetails = (productId: string) => {
-    setSelectedProductForDetails(productId);
-    setIsProductDetailsOpen(true);
-  };
-  
-  const handleCloseProductDetails = () => {
-    setIsProductDetailsOpen(false);
-    setSelectedProductForDetails(null);
+  const openEscalationModal = (productId: string, marketId: string, marketType: 'city' | 'country' | 'region') => {
+    setEscalationModal({
+      isOpen: true,
+      productId,
+      marketId,
+      marketType
+    });
   };
   
   if (markets.length === 0 || products.length === 0) {
@@ -259,12 +269,12 @@ export default function HeatmapGrid() {
                   <TableCell className="sticky left-0 bg-white z-10 border-b">
                     <div className="flex items-center justify-between">
                       <div className="mr-2">
-                        <button 
-                          className="text-sm font-medium hover:text-blue-600 hover:underline text-left"
-                          onClick={() => handleOpenProductDetails(product.id)}
-                        >
-                          {product.name}
-                        </button>
+                        <div className="text-sm font-medium">
+                          <ProductNameTrigger 
+                            productId={product.id} 
+                            productName={product.name}
+                          />
+                        </div>
                         <div className="text-xs text-gray-500">{product.line_of_business} - {product.sub_team}</div>
                       </div>
                       <button 
@@ -326,11 +336,40 @@ export default function HeatmapGrid() {
                               focusCommentId={isHighlighted ? focusedComment || undefined : undefined} 
                             />
                             
+                            {/* Escalation Badge */}
+                            <EscalationBadge
+                              productId={product.id}
+                              marketId={market.id}
+                              marketType={market.type as 'city' | 'country' | 'region'}
+                            />
+                            
+                            {/* Escalation button */}
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openEscalationModal(product.id, market.id, market.type as 'city' | 'country' | 'region');
+                                    }}
+                                    className="h-5 w-5 p-0 ml-1"
+                                  >
+                                    <Flag className="h-3 w-3 text-red-500" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p>Escalate this market</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            
                             {cell.hasBlocker && (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                                    <AlertTriangle className="w-4 h-4 text-red-500 ml-1" />
                                   </TooltipTrigger>
                                   <TooltipContent side="top">
                                     <span>This market has a blocker</span>
@@ -397,14 +436,14 @@ export default function HeatmapGrid() {
         />
       )}
       
-      {/* Product Details Card */}
-      {selectedProductForDetails && (
-        <ProductDetailsCard
-          productId={selectedProductForDetails}
-          isOpen={isProductDetailsOpen}
-          onClose={handleCloseProductDetails}
-        />
-      )}
+      {/* Escalation Modal */}
+      <EscalationModal
+        isOpen={escalationModal.isOpen}
+        onClose={() => setEscalationModal(prev => ({ ...prev, isOpen: false }))}
+        productId={escalationModal.productId}
+        marketId={escalationModal.marketId}
+        marketType={escalationModal.marketType}
+      />
     </div>
   );
 }

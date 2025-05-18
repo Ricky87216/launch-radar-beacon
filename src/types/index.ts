@@ -6,7 +6,6 @@ export interface Market {
   type: 'mega_region' | 'region' | 'country' | 'city';
   parent_id: string | null;
   geo_path: string;
-  gb_weight?: number;
 }
 
 // Product dimensions
@@ -17,21 +16,7 @@ export interface Product {
   sub_team: string;
   status: string;
   launch_date: string | null;
-  notes?: string;
-}
-
-// Product metadata
-export interface ProductMeta {
-  product_id: string;
-  description?: string;
-  pm_poc?: string;
-  prod_ops_poc?: string;
-  prd_link?: string;
-  launch_date?: Date | null;
-  xp_plan?: string;
-  newsletter_url?: string;
-  company_priority?: string;
-  screenshot_url?: string;
+  notes?: string; // Added notes field for product status/blockers/next steps
 }
 
 // Coverage fact data
@@ -40,7 +25,7 @@ export interface Coverage {
   market_id: string;
   city_percentage: number;
   gb_weighted: number;
-  tam_percentage?: number;
+  tam_percentage?: number; // Added TAM percentage field
   updated_at: string;
 }
 
@@ -102,39 +87,39 @@ export interface CellComment {
   tam_escalation?: boolean;
 }
 
-// Database escalation status enum
-export type DatabaseEscalationStatus = 'OPEN' | 'ALIGNED' | 'RESOLVED';
+// Escalation status type - our updated application type
+export type EscalationStatus = 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
 
-// Function to map app status to database status
-export const mapAppStatusToDatabaseStatus = (status: string): DatabaseEscalationStatus => {
-  switch (status) {
-    case 'Open':
-      return 'OPEN';
-    case 'Aligned':
-      return 'ALIGNED';
-    case 'Resolved':
-      return 'RESOLVED';
-    default:
-      return 'OPEN';
-  }
+// Database status type - for compatibility with Supabase database
+export type DatabaseEscalationStatus = 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
+
+// Map between app status and database status for backward compatibility
+export const mapAppStatusToDatabaseStatus = (status: EscalationStatus): DatabaseEscalationStatus => {
+  // Since we've updated the database to use the same status values as our app,
+  // we can directly return the same status
+  return status;
 };
 
-// Function to map database status to app status
-export const mapDatabaseStatusToAppStatus = (status: DatabaseEscalationStatus): string => {
+// Map between database status and app status
+export const mapDatabaseStatusToAppStatus = (status: string): EscalationStatus => {
+  // Check if the status is already one of our valid EscalationStatus values
+  const validStatuses: EscalationStatus[] = [
+    'SUBMITTED', 'IN_DISCUSSION', 'RESOLVED_BLOCKED', 'RESOLVED_LAUNCHING', 'RESOLVED_LAUNCHED'
+  ];
+  
+  if (validStatuses.includes(status as EscalationStatus)) {
+    return status as EscalationStatus;
+  }
+  
+  // Handle legacy statuses if any
   switch (status) {
     case 'OPEN':
-      return 'Open';
+      return 'SUBMITTED';
     case 'ALIGNED':
-      return 'Aligned';
+      return 'IN_DISCUSSION';
     case 'RESOLVED':
-      return 'Resolved';
+      return 'RESOLVED_LAUNCHED';
     default:
-      return 'Open';
+      return 'SUBMITTED';
   }
 };
-
-// User watchlist item
-export interface UserWatchlistItem {
-  product_id: string;
-  created_at: string;
-}

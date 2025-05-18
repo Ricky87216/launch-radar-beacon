@@ -26,27 +26,28 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b">
+    <header className="sticky top-0 z-50 bg-white border-b border-[var(--uber-gray-30)]">
       <div className="container flex items-center justify-between h-16 px-4 md:px-6">
         <div className="flex items-center">
           <button
             onClick={handleLogoClick}
             className="inline-flex items-center mr-6"
           >
-            <span className="font-bold text-xl">Global First Launch Coverage</span>
+            <img src="https://d1a3f4spazzrp4.cloudfront.net/uber/uber-logo.svg" alt="Uber" height="24" className="h-6" />
+            <span className="ml-2 font-bold">First Launch Coverage</span>
           </button>
 
           {!isMobile && (
             <nav className="hidden md:flex items-center space-x-4">
               <Link
                 to="/"
-                className="text-sm font-medium transition-colors hover:text-primary"
+                className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)]"
               >
                 Dashboard
               </Link>
               <Link
                 to="/my"
-                className="text-sm font-medium transition-colors hover:text-primary"
+                className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)]"
               >
                 My Coverage
               </Link>
@@ -90,17 +91,20 @@ const Header = () => {
                 </Button>
               </SheetTrigger>
               <SheetContent>
+                <div className="flex py-4">
+                  <img src="https://d1a3f4spazzrp4.cloudfront.net/uber/uber-logo.svg" alt="Uber" className="h-6" />
+                </div>
                 <nav className="flex flex-col space-y-4 mt-6">
                   <Link
                     to="/"
-                    className="text-sm font-medium transition-colors hover:text-primary"
+                    className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)]"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Dashboard
                   </Link>
                   <Link
                     to="/my"
-                    className="text-sm font-medium transition-colors hover:text-primary"
+                    className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)]"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     My Coverage
@@ -110,28 +114,28 @@ const Header = () => {
                     <h4 className="text-sm font-semibold mb-2">Admin</h4>
                     <Link
                       to="/admin"
-                      className="text-sm font-medium transition-colors hover:text-primary block py-1"
+                      className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)] block py-1"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Admin Dashboard
                     </Link>
                     <Link
                       to="/admin/data-sync"
-                      className="text-sm font-medium transition-colors hover:text-primary block py-1"
+                      className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)] block py-1"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Data Sync
                     </Link>
                     <Link
                       to="/admin/bulk-edit"
-                      className="text-sm font-medium transition-colors hover:text-primary block py-1"
+                      className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)] block py-1"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Bulk Edit Workspace
                     </Link>
                     <Link
                       to="/admin/logs"
-                      className="text-sm font-medium transition-colors hover:text-primary block py-1"
+                      className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)] block py-1"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       System Logs
