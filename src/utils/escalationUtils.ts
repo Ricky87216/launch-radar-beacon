@@ -19,6 +19,17 @@ export interface ExtendedEscalationFormData extends EscalationFormData {
   additionalStakeholders?: string;
 }
 
+// Type for escalation history/comments from the database
+export interface EscalationHistoryItem {
+  id: string;
+  escalation_id: string;
+  user_id: string;
+  old_status?: string | null;
+  new_status?: string;
+  notes?: string | null;
+  changed_at: string;
+}
+
 export const getMarketIdField = (marketType: MarketType) => {
   switch (marketType) {
     case 'city':
@@ -66,7 +77,7 @@ export const loadEscalationHistory = async (productId: string, marketId: string,
 };
 
 export const submitEscalation = async (
-  formData: EscalationFormData, 
+  formData: ExtendedEscalationFormData, 
   productId: string, 
   marketId: string, 
   marketType: MarketType, 
@@ -87,6 +98,11 @@ export const submitEscalation = async (
     reason: formData.reason,
     reason_type: formData.reasonType,
     business_case_url: formData.businessCaseUrl || null,
+    tech_poc: formData.techPoc || null,
+    tech_sponsor: formData.techSponsor || null,
+    ops_poc: formData.opsPoc || null,
+    ops_sponsor: formData.opsSponsor || null,
+    additional_stakeholders: formData.additionalStakeholders || null,
     status: dbStatus,
   };
   
@@ -139,7 +155,7 @@ export const updateEscalationStatus = async (
       old_status: currentEscalation.status,
       new_status: dbStatus,
       notes: note || `Status changed to ${newStatus}`
-    } as any);
+    });
     
   return data;
 };
@@ -169,7 +185,7 @@ export const addEscalationComment = async (
       old_status: currentEscalation.status,
       new_status: currentEscalation.status, // Same status, just adding a comment
       notes: comment
-    } as any);
+    });
 };
 
 export const getEscalationDetails = async (escalationId: string) => {
