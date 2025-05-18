@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Shield } from "lucide-react";
 import { useDashboard } from "@/context/DashboardContext";
@@ -56,7 +55,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
   
   const handleFormSuccess = () => {
     setShowSuccess(true);
-    // Automatically close after 3 seconds
+    // Automatically close after 3 seconds and navigate to escalation log
     setTimeout(() => {
       onClose();
       // Redirect to escalation log

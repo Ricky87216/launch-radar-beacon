@@ -101,9 +101,10 @@ const EscalationForm: React.FC<EscalationFormProps> = ({
         market?.name || "Unknown market"
       );
       
-      // Close modal and redirect directly to escalation log
+      // Close modal and redirect to escalation log page
+      // Note: We need to make sure onClose gets called first to trigger
+      // the parent component's success handling
       onClose();
-      navigate("/escalations");
       
     } catch (error) {
       console.error("Error submitting escalation:", error);

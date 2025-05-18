@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { EscalationStatus, DatabaseEscalationStatus, mapAppStatusToDatabaseStatus, mapDatabaseStatusToAppStatus } from "@/types";
 
@@ -83,6 +84,8 @@ export const submitEscalation = async (
   userName: string
 ) => {
   try {
+    console.log("Submitting escalation:", { formData, productId, marketId, marketType, userName });
+    
     // Create the escalation record
     const appStatus: EscalationStatus = "SUBMITTED";
     const dbStatus = mapAppStatusToDatabaseStatus(appStatus);
@@ -106,20 +109,27 @@ export const submitEscalation = async (
       status: dbStatus,
     };
     
+    console.log("Insert data:", insertData);
+    
     // Insert the escalation
     const { data, error } = await supabase
       .from("escalation")
       .insert(insertData as any)
       .select();
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error inserting escalation:", error);
+      throw error;
+    }
+    
+    console.log("Escalation created:", data);
     
     // Create initial history record (important for showing in the log)
     if (data && data.length > 0) {
       const escalationId = data[0].esc_id;
       
       // Add initial history record
-      await supabase
+      const historyResult = await supabase
         .from("escalation_history")
         .insert({
           escalation_id: escalationId,
@@ -128,6 +138,12 @@ export const submitEscalation = async (
           new_status: dbStatus,
           notes: `Escalation created: ${formData.reason.substring(0, 50)}${formData.reason.length > 50 ? '...' : ''}`
         });
+        
+      if (historyResult.error) {
+        console.error("Error creating history record:", historyResult.error);
+      } else {
+        console.log("History record created");
+      }
     }
     
     return { data, error: null };

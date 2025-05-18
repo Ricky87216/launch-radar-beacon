@@ -19,7 +19,8 @@ import {
   ShieldQuestion,
   MessageSquare,
   Search,
-  Filter
+  Filter,
+  RefreshCcw
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -70,9 +71,12 @@ const EscalationLog = () => {
     resolvedEscalations: 0,
   });
 
+  // Automatically fetch escalation data when the component mounts
+  // or when the route parameters change (like when navigating to this page)
   useEffect(() => {
+    console.log("EscalationLog mounted or route changed");
     fetchEscalationHistory();
-  }, []);
+  }, [selectedEscalationId]);
   
   // Apply filters whenever filter state or history items change
   useEffect(() => {
@@ -82,6 +86,7 @@ const EscalationLog = () => {
   const fetchEscalationHistory = async () => {
     try {
       setIsLoading(true);
+      console.log("Fetching escalation history...");
       
       // Get the escalation history with a LEFT JOIN to get all history items
       const { data: historyData, error } = await supabase
@@ -89,10 +94,16 @@ const EscalationLog = () => {
         .select("*, escalation:escalation_id(*)")
         .order("changed_at", { ascending: false });
           
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching escalation history:", error);
+        throw error;
+      }
+      
+      console.log("Received escalation history data:", historyData);
       
       // Get all unique escalation IDs
       const escalationIds = [...new Set(historyData?.map(item => item.escalation_id) || [])];
+      console.log("Unique escalation IDs:", escalationIds);
       
       // Get the latest status for each escalation
       const latestStatuses = await Promise.all(
@@ -109,6 +120,7 @@ const EscalationLog = () => {
       
       // Filter out nulls
       const validStatuses = latestStatuses.filter(Boolean);
+      console.log("Latest statuses:", validStatuses);
       
       // Calculate statistics
       const total = validStatuses.length;
@@ -151,6 +163,7 @@ const EscalationLog = () => {
         } as EscalationHistoryItem;
       }).filter(Boolean) as EscalationHistoryItem[];
       
+      console.log("Enriched history data:", enrichedData);
       setHistoryItems(enrichedData);
     } catch (error) {
       console.error("Error fetching escalation history:", error);
@@ -375,6 +388,7 @@ const EscalationLog = () => {
         </div>
         
         <Button onClick={() => fetchEscalationHistory()}>
+          <RefreshCcw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
       </div>
