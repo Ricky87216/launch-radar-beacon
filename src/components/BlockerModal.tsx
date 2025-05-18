@@ -25,9 +25,10 @@ interface BlockerModalProps {
   blockerId?: string;
   productId?: string;
   marketId?: string;
+  onEscalate?: () => void; // Added the missing prop
 }
 
-export default function BlockerModal({ open, onClose, blockerId, productId, marketId }: BlockerModalProps) {
+export default function BlockerModal({ open, onClose, blockerId, productId, marketId, onEscalate }: BlockerModalProps) {
   const { 
     getBlockerById, 
     getProductById,
@@ -129,6 +130,11 @@ export default function BlockerModal({ open, onClose, blockerId, productId, mark
       <Button onClick={handleSubmit} disabled={!canSave}>
         {isNew ? "Create Blocker" : "Update Blocker"}
       </Button>
+      {onEscalate && (
+        <Button variant="destructive" onClick={onEscalate}>
+          Escalate
+        </Button>
+      )}
     </>
   );
   

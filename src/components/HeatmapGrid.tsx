@@ -20,7 +20,12 @@ import EscalationModal from "./admin/EscalationModal";
 import EscalationBadge from "./EscalationBadge";
 import { ScrollArea } from "./ui/scroll-area";
 
-export default function HeatmapGrid() {
+interface HeatmapGridProps {
+  onEscalate?: (productId: string, marketId: string) => void;
+  onShowBlocker?: (productId: string, marketId: string, blockerId?: string) => void;
+}
+
+export default function HeatmapGrid({ onEscalate, onShowBlocker }: HeatmapGridProps) {
   const { 
     getVisibleMarkets,
     getFilteredProducts,
@@ -202,12 +207,24 @@ export default function HeatmapGrid() {
   };
   
   const openEscalationModal = (productId: string, marketId: string, marketType: 'city' | 'country' | 'region') => {
-    setEscalationModal({
-      isOpen: true,
-      productId,
-      marketId,
-      marketType
-    });
+    // If the parent component has provided an onEscalate handler, use it
+    if (onEscalate && marketType === 'city') {
+      onEscalate(productId, marketId);
+    } else {
+      // Otherwise use the internal state
+      setEscalationModal({
+        isOpen: true,
+        productId,
+        marketId,
+        marketType
+      });
+    }
+  };
+  
+  const handleShowBlocker = (productId: string, marketId: string, blockerId?: string) => {
+    if (onShowBlocker) {
+      onShowBlocker(productId, marketId, blockerId);
+    }
   };
   
   if (markets.length === 0 || products.length === 0) {
@@ -499,14 +516,16 @@ export default function HeatmapGrid() {
         />
       )}
       
-      {/* Escalation Modal */}
-      <EscalationModal
-        isOpen={escalationModal.isOpen}
-        onClose={() => setEscalationModal(prev => ({ ...prev, isOpen: false }))}
-        productId={escalationModal.productId}
-        marketId={escalationModal.marketId}
-        marketType={escalationModal.marketType}
-      />
+      {/* Escalation Modal - Only render if using internal state */}
+      {!onEscalate && (
+        <EscalationModal
+          isOpen={escalationModal.isOpen}
+          onClose={() => setEscalationModal(prev => ({ ...prev, isOpen: false }))}
+          productId={escalationModal.productId}
+          marketId={escalationModal.marketId}
+          marketType={escalationModal.marketType}
+        />
+      )}
     </ScrollArea>
   );
 }

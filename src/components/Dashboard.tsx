@@ -43,7 +43,10 @@ export default function Dashboard() {
   return (
     <div className={`flex flex-col h-full ${isMobile ? 'pb-16' : ''}`}>
       <main className="flex-1 overflow-hidden">
-        <HeatmapGrid onEscalate={openEscalationModal} onShowBlocker={openBlockerModal} />
+        <HeatmapGrid 
+          onEscalate={openEscalationModal} 
+          onShowBlocker={openBlockerModal} 
+        />
       </main>
       
       {blockerModalOpen && (
@@ -53,12 +56,10 @@ export default function Dashboard() {
           blockerId={selectedBlockerId}
           productId={selectedProductId}
           marketId={selectedMarketId}
-          onEscalate={() => {
+          onEscalate={selectedProductId && selectedMarketId ? () => {
             closeBlockerModal();
-            if (selectedProductId && selectedMarketId) {
-              openEscalationModal(selectedProductId, selectedMarketId);
-            }
-          }}
+            openEscalationModal(selectedProductId, selectedMarketId);
+          } : undefined}
         />
       )}
       
