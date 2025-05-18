@@ -181,31 +181,7 @@ export default function HeatmapGrid({ onEscalate, onShowBlocker }: HeatmapGridPr
     }
   };
   
-  // Function to get cell color based on coverage value
-  const getCellColor = (coverage: number) => {
-    if (coverage >= 95) return 'bg-heatmap-green';
-    if (coverage >= 70) return 'bg-heatmap-yellow';
-    return 'bg-heatmap-red';
-  };
-  
-  // Function to get formatted coverage value
-  const getFormattedCoverage = (value: number) => {
-    return `${value.toFixed(1)}%`;
-  };
-  
-  // Get product-specific blockers
-  const getProductBlockers = (productId: string) => {
-    return blockers
-      .filter(blocker => blocker.product_id === productId && !blocker.resolved)
-      .map(blocker => `[${blocker.category}] ${blocker.note} (ETA: ${new Date(blocker.eta).toLocaleDateString()})`)
-      .join('\n');
-  };
-  
-  const handleOpenTamModal = (productId: string) => {
-    setSelectedProductForTam(productId);
-    setIsTamModalOpen(true);
-  };
-  
+  // Fixed: Make sure this function correctly handles escalation
   const openEscalationModal = (productId: string, marketId: string, marketType: 'city' | 'country' | 'region') => {
     // If the parent component has provided an onEscalate handler, use it
     if (onEscalate) {
@@ -422,7 +398,7 @@ export default function HeatmapGrid({ onEscalate, onShowBlocker }: HeatmapGridPr
                               marketType={market.type as 'city' | 'country' | 'region'}
                             />
                             
-                            {/* Escalation button */}
+                            {/* Escalation button - Fixed to correctly call openEscalationModal */}
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -448,7 +424,10 @@ export default function HeatmapGrid({ onEscalate, onShowBlocker }: HeatmapGridPr
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <AlertTriangle className="w-4 h-4 text-red-500 ml-1" />
+                                    <AlertTriangle
+                                      className="w-4 h-4 text-red-500 ml-1"
+                                      onClick={() => handleShowBlocker(product.id, market.id)}
+                                    />
                                   </TooltipTrigger>
                                   <TooltipContent side="top">
                                     <span>This market has a blocker</span>
