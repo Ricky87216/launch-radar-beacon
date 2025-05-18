@@ -1,4 +1,3 @@
-
 import { useMemo, useState, useEffect } from "react";
 import { 
   ChevronRight, 
@@ -146,11 +145,11 @@ export default function HeatmapGrid() {
     if (currentLevel === 'mega_region') {
       setCurrentLevel('region');
       setSelectedParent(market.id);
-      toast.info(`Drilling down to regions in ${market.name}`);
+      toast.info(`Drilling down to countries in ${market.name}`);
     } else if (currentLevel === 'region') {
       setCurrentLevel('country');
       setSelectedParent(market.id);
-      toast.info(`Drilling down to countries in ${market.name}`);
+      toast.info(`Drilling down to provinces in ${market.name}`);
     } else if (currentLevel === 'country') {
       setCurrentLevel('city');
       setSelectedParent(market.id);
@@ -164,12 +163,12 @@ export default function HeatmapGrid() {
       setCurrentLevel('country');
       const currentMarket = getMarketById(selectedParent || "");
       setSelectedParent(currentMarket?.parent_id || null);
-      toast.info("Going back to country view");
+      toast.info("Going back to province view");
     } else if (currentLevel === 'country') {
       setCurrentLevel('region');
       const currentMarket = getMarketById(selectedParent || "");
       setSelectedParent(currentMarket?.parent_id || null);
-      toast.info("Going back to region view");
+      toast.info("Going back to country view");
     } else if (currentLevel === 'region') {
       setCurrentLevel('mega_region');
       setSelectedParent(null);
@@ -259,13 +258,13 @@ export default function HeatmapGrid() {
           {currentLevel !== 'mega_region' && (
             <Button variant="ghost" onClick={handleDrillUp} className="text-sm text-gray-500">
               <ChevronDown className="mr-1 h-4 w-4" />
-              Back to {currentLevel === 'city' ? 'Countries' : currentLevel === 'country' ? 'Regions' : 'Mega Regions'}
+              Back to {currentLevel === 'city' ? 'Provinces' : currentLevel === 'country' ? 'Countries' : 'Mega Regions'}
             </Button>
           )}
           <span className="text-sm text-gray-500 ml-2">
             {currentLevel === 'mega_region' && 'Viewing Mega Regions'}
-            {currentLevel === 'region' && `Viewing Regions in ${getMarketById(selectedParent || "")?.name || ""}`}
-            {currentLevel === 'country' && `Viewing Countries in ${getMarketById(selectedParent || "")?.name || ""}`}
+            {currentLevel === 'region' && `Viewing Countries in ${getMarketById(selectedParent || "")?.name || ""}`}
+            {currentLevel === 'country' && `Viewing Provinces in ${getMarketById(selectedParent || "")?.name || ""}`}
             {currentLevel === 'city' && `Viewing Cities in ${getMarketById(selectedParent || "")?.name || ""}`}
           </span>
           
@@ -305,7 +304,7 @@ export default function HeatmapGrid() {
           {currentLevel !== 'city' && (
             <div className="ml-4 text-xs bg-blue-50 p-1 rounded flex items-center">
               <Info className="h-3 w-3 mr-1 text-blue-500" />
-              <span>Use <ChevronRight className="inline h-3 w-3" /> to drill down to city-level data</span>
+              <span>Use <ChevronRight className="inline h-3 w-3" /> to drill down to more detailed data</span>
             </div>
           )}
         </div>

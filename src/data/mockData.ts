@@ -1,4 +1,3 @@
-
 import { Market, Product, Coverage, Blocker, User, TamScope } from "../types";
 
 // Mock User Data
@@ -20,41 +19,72 @@ export const markets: Market[] = [
   { id: "mr-3", name: "APAC", type: "mega_region", parent_id: null, geo_path: "/APAC" },
   { id: "mr-4", name: "Latam", type: "mega_region", parent_id: null, geo_path: "/Latam" },
   
-  // Regions
-  { id: "r-1", name: "North America", type: "region", parent_id: "mr-1", geo_path: "/US&C/North America" },
-  { id: "r-2", name: "South America", type: "region", parent_id: "mr-4", geo_path: "/Latam/South America" },
-  { id: "r-3", name: "Western Europe", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Western Europe" },
-  { id: "r-4", name: "Eastern Europe", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Eastern Europe" },
-  { id: "r-5", name: "Middle East", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Middle East" },
-  { id: "r-6", name: "East Asia", type: "region", parent_id: "mr-3", geo_path: "/APAC/East Asia" },
-  { id: "r-7", name: "South Asia", type: "region", parent_id: "mr-3", geo_path: "/APAC/South Asia" },
-  { id: "r-8", name: "Oceania", type: "region", parent_id: "mr-3", geo_path: "/APAC/Oceania" },
-  
-  // Countries
-  { id: "c-1", name: "USA", type: "country", parent_id: "r-1", geo_path: "/US&C/North America/USA" },
-  { id: "c-2", name: "Canada", type: "country", parent_id: "r-1", geo_path: "/US&C/North America/Canada" },
-  { id: "c-3", name: "Brazil", type: "country", parent_id: "r-2", geo_path: "/Latam/South America/Brazil" },
-  { id: "c-4", name: "UK", type: "country", parent_id: "r-3", geo_path: "/EMEA/Western Europe/UK" },
-  { id: "c-5", name: "Germany", type: "country", parent_id: "r-3", geo_path: "/EMEA/Western Europe/Germany" },
-  { id: "c-6", name: "Poland", type: "country", parent_id: "r-4", geo_path: "/EMEA/Eastern Europe/Poland" },
-  { id: "c-7", name: "UAE", type: "country", parent_id: "r-5", geo_path: "/EMEA/Middle East/UAE" },
-  { id: "c-8", name: "Japan", type: "country", parent_id: "r-6", geo_path: "/APAC/East Asia/Japan" },
-  { id: "c-9", name: "India", type: "country", parent_id: "r-7", geo_path: "/APAC/South Asia/India" },
-  { id: "c-10", name: "Australia", type: "country", parent_id: "r-8", geo_path: "/APAC/Oceania/Australia" },
+  // Countries (formerly Regions, keeping r- prefix for compatibility)
+  { id: "r-1", name: "United States", type: "region", parent_id: "mr-1", geo_path: "/US&C/United States" },
+  { id: "r-2", name: "Canada", type: "region", parent_id: "mr-1", geo_path: "/US&C/Canada" },
+  { id: "r-3", name: "United Kingdom", type: "region", parent_id: "mr-2", geo_path: "/EMEA/United Kingdom" },
+  { id: "r-4", name: "Germany", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Germany" },
+  { id: "r-5", name: "France", type: "region", parent_id: "mr-2", geo_path: "/EMEA/France" },
+  { id: "r-6", name: "China", type: "region", parent_id: "mr-3", geo_path: "/APAC/China" },
+  { id: "r-7", name: "India", type: "region", parent_id: "mr-3", geo_path: "/APAC/India" },
+  { id: "r-8", name: "Japan", type: "region", parent_id: "mr-3", geo_path: "/APAC/Japan" },
+  { id: "r-9", name: "Brazil", type: "region", parent_id: "mr-4", geo_path: "/Latam/Brazil" },
+  { id: "r-10", name: "Mexico", type: "region", parent_id: "mr-4", geo_path: "/Latam/Mexico" },
   
   // Cities
-  { id: "city-1", name: "New York", type: "city", parent_id: "c-1", geo_path: "/US&C/North America/USA/New York" },
-  { id: "city-2", name: "San Francisco", type: "city", parent_id: "c-1", geo_path: "/US&C/North America/USA/San Francisco" },
-  { id: "city-3", name: "Toronto", type: "city", parent_id: "c-2", geo_path: "/US&C/North America/Canada/Toronto" },
-  { id: "city-4", name: "São Paulo", type: "city", parent_id: "c-3", geo_path: "/Latam/South America/Brazil/São Paulo" },
-  { id: "city-5", name: "London", type: "city", parent_id: "c-4", geo_path: "/EMEA/Western Europe/UK/London" },
-  { id: "city-6", name: "Manchester", type: "city", parent_id: "c-4", geo_path: "/EMEA/Western Europe/UK/Manchester" },
-  { id: "city-7", name: "Berlin", type: "city", parent_id: "c-5", geo_path: "/EMEA/Western Europe/Germany/Berlin" },
-  { id: "city-8", name: "Warsaw", type: "city", parent_id: "c-6", geo_path: "/EMEA/Eastern Europe/Poland/Warsaw" },
-  { id: "city-9", name: "Dubai", type: "city", parent_id: "c-7", geo_path: "/EMEA/Middle East/UAE/Dubai" },
-  { id: "city-10", name: "Tokyo", type: "city", parent_id: "c-8", geo_path: "/APAC/East Asia/Japan/Tokyo" },
-  { id: "city-11", name: "Mumbai", type: "city", parent_id: "c-9", geo_path: "/APAC/South Asia/India/Mumbai" },
-  { id: "city-12", name: "Sydney", type: "city", parent_id: "c-10", geo_path: "/APAC/Oceania/Australia/Sydney" }
+  // US Cities
+  { id: "c-1", name: "New York", type: "country", parent_id: "r-1", geo_path: "/US&C/United States/New York" },
+  { id: "c-2", name: "Los Angeles", type: "country", parent_id: "r-1", geo_path: "/US&C/United States/Los Angeles" },
+  { id: "c-3", name: "Chicago", type: "country", parent_id: "r-1", geo_path: "/US&C/United States/Chicago" },
+  
+  // Canada Cities
+  { id: "c-4", name: "Toronto", type: "country", parent_id: "r-2", geo_path: "/US&C/Canada/Toronto" },
+  { id: "c-5", name: "Vancouver", type: "country", parent_id: "r-2", geo_path: "/US&C/Canada/Vancouver" },
+  
+  // UK Cities
+  { id: "c-6", name: "London", type: "country", parent_id: "r-3", geo_path: "/EMEA/United Kingdom/London" },
+  { id: "c-7", name: "Manchester", type: "country", parent_id: "r-3", geo_path: "/EMEA/United Kingdom/Manchester" },
+  
+  // German Cities
+  { id: "c-8", name: "Berlin", type: "country", parent_id: "r-4", geo_path: "/EMEA/Germany/Berlin" },
+  { id: "c-9", name: "Munich", type: "country", parent_id: "r-4", geo_path: "/EMEA/Germany/Munich" },
+  
+  // French Cities
+  { id: "c-10", name: "Paris", type: "country", parent_id: "r-5", geo_path: "/EMEA/France/Paris" },
+  
+  // Chinese Cities
+  { id: "c-11", name: "Shanghai", type: "country", parent_id: "r-6", geo_path: "/APAC/China/Shanghai" },
+  { id: "c-12", name: "Beijing", type: "country", parent_id: "r-6", geo_path: "/APAC/China/Beijing" },
+  
+  // Indian Cities
+  { id: "c-13", name: "Mumbai", type: "country", parent_id: "r-7", geo_path: "/APAC/India/Mumbai" },
+  { id: "c-14", name: "Delhi", type: "country", parent_id: "r-7", geo_path: "/APAC/India/Delhi" },
+  
+  // Japanese Cities
+  { id: "c-15", name: "Tokyo", type: "country", parent_id: "r-8", geo_path: "/APAC/Japan/Tokyo" },
+  { id: "c-16", name: "Osaka", type: "country", parent_id: "r-8", geo_path: "/APAC/Japan/Osaka" },
+  
+  // Brazilian Cities
+  { id: "c-17", name: "São Paulo", type: "country", parent_id: "r-9", geo_path: "/Latam/Brazil/São Paulo" },
+  { id: "c-18", name: "Rio de Janeiro", type: "country", parent_id: "r-9", geo_path: "/Latam/Brazil/Rio de Janeiro" },
+  
+  // Mexican Cities
+  { id: "c-19", name: "Mexico City", type: "country", parent_id: "r-10", geo_path: "/Latam/Mexico/Mexico City" },
+  { id: "c-20", name: "Guadalajara", type: "country", parent_id: "r-10", geo_path: "/Latam/Mexico/Guadalajara" },
+  
+  // Major Cities
+  { id: "city-1", name: "Manhattan", type: "city", parent_id: "c-1", geo_path: "/US&C/United States/New York/Manhattan" },
+  { id: "city-2", name: "Brooklyn", type: "city", parent_id: "c-1", geo_path: "/US&C/United States/New York/Brooklyn" },
+  { id: "city-3", name: "Hollywood", type: "city", parent_id: "c-2", geo_path: "/US&C/United States/Los Angeles/Hollywood" },
+  { id: "city-4", name: "Downtown Toronto", type: "city", parent_id: "c-4", geo_path: "/US&C/Canada/Toronto/Downtown Toronto" },
+  { id: "city-5", name: "Westminster", type: "city", parent_id: "c-6", geo_path: "/EMEA/United Kingdom/London/Westminster" },
+  { id: "city-6", name: "Camden", type: "city", parent_id: "c-6", geo_path: "/EMEA/United Kingdom/London/Camden" },
+  { id: "city-7", name: "Mitte", type: "city", parent_id: "c-8", geo_path: "/EMEA/Germany/Berlin/Mitte" },
+  { id: "city-8", name: "Le Marais", type: "city", parent_id: "c-10", geo_path: "/EMEA/France/Paris/Le Marais" },
+  { id: "city-9", name: "Pudong", type: "city", parent_id: "c-11", geo_path: "/APAC/China/Shanghai/Pudong" },
+  { id: "city-10", name: "Shinjuku", type: "city", parent_id: "c-15", geo_path: "/APAC/Japan/Tokyo/Shinjuku" },
+  { id: "city-11", name: "Colaba", type: "city", parent_id: "c-13", geo_path: "/APAC/India/Mumbai/Colaba" },
+  { id: "city-12", name: "Ipanema", type: "city", parent_id: "c-18", geo_path: "/Latam/Brazil/Rio de Janeiro/Ipanema" }
 ];
 
 export const products: Product[] = [
@@ -110,6 +140,25 @@ markets.filter(m => m.type === "city").forEach(city => {
   });
 });
 
+// Update country-level coverage data
+markets.filter(m => m.type === "country").forEach(country => {
+  products.forEach(product => {
+    // Generate random coverage values
+    const cityPercentage = Math.random() * 100;
+    const gbWeighted = Math.random() * 100;
+    const tamPercentage = Math.min(cityPercentage * 1.2, 100);
+    
+    coverageData.push({
+      product_id: product.id,
+      market_id: country.id,
+      city_percentage: cityPercentage,
+      gb_weighted: gbWeighted,
+      tam_percentage: tamPercentage,
+      updated_at: new Date().toISOString()
+    });
+  });
+});
+
 // TAM Scope Data
 export const tamScopeData: TamScope[] = [];
 
@@ -149,7 +198,7 @@ export const blockers: Blocker[] = [
     category: "Regulatory",
     owner: "John Doe",
     eta: "2023-12-15",
-    note: "Waiting for regulatory approval in North America",
+    note: "Waiting for regulatory approval in United States",
     jira_url: "https://jira.example.com/issue/LAR-123",
     escalated: true,
     created_at: "2023-10-01T09:00:00Z",
@@ -179,7 +228,7 @@ export const blockers: Blocker[] = [
     category: "Business",
     owner: "Michael Chang",
     eta: "2023-11-30",
-    note: "Pricing strategy reconsideration needed for East Asia",
+    note: "Pricing strategy reconsideration needed for China",
     jira_url: "https://jira.example.com/issue/LAR-789",
     escalated: false,
     created_at: "2023-10-05T13:10:00Z",
