@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronDown, Menu, Settings, UploadCloud, Grid2x2 } from 'lucide-react';
@@ -6,49 +5,30 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from './ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useDashboard } from '@/context/DashboardContext';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from './ui/dropdown-menu';
-
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 const Header = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { user } = useDashboard();
+  const {
+    user
+  } = useDashboard();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
   const handleLogoClick = () => {
     navigate('/');
   };
-
-  return (
-    <header className="sticky top-0 z-50 bg-white border-b border-[var(--uber-gray-30)]">
+  return <header className="sticky top-0 z-50 bg-white border-b border-[var(--uber-gray-30)]">
       <div className="container flex items-center justify-between h-16 px-4 md:px-6">
         <div className="flex items-center">
-          <button
-            onClick={handleLogoClick}
-            className="inline-flex items-center mr-6"
-          >
-            <img src="https://d1a3f4spazzrp4.cloudfront.net/uber/uber-logo.svg" alt="Uber" height="24" className="h-6" />
-            <span className="ml-2 font-bold">First Launch Coverage</span>
+          <button onClick={handleLogoClick} className="inline-flex items-center mr-6">
+            <img alt="Uber" height="24" className="h-6" src="/lovable-uploads/0822b460-6455-4645-a73e-d2369119d882.png" />
+            <span className="ml-2 font-bold">Global First Launch Coverage</span>
           </button>
 
-          {!isMobile && (
-            <nav className="hidden md:flex items-center space-x-4">
-              <Link
-                to="/"
-                className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)]"
-              >
+          {!isMobile && <nav className="hidden md:flex items-center space-x-4">
+              <Link to="/" className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)]">
                 Dashboard
               </Link>
-              <Link
-                to="/my"
-                className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)]"
-              >
+              <Link to="/my" className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)]">
                 My Coverage
               </Link>
               
@@ -76,15 +56,13 @@ const Header = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </nav>
-          )}
+            </nav>}
         </div>
 
         <div className="flex items-center space-x-4">
           {/* Add more header items here if needed */}
           
-          {isMobile && (
-            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          {isMobile && <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon">
                   <Menu className="h-5 w-5" />
@@ -95,60 +73,33 @@ const Header = () => {
                   <img src="https://d1a3f4spazzrp4.cloudfront.net/uber/uber-logo.svg" alt="Uber" className="h-6" />
                 </div>
                 <nav className="flex flex-col space-y-4 mt-6">
-                  <Link
-                    to="/"
-                    className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)]"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/" className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)]" onClick={() => setIsMenuOpen(false)}>
                     Dashboard
                   </Link>
-                  <Link
-                    to="/my"
-                    className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)]"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/my" className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)]" onClick={() => setIsMenuOpen(false)}>
                     My Coverage
                   </Link>
                   
                   <div className="pt-2 pb-1">
                     <h4 className="text-sm font-semibold mb-2">Admin</h4>
-                    <Link
-                      to="/admin"
-                      className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)] block py-1"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
+                    <Link to="/admin" className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)] block py-1" onClick={() => setIsMenuOpen(false)}>
                       Admin Dashboard
                     </Link>
-                    <Link
-                      to="/admin/data-sync"
-                      className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)] block py-1"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
+                    <Link to="/admin/data-sync" className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)] block py-1" onClick={() => setIsMenuOpen(false)}>
                       Data Sync
                     </Link>
-                    <Link
-                      to="/admin/bulk-edit"
-                      className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)] block py-1"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
+                    <Link to="/admin/bulk-edit" className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)] block py-1" onClick={() => setIsMenuOpen(false)}>
                       Bulk Edit Workspace
                     </Link>
-                    <Link
-                      to="/admin/logs"
-                      className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)] block py-1"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
+                    <Link to="/admin/logs" className="text-sm font-medium transition-colors hover:text-[var(--uber-gray-60)] block py-1" onClick={() => setIsMenuOpen(false)}>
                       System Logs
                     </Link>
                   </div>
                 </nav>
               </SheetContent>
-            </Sheet>
-          )}
+            </Sheet>}
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 export default Header;
