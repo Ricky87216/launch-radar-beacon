@@ -21,7 +21,7 @@ import AnswerHub from "@/pages/admin/AnswerHub";
 import Logs from "@/pages/admin/Logs";
 import EscalationLog from "@/pages/EscalationLog";
 import ProductMeta from "@/pages/admin/ProductMeta";
-import Analytics from "@/pages/Analytics"; // Add import for Analytics
+import Analytics from "@/pages/Analytics";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -37,11 +37,11 @@ function App() {
               <div className="flex-1 flex flex-col">
                 <GlobalNavBar />
                 <GlobalBreadcrumb />
-                <main className="flex-1 max-h-[calc(100vh-64px-40px)] overflow-hidden">
+                <main className="flex-1 overflow-y-auto">
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/my" element={<MyLaunchRadar />} />
-                    <Route path="/analytics" element={<Analytics />} /> {/* Add Analytics route */}
+                    <Route path="/analytics" element={<Analytics />} />
                     <Route path="/admin/bulk-edit" element={<BulkEdit />} />
                     <Route path="/admin/data-sync" element={<DataSync />} />
                     <Route path="/admin/answer-hub" element={<AnswerHub />} />
