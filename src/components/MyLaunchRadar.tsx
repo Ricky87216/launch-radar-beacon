@@ -12,7 +12,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; 
 import PreferencesModal from "./PreferencesModal";
-import { getMarketDimName, getMarketDimParentId, getMarketDimType } from "@/types";
 
 import type { Blocker } from "../types";
 
@@ -111,16 +110,11 @@ export default function MyLaunchRadar() {
       // Get all markets that match the user preferences
       const markets = getAllMarkets();
       const userMarkets = markets.filter(market => {
-        // Convert number IDs to strings for comparison
-        const marketId = String(market.city_id);
-        const marketParentId = getMarketDimParentId(market);
-        
-        // Check if this market's ID is in the selected regions or countries
-        if (regions.includes(marketId)) return true;
-        if (countries.includes(marketId)) return true;
+        if (regions.includes(market.id)) return true;
+        if (countries.includes(market.id)) return true;
         
         // Check if this market's parent is in the selected regions
-        if (marketParentId && regions.includes(marketParentId)) return true;
+        if (market.parent_id && regions.includes(market.parent_id)) return true;
         
         return false;
       });
@@ -133,7 +127,7 @@ export default function MyLaunchRadar() {
         // Simulate querying products with blockers in this market
         const { blockers } = useDashboard();
         const marketsBlockers = blockers.filter(b => 
-          b.market_id === market.city_id && 
+          b.market_id === market.id && 
           !b.resolved
         );
         
@@ -171,11 +165,11 @@ export default function MyLaunchRadar() {
         let totalCities = 0;
         
         userMarkets.forEach(market => {
-          if (getMarketDimType(market) === 'city') {
+          if (market.type === 'city') {
             totalCities++;
             
             // Check if there's a blocker for this product in this city
-            const hasBlocker = productData.blockers.some(b => b.market_id === market.city_id);
+            const hasBlocker = productData.blockers.some(b => b.market_id === market.id);
             if (hasBlocker) {
               blockedCities++;
             }
@@ -218,11 +212,6 @@ export default function MyLaunchRadar() {
     if (coverage >= 80) return "bg-green-100 text-green-800";
     if (coverage >= 50) return "bg-yellow-100 text-yellow-800";
     return "bg-red-100 text-red-800";
-  };
-
-  const getMarketName = (id: string) => {
-    const market = getMarketById(id);
-    return market ? getMarketDimName(market) : id;
   };
 
   if (loading) {
@@ -361,12 +350,12 @@ export default function MyLaunchRadar() {
           <div className="flex flex-wrap gap-1 mt-1">
             {userPrefs.regions.map(region => (
               <Badge key={region} variant="secondary" className="text-xs">
-                {getMarketName(region)}
+                {getMarketById(region)?.name || region}
               </Badge>
             ))}
             {userPrefs.countries.map(country => (
               <Badge key={country} variant="secondary" className="text-xs">
-                {getMarketName(country)}
+                {getMarketById(country)?.name || country}
               </Badge>
             ))}
           </div>
@@ -442,11 +431,11 @@ export default function MyLaunchRadar() {
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <span className="truncate block max-w-[100px]">
-                                        {getMarketName(blocker.market_id)}
+                                        {getMarketById(blocker.market_id)?.name}
                                       </span>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      {getMarketName(blocker.market_id)}
+                                      {getMarketById(blocker.market_id)?.name}
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>

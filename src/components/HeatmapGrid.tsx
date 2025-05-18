@@ -1,12 +1,13 @@
+
 import { useMemo, useState, useEffect } from "react";
 import { 
   ChevronRight, 
   AlertTriangle, 
   Info,
-  Flag
+  Tag
 } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
-import { Product } from "../types";
+import { Market, Product } from "../types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -14,17 +15,16 @@ import { CellCommentPopover } from "./CellCommentPopover";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { TamDetailsModal } from "./TamDetailsModal";
-import ProductNameTrigger from "./ProductNameTrigger";
-import EscalationModal from "./admin/EscalationModal";
-import EscalationBadge from "./EscalationBadge";
-import { Badge } from "@/components/ui/badge";
-import BreadcrumbNav from "./BreadcrumbNav";
 
 export default function HeatmapGrid() {
   const { 
     getVisibleMarkets,
     getFilteredProducts,
     getCoverageCell,
+    currentLevel,
+    setCurrentLevel,
+    selectedParent,
+    setSelectedParent,
     getMarketById,
     coverageType,
     getProductNotes,
@@ -32,16 +32,9 @@ export default function HeatmapGrid() {
     setSelectedLOBs,
     setSelectedSubTeams,
     setHideFullCoverage,
-    useTam,
-    getCoverageStatusForCityProduct,
-    loadingState,
-    
-    // New drill-down navigation
-    drillLevel,
-    handleCellClick,
+    useTam
   } = useDashboard();
   
-  // Use memo to prevent unnecessary recalculations
   const markets = useMemo(() => getVisibleMarkets(), [getVisibleMarkets]);
   const products = useMemo(() => getFilteredProducts(), [getFilteredProducts]);
   
@@ -55,21 +48,8 @@ export default function HeatmapGrid() {
   // State for TAM details modal
   const [isTamModalOpen, setIsTamModalOpen] = useState(false);
   const [selectedProductForTam, setSelectedProductForTam] = useState<string | null>(null);
-  
-  // State for Escalation modal
-  const [escalationModal, setEscalationModal] = useState<{
-    isOpen: boolean;
-    productId: string;
-    marketId: string;
-    marketType: 'city' | 'country' | 'region';
-  }>({
-    isOpen: false,
-    productId: '',
-    marketId: '',
-    marketType: 'city'
-  });
 
-  // Parse URL parameters on component mount
+  // Parse URL parameters on component mount and when location changes
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const focusComment = searchParams.get('focusComment');
@@ -92,7 +72,7 @@ export default function HeatmapGrid() {
     if (focusComment && product && market) {
       // Check if product and market are in the current visible set
       const isProductVisible = products.some(p => p.id === product);
-      const isMarketVisible = markets.some(m => m.city_id === market);
+      const isMarketVisible = markets.some(m => m.id === market);
       
       // If either is not visible, adjust filters to show them
       if (!isProductVisible || !isMarketVisible) {
@@ -102,6 +82,35 @@ export default function HeatmapGrid() {
         setSelectedLOBs([]);
         setSelectedSubTeams([]);
         setHideFullCoverage(false);
+        
+        // If we're not at the city level, we need to drill down
+        if (currentLevel !== 'city') {
+          // Find the path to the market (assuming it's a city)
+          const targetMarket = getMarketById(market);
+          if (targetMarket) {
+            if (targetMarket.type === 'city') {
+              // Drill down to city level
+              const country = getMarketById(targetMarket.parent_id || "");
+              const region = country ? getMarketById(country.parent_id || "") : null;
+              
+              if (region) {
+                // Set up the drill-down path
+                setCurrentLevel('region');
+                setSelectedParent(region.id);
+                
+                setTimeout(() => {
+                  setCurrentLevel('country');
+                  setSelectedParent(country?.id || null);
+                  
+                  setTimeout(() => {
+                    setCurrentLevel('city');
+                    setSelectedParent(targetMarket.parent_id);
+                  }, 100);
+                }, 100);
+              }
+            }
+          }
+        }
       }
       
       // Scroll to the comment when it's rendered
@@ -114,17 +123,41 @@ export default function HeatmapGrid() {
     }
   }, [location.search, products, markets]);
   
+  // Function to handle drill-down
+  const handleDrillDown = (market: Market) => {
+    if (currentLevel === 'mega_region') {
+      setCurrentLevel('region');
+      setSelectedParent(market.id);
+    } else if (currentLevel === 'region') {
+      setCurrentLevel('country');
+      setSelectedParent(market.id);
+    } else if (currentLevel === 'country') {
+      setCurrentLevel('city');
+      setSelectedParent(market.id);
+    }
+  };
+  
+  // Function to handle drill-up
+  const handleDrillUp = () => {
+    if (currentLevel === 'city') {
+      setCurrentLevel('country');
+      const currentMarket = getMarketById(selectedParent || "");
+      setSelectedParent(currentMarket?.parent_id || null);
+    } else if (currentLevel === 'country') {
+      setCurrentLevel('region');
+      const currentMarket = getMarketById(selectedParent || "");
+      setSelectedParent(currentMarket?.parent_id || null);
+    } else if (currentLevel === 'region') {
+      setCurrentLevel('mega_region');
+      setSelectedParent(null);
+    }
+  };
+  
   // Function to get cell color based on coverage value
   const getCellColor = (coverage: number) => {
     if (coverage >= 95) return 'bg-heatmap-green';
     if (coverage >= 70) return 'bg-heatmap-yellow';
     return 'bg-heatmap-red';
-  };
-  
-  // Function to get status badge color
-  const getStatusBadgeColor = (status: string) => {
-    if (status === 'LIVE') return 'bg-green-500 text-white';
-    return 'bg-red-500 text-white';
   };
   
   // Function to get formatted coverage value
@@ -145,93 +178,49 @@ export default function HeatmapGrid() {
     setIsTamModalOpen(true);
   };
   
-  const openEscalationModal = (productId: string, marketId: string, marketType: 'city' | 'country' | 'region') => {
-    setEscalationModal({
-      isOpen: true,
-      productId,
-      marketId,
-      marketType
-    });
-  };
-  
-  // Get market name for display
-  const getMarketName = (market: any) => {
-    if (drillLevel === 0) return market.region;
-    if (drillLevel === 1) return market.country_name;
-    return market.city_name;
-  };
-  
-  // Get market ID based on drill level
-  const getMarketId = (market: any) => {
-    if (drillLevel === 0) return market.region;
-    if (drillLevel === 1) return market.country_code;
-    return market.city_id;
-  };
-  
-  // Logging to debug
-  useEffect(() => {
-    console.log("HeatmapGrid render state:", {
-      drillLevel,
-      markets: markets.length,
-      products: products.length,
-      loadingState
-    });
-  }, [markets.length, products.length, loadingState, drillLevel]);
-  
-  if (loadingState) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-8">
-        <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
-        <p className="mt-4 text-gray-500">Loading dashboard data...</p>
-      </div>
-    );
-  }
-  
   if (markets.length === 0 || products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8">
         <Info className="w-12 h-12 text-gray-400" />
         <p className="mt-4 text-gray-500">No data to display based on your current filters.</p>
-        <Button 
-          variant="outline" 
-          onClick={() => {
-            setSelectedLOBs([]);
-            setSelectedSubTeams([]);
-            setHideFullCoverage(false);
-          }}
-          className="mt-4"
-        >
-          Clear Filters
-        </Button>
       </div>
     );
   }
-  
-  // Update how we display the coverage type text
-  const getCoverageTypeLabel = () => {
-    if (coverageType === 'city_percentage') return 'City Coverage %';
-    if (coverageType === 'gb_weighted') return 'GB-Weighted Coverage %';
-    return '';
-  };
   
   return (
     <div className="overflow-auto h-full">
       <div className="p-4">
         {/* Breadcrumb navigation */}
-        <BreadcrumbNav />
-        
-        {/* TAM Mode Pill - shown when TAM filter is active */}
-        {useTam && (
-          <div className="mb-4">
-            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-              TAM Mode Active - Higher % due to smaller market selection
-            </span>
-          </div>
-        )}
+        <div className="flex items-center mb-4">
+          {currentLevel !== 'mega_region' && (
+            <Button variant="ghost" onClick={handleDrillUp} className="text-sm text-gray-500">
+              Back to {currentLevel === 'city' ? 'Countries' : currentLevel === 'country' ? 'Regions' : 'Mega Regions'}
+            </Button>
+          )}
+          <span className="text-sm text-gray-500">
+            {currentLevel === 'mega_region' && 'Viewing Mega Regions'}
+            {currentLevel === 'region' && `Viewing Regions in ${getMarketById(selectedParent || "")?.name || ""}`}
+            {currentLevel === 'country' && `Viewing Countries in ${getMarketById(selectedParent || "")?.name || ""}`}
+            {currentLevel === 'city' && `Viewing Cities in ${getMarketById(selectedParent || "")?.name || ""}`}
+          </span>
+          
+          {/* TAM Mode Pill - shown when TAM filter is active */}
+          {useTam && (
+            <div className="ml-auto">
+              <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                TAM Mode Active
+              </span>
+            </div>
+          )}
+        </div>
         
         {/* Coverage type indicator */}
         <div className="text-sm text-gray-500 mb-4">
-          Showing: {getCoverageTypeLabel()}
+          Showing: {
+            coverageType === 'city_percentage' ? 'City Coverage %' : 
+            coverageType === 'gb_weighted' ? 'GB-Weighted Coverage %' : 
+            'TAM Coverage %'
+          }
         </div>
         
         {/* Heatmap grid */}
@@ -241,9 +230,9 @@ export default function HeatmapGrid() {
               <TableRow>
                 <TableHead className="sticky left-0 bg-white z-10 border-b">Products</TableHead>
                 {markets.map(market => (
-                  <TableHead key={market.city_id || market.region} className="border-b">
+                  <TableHead key={market.id} className="border-b">
                     <div className="text-sm font-medium whitespace-nowrap">
-                      {getMarketName(market)}
+                      {market.name}
                     </div>
                   </TableHead>
                 ))}
@@ -256,12 +245,7 @@ export default function HeatmapGrid() {
                   <TableCell className="sticky left-0 bg-white z-10 border-b">
                     <div className="flex items-center justify-between">
                       <div className="mr-2">
-                        <div className="text-sm font-medium">
-                          <ProductNameTrigger 
-                            productId={product.id} 
-                            productName={product.name}
-                          />
-                        </div>
+                        <div className="text-sm font-medium">{product.name}</div>
                         <div className="text-xs text-gray-500">{product.line_of_business} - {product.sub_team}</div>
                       </div>
                       <button 
@@ -274,13 +258,12 @@ export default function HeatmapGrid() {
                   </TableCell>
                   
                   {markets.map(market => {
-                    const marketId = getMarketId(market);
-                    const cell = getCoverageCell(product.id, market.city_id);
-                    const isHighlighted = focusedProduct === product.id && focusedMarket === market.city_id;
+                    const cell = getCoverageCell(product.id, market.id);
+                    const isHighlighted = focusedProduct === product.id && focusedMarket === market.id;
                     
                     if (!cell) {
                       return (
-                        <TableCell key={marketId} className="border-b text-center bg-gray-100">
+                        <TableCell key={market.id} className="border-b text-center bg-gray-100">
                           <span className="text-xs text-gray-400">No data</span>
                         </TableCell>
                       );
@@ -288,10 +271,9 @@ export default function HeatmapGrid() {
                     
                     return (
                       <TableCell 
-                        key={marketId} 
-                        className={`border-b ${getCellColor(cell.coverage)} relative cursor-pointer ${isHighlighted ? 'ring-2 ring-blue-500' : ''}`}
-                        id={`cell-${product.id}-${market.city_id}`}
-                        onClick={() => handleCellClick(marketId)}
+                        key={market.id} 
+                        className={`border-b ${getCellColor(cell.coverage)} relative ${isHighlighted ? 'ring-2 ring-blue-500' : ''}`}
+                        id={`cell-${product.id}-${market.id}`}
                       >
                         <div className="flex items-center justify-between">
                           <TooltipProvider>
@@ -304,7 +286,7 @@ export default function HeatmapGrid() {
                               <TooltipContent side="top">
                                 <div>
                                   <strong>Product:</strong> {product.name}<br />
-                                  <strong>Market:</strong> {getMarketName(market)}<br />
+                                  <strong>Market:</strong> {market.name}<br />
                                   <strong>Coverage:</strong> {getFormattedCoverage(cell.coverage)}
                                   {cell.hasBlocker && (
                                     <div className="mt-1 text-red-500 flex items-center">
@@ -321,54 +303,32 @@ export default function HeatmapGrid() {
                             {/* Comment Popover - pass focusedComment if this is the target cell */}
                             <CellCommentPopover 
                               productId={product.id} 
-                              marketId={market.city_id} 
+                              marketId={market.id} 
                               focusCommentId={isHighlighted ? focusedComment || undefined : undefined} 
                             />
-                            
-                            {/* Escalation Badge */}
-                            <EscalationBadge
-                              productId={product.id}
-                              marketId={market.city_id}
-                              marketType={drillLevel === 0 ? 'region' : drillLevel === 1 ? 'country' : 'city'}
-                            />
-                            
-                            {/* Escalation button */}
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      openEscalationModal(
-                                        product.id, 
-                                        market.city_id, 
-                                        drillLevel === 0 ? 'region' : drillLevel === 1 ? 'country' : 'city'
-                                      );
-                                    }}
-                                    className="h-5 w-5 p-0 ml-1"
-                                  >
-                                    <Flag className="h-3 w-3 text-red-500" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                  <p>Escalate this market</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
                             
                             {cell.hasBlocker && (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <AlertTriangle className="w-4 h-4 text-red-500 ml-1" />
+                                    <AlertTriangle className="w-4 h-4 text-red-500" />
                                   </TooltipTrigger>
                                   <TooltipContent side="top">
                                     <span>This market has a blocker</span>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
+                            )}
+                            
+                            {currentLevel !== 'city' && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => handleDrillDown(market)}
+                                className="h-5 w-5 ml-1"
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
                             )}
                           </div>
                         </div>
@@ -417,15 +377,6 @@ export default function HeatmapGrid() {
           productId={selectedProductForTam}
         />
       )}
-      
-      {/* Escalation Modal */}
-      <EscalationModal
-        isOpen={escalationModal.isOpen}
-        onClose={() => setEscalationModal(prev => ({ ...prev, isOpen: false }))}
-        productId={escalationModal.productId}
-        marketId={escalationModal.marketId}
-        marketType={escalationModal.marketType}
-      />
     </div>
   );
 }

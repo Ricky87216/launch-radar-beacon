@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Grid, Star, AlertTriangle, Wrench, Database, Search, ShieldAlert, BarChartIcon } from 'lucide-react';
+import { Grid, Star, AlertTriangle, Wrench, Database, Search, ShieldAlert } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { 
   Sidebar, 
@@ -29,7 +29,6 @@ const GlobalSidebar = () => {
 
   const menuItems: MenuItem[] = [
     { icon: Grid, label: 'Dashboard', href: '/' },
-    { icon: BarChartIcon, label: 'Analytics', href: '/analytics' },
     { icon: Star, label: 'My Coverage', href: '/my' },
     { 
       icon: ShieldAlert, 

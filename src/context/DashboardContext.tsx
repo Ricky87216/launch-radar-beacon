@@ -1,471 +1,295 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { supabase } from "../integrations/supabase/client";
+
+import React, { createContext, useContext, useState, ReactNode } from "react";
 import { 
-  Market, Product, Blocker, User, MarketDim, CoverageFact, 
-  CellComment, HeatmapCell, marketDimsToMarkets, marketDimToMarket, 
-  getMarketDimName, getMarketDimType, getMarketDimParentId, getMarketDimGeoPath
+  Market, 
+  Product, 
+  Coverage, 
+  Blocker, 
+  User, 
+  HeatmapCell,
+  TamScope,
+  CellComment
 } from "../types";
+import { 
+  markets, 
+  products, 
+  coverageData, 
+  blockers, 
+  currentUser,
+  tamScopeData
+} from "../data/mockData";
 
 interface DashboardContextProps {
-  user: User;
+  markets: Market[];
   products: Product[];
+  coverageData: Coverage[];
   blockers: Blocker[];
-  markets: MarketDim[];
-  getProductById: (id: string) => Product | undefined;
-  getMarketById: (id: string) => MarketDim | undefined;
-  getAllMarkets: () => MarketDim[];
-  
-  // Additional methods needed by components
-  getVisibleMarkets: () => MarketDim[];
-  getFilteredProducts: () => Product[];
-  getCoverageCell: (productId: string, marketId: string) => HeatmapCell | undefined;
-  
-  // Drill level navigation
-  drillLevel: 0 | 1 | 2; // 0 = Region, 1 = Country/State, 2 = City
-  setDrillLevel: (level: 0 | 1 | 2) => void;
-  selectedRegion: string | null;
-  setSelectedRegion: (region: string | null) => void;
-  selectedCountry: string | null;
-  setSelectedCountry: (country: string | null) => void;
-  
-  // Replacing the old navigation
-  currentLevel: 'region' | 'country' | 'city';
-  setCurrentLevel: (level: 'region' | 'country' | 'city') => void;
-  selectedParent: string | null;
-  setSelectedParent: (parent: string | null) => void;
-  
+  user: User;
   coverageType: 'city_percentage' | 'gb_weighted' | 'tam_percentage';
   setCoverageType: (type: 'city_percentage' | 'gb_weighted' | 'tam_percentage') => void;
-  getProductNotes: (productId: string) => string;
   selectedLOBs: string[];
   setSelectedLOBs: (lobs: string[]) => void;
   selectedSubTeams: string[];
-  setSelectedSubTeams: (teams: string[]) => void;
+  setSelectedSubTeams: (subTeams: string[]) => void;
   hideFullCoverage: boolean;
   setHideFullCoverage: (hide: boolean) => void;
+  currentLevel: 'mega_region' | 'region' | 'country' | 'city';
+  setCurrentLevel: (level: 'mega_region' | 'region' | 'country' | 'city') => void;
+  selectedParent: string | null;
+  setSelectedParent: (parentId: string | null) => void;
+  getCoverageCell: (productId: string, marketId: string) => HeatmapCell | null;
+  getProductById: (productId: string) => Product | undefined;
+  getMarketById: (marketId: string) => Market | undefined;
+  getBlockerById: (blockerId: string) => Blocker | undefined;
+  addBlocker: (blocker: Omit<Blocker, "id" | "created_at">) => void;
+  updateBlocker: (blockerId: string, updates: Partial<Blocker>) => void;
+  updateCoverage: (productId: string, marketId: string, value: number) => void;
+  getVisibleMarkets: () => Market[];
+  getFilteredProducts: () => Product[];
+  getProductNotes: (productId: string) => string;
+  getAllMarkets: () => Market[];
   useTam: boolean;
   setUseTam: (useTam: boolean) => void;
-  getMarketsForRegion: (region: string) => MarketDim[];
-  getMarketsForCountry: (countryCode: string) => MarketDim[];
-  getCoverageStatusForCityProduct: (cityId: string, productId: string) => string;
-  loadingState: boolean;
-  getBlockerById: (blockerId: string) => Blocker | undefined;
-  addBlocker: (blocker: Omit<Blocker, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
-  updateBlocker: (blocker: Partial<Blocker> & { id: string }) => Promise<void>;
-  getProductTamRegions: (productId: string) => Market[];
-  getProductTamCountries: (productId: string) => Market[];
+  isMarketInTam: (productId: string, marketId: string) => boolean;
   getProductTamCities: (productId: string) => Market[];
+  getProductTamCountries: (productId: string) => Market[];
+  getProductTamRegions: (productId: string) => Market[];
   isUserLocationInTam: (productId: string) => boolean;
-  addCellComment: (comment: Omit<CellComment, 'comment_id' | 'created_at'>) => Promise<void>;
-  
-  // Navigation helper methods
-  resetToLevel: (level: 0 | 1 | 2) => void;
-  getColumnsForCurrentLevel: () => string[];
-  handleCellClick: (geoKey: string) => void;
+  addCellComment: (comment: Omit<CellComment, "comment_id" | "created_at">) => void;
+  updateCellComment: (commentId: string, updates: Partial<CellComment>) => void;
 }
 
 const DashboardContext = createContext<DashboardContextProps | undefined>(undefined);
 
-export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User>({
-    id: "1",
-    name: "Demo User",
-    email: "demo@example.com",
-    region: "EMEA",
-    country: "Germany",
-    role: "viewer",
-    canEditStatus: false
-  });
-  const [products, setProducts] = useState<Product[]>([]);
-  const [blockers, setBlockers] = useState<Blocker[]>([]);
-  const [markets, setMarkets] = useState<MarketDim[]>([]);
-  const [coverageFacts, setCoverageFacts] = useState<CoverageFact[]>([]);
-  const [loadingState, setLoadingState] = useState<boolean>(true);
+export function DashboardProvider({ children }: { children: ReactNode }) {
+  // State for markets, products, coverage, and blockers
+  const [marketsData, setMarketsData] = useState<Market[]>(markets);
+  const [productsData, setProductsData] = useState<Product[]>(products);
+  const [coverageDataState, setCoverageDataState] = useState<Coverage[]>(coverageData);
+  const [blockersData, setBlockersData] = useState<Blocker[]>(blockers);
+  const [tamScopeState, setTamScopeState] = useState<TamScope[]>(tamScopeData || []);
+  const [cellCommentsState, setCellCommentsState] = useState<CellComment[]>([]);
   
-  // New drill-down navigation states
-  const [drillLevel, setDrillLevel] = useState<0 | 1 | 2>(0);
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  
-  // Keep old navigation variables for compatibility
-  const [currentLevel, setCurrentLevel] = useState<'region' | 'country' | 'city'>('region');
-  const [selectedParent, setSelectedParent] = useState<string | null>(null);
-  
+  // State for user preferences and filters
   const [coverageType, setCoverageType] = useState<'city_percentage' | 'gb_weighted' | 'tam_percentage'>('city_percentage');
   const [selectedLOBs, setSelectedLOBs] = useState<string[]>([]);
   const [selectedSubTeams, setSelectedSubTeams] = useState<string[]>([]);
-  const [hideFullCoverage, setHideFullCoverage] = useState<boolean>(false);
-  const [useTam, setUseTam] = useState<boolean>(false);
-
-  // Sync old and new navigation systems
-  useEffect(() => {
-    // Map drillLevel to currentLevel
-    if (drillLevel === 0) setCurrentLevel('region');
-    else if (drillLevel === 1) setCurrentLevel('country');
-    else if (drillLevel === 2) setCurrentLevel('city');
+  const [hideFullCoverage, setHideFullCoverage] = useState(false);
+  const [useTam, setUseTam] = useState(false);
+  
+  // State for drill-down navigation
+  const [currentLevel, setCurrentLevel] = useState<'mega_region' | 'region' | 'country' | 'city'>('mega_region');
+  const [selectedParent, setSelectedParent] = useState<string | null>(null);
+  
+  // Function to check if a market is in TAM scope for a product
+  const isMarketInTam = (productId: string, marketId: string): boolean => {
+    // If the market is a city, check directly
+    const market = getMarketById(marketId);
+    if (!market) return false;
     
-    // Map selectedRegion/Country to selectedParent
-    if (drillLevel === 1 && selectedRegion) {
-      setSelectedParent(selectedRegion);
-    } else if (drillLevel === 2 && selectedCountry) {
-      setSelectedParent(selectedCountry);
-    } else if (drillLevel === 0) {
-      setSelectedParent(null);
+    if (market.type === 'city') {
+      return tamScopeState.some(ts => ts.product_id === productId && ts.city_id === marketId);
+    } else {
+      // For non-city markets, check if any children cities are in TAM
+      const cityChildren = getCityChildrenForMarket(marketId);
+      return cityChildren.some(city => tamScopeState.some(ts => ts.product_id === productId && ts.city_id === city.id));
     }
-  }, [drillLevel, selectedRegion, selectedCountry]);
-
-  // Reset to a specific navigation level
-  const resetToLevel = (level: 0 | 1 | 2) => {
-    setDrillLevel(level);
+  };
+  
+  // Get all city children for a given market
+  const getCityChildrenForMarket = (marketId: string): Market[] => {
+    const market = getMarketById(marketId);
+    if (!market) return [];
     
-    // Clear deeper selectors
-    if (level === 0) {
-      setSelectedRegion(null);
-      setSelectedCountry(null);
-    } else if (level === 1) {
-      setSelectedCountry(null);
-    }
-  };
-  
-  // Get columns for the current drill level
-  const getColumnsForCurrentLevel = (): string[] => {
-    if (drillLevel === 0) {
-      return ['US/CAN', 'EMEA', 'APAC', 'LATAM'];
-    } else if (drillLevel === 1 && selectedRegion) {
-      // Get countries for the selected region
-      const countriesInRegion = Array.from(new Set(
-        markets
-          .filter(m => m.region === selectedRegion && m.country_code)
-          .map(m => m.country_code)
-      ));
-      return countriesInRegion;
-    } else if (drillLevel === 2 && selectedCountry) {
-      // Get top 5 cities for the selected country
-      const citiesInCountry = Array.from(new Set(
-        markets
-          .filter(m => m.country_code === selectedCountry && m.city_id && m.city_name)
-          .map(m => m.city_id)
-      )).slice(0, 5);
-      return citiesInCountry;
-    }
-    return [];
-  };
-  
-  // Handle click on a cell to drill down
-  const handleCellClick = (geoKey: string) => {
-    if (drillLevel === 0) {
-      setSelectedRegion(geoKey);
-      setDrillLevel(1);
-    } else if (drillLevel === 1) {
-      setSelectedCountry(geoKey);
-      setDrillLevel(2);
-    }
-    // No action for level 2 (city level)
-  };
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data } = await supabase.auth.getUser();
-        if (data.user) {
-          setUser({
-            id: data.user.id,
-            name: data.user.user_metadata?.name || "Unknown User",
-            email: data.user.email || "unknown@example.com",
-            region: data.user.user_metadata?.region || "GLOBAL",
-            country: data.user.user_metadata?.country || "Global",
-            role: data.user.user_metadata?.role || "viewer",
-            canEditStatus: data.user.user_metadata?.canEditStatus || false
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-
-    const fetchMockData = async () => {
-      try {
-        // Generate mock markets since the market_dim table is empty
-        const mockMarkets: MarketDim[] = [
-          {
-            city_id: "region-EMEA",
-            id: 1,
-            gb_weight: 1.0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            country_name: "",
-            city_name: "",
-            region: "EMEA",
-            country_code: ""
-          },
-          {
-            city_id: "region-APAC",
-            id: 2,
-            gb_weight: 1.0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            country_name: "",
-            city_name: "",
-            region: "APAC",
-            country_code: ""
-          },
-          {
-            city_id: "region-LATAM",
-            id: 3,
-            gb_weight: 1.0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            country_name: "",
-            city_name: "",
-            region: "LATAM",
-            country_code: ""
-          },
-          {
-            city_id: "region-NA",
-            id: 4,
-            gb_weight: 1.0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            country_name: "",
-            city_name: "",
-            region: "NA",
-            country_code: ""
-          },
-          // Countries
-          {
-            city_id: "country-DE",
-            id: 5,
-            gb_weight: 0.8,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            country_name: "Germany",
-            city_name: "",
-            region: "EMEA",
-            country_code: "DE"
-          },
-          {
-            city_id: "country-FR",
-            id: 6,
-            gb_weight: 0.7,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            country_name: "France",
-            city_name: "",
-            region: "EMEA",
-            country_code: "FR"
-          },
-          {
-            city_id: "country-JP",
-            id: 7,
-            gb_weight: 0.9,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            country_name: "Japan",
-            city_name: "",
-            region: "APAC",
-            country_code: "JP"
-          },
-          // Cities
-          {
-            city_id: "city-berlin",
-            id: 8,
-            gb_weight: 0.5,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            country_name: "Germany",
-            city_name: "Berlin",
-            region: "EMEA",
-            country_code: "DE"
-          },
-          {
-            city_id: "city-munich",
-            id: 9,
-            gb_weight: 0.4,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            country_name: "Germany",
-            city_name: "Munich",
-            region: "EMEA",
-            country_code: "DE"
-          },
-          {
-            city_id: "city-paris",
-            id: 10,
-            gb_weight: 0.6,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            country_name: "France",
-            city_name: "Paris",
-            region: "EMEA",
-            country_code: "FR"
-          },
-          {
-            city_id: "city-tokyo",
-            id: 11,
-            gb_weight: 0.8,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            country_name: "Japan",
-            city_name: "Tokyo",
-            region: "APAC",
-            country_code: "JP"
-          }
-        ];
-        
-        setMarkets(mockMarkets);
-
-        // Generate mock coverage facts
-        const mockCoverageFacts: CoverageFact[] = [];
-        mockMarkets.forEach(market => {
-          if (market.city_id.startsWith('city-')) {
-            for (let i = 1; i <= 10; i++) {
-              mockCoverageFacts.push({
-                id: mockCoverageFacts.length + 1,
-                updated_at: new Date().toISOString(),
-                status: Math.random() > 0.3 ? 'LIVE' : 'NOT_LIVE', // 70% chance of being LIVE
-                city_id: market.city_id,
-                product_id: `prod_${String(i).padStart(3, '0')}`
-              });
-            }
-          }
-        });
-        
-        setCoverageFacts(mockCoverageFacts);
-
-        // Generate mock products
-        const mockProducts: Product[] = Array.from({ length: 30 }, (_, i) => ({
-          id: `prod_${String(i + 1).padStart(3, '0')}`,
-          name: `Product ${i + 1}`,
-          line_of_business: ['Mobility', 'Restaurant', 'Grocery'][i % 3],
-          sub_team: ['Core', 'Growth', 'Infrastructure'][Math.floor(i / 10)],
-          status: ['Launched', 'In Development', 'Planned'][i % 3],
-          launch_date: i % 3 === 0 ? new Date().toISOString() : null,
-          notes: i % 5 === 0 ? `Notes for product ${i + 1}` : ''
-        }));
-        setProducts(mockProducts);
-
-        // Generate mock blockers
-        const mockBlockers: Blocker[] = [];
-        for (let i = 0; i < 25; i++) {
-          const productIndex = i % 10;
-          const marketIndex = i % mockMarkets.length;
-          
-          mockBlockers.push({
-            id: `blocker_${String(i + 1).padStart(3, '0')}`,
-            product_id: `prod_${String(productIndex + 1).padStart(3, '0')}`,
-            market_id: mockMarkets[marketIndex].city_id,
-            category: ['Technical', 'Legal', 'Business', 'Resource'][i % 4],
-            owner: ['John Doe', 'Jane Smith', 'Bob Jones'][i % 3],
-            eta: new Date(Date.now() + (i * 86400000)).toISOString(), // i days from now
-            note: `Blocker note ${i + 1}: ${['API integration issue', 'Regulatory approval pending', 'Resource allocation', 'Contract negotiation'][i % 4]}`,
-            jira_url: i % 2 === 0 ? `https://jira.example.com/ticket-${i+1}` : null,
-            escalated: i % 3 === 0,
-            created_at: new Date(Date.now() - (i * 86400000)).toISOString(), // i days ago
-            updated_at: new Date().toISOString(),
-            resolved: i % 4 === 0,
-            stale: i % 5 === 0
-          });
-        }
-        
-        setBlockers(mockBlockers);
-      } catch (error) {
-        console.error("Error generating mock data:", error);
-        // Set default empty arrays if mock generation fails
-        setMarkets([]);
-        setCoverageFacts([]);
-        setProducts([]);
-        setBlockers([]);
-      }
-    };
-
-    const fetchMarkets = async () => {
-      try {
-        const { data, error } = await supabase.from('market_dim').select('*');
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          setMarkets(data);
-        } else {
-          console.log("No markets found in database, using mock data");
-          // Will use mock data
-        }
-      } catch (error) {
-        console.error("Error fetching markets:", error);
-      }
-    };
-
-    const fetchCoverageFacts = async () => {
-      try {
-        const { data, error } = await supabase.from('coverage_fact').select('*');
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          setCoverageFacts(data);
-        } else {
-          console.log("No coverage facts found in database, using mock data");
-          // Will use mock data
-        }
-      } catch (error) {
-        console.error("Error fetching coverage facts:", error);
-      }
-    };
-
-    const loadData = async () => {
-      setLoadingState(true);
-      await Promise.all([
-        fetchUser(),
-        fetchMarkets(),
-        fetchCoverageFacts()
-      ]);
-      
-      // If no real data was loaded, use mock data
-      if (markets.length === 0 || coverageFacts.length === 0) {
-        await fetchMockData();
-      }
-      
-      setLoadingState(false);
-    };
-
-    loadData();
-  }, []);
-
-  const getProductById = (id: string) => products.find(product => product.id === id);
-  
-  const getMarketById = (id: string) => markets.find(market => 
-    market.city_id === id || 
-    market.country_code === id || 
-    `region-${market.region}` === id
-  );
-  
-  const getAllMarkets = () => markets;
-
-  // Return visible markets based on current drill level
-  const getVisibleMarkets = () => {
-    if (drillLevel === 0) {
-      // Get unique regions
-      const uniqueRegions = Array.from(new Set(markets.map(m => m.region)));
-      return uniqueRegions.map(region => {
-        const firstMarketInRegion = markets.find(m => m.region === region);
-        return firstMarketInRegion || markets[0]; // Fallback to first market if none found
+    if (market.type === 'city') return [market];
+    
+    // For non-city markets, recursively get all city children
+    let cities: Market[] = [];
+    
+    if (market.type === 'country') {
+      cities = marketsData.filter(m => m.type === 'city' && m.parent_id === marketId);
+    } else if (market.type === 'region') {
+      const countries = marketsData.filter(m => m.type === 'country' && m.parent_id === marketId);
+      countries.forEach(country => {
+        cities = [...cities, ...marketsData.filter(m => m.type === 'city' && m.parent_id === country.id)];
       });
-    } else if (drillLevel === 1) {
-      if (!selectedRegion) return [];
-      // Get countries in the selected region
-      return markets.filter(m => m.region === selectedRegion && 
-        getMarketDimType(m) !== 'city');
-    } else if (drillLevel === 2) {
-      if (!selectedCountry) return [];
-      // Get cities in the selected country (limit to top 5)
-      return markets
-        .filter(m => m.country_code === selectedCountry && getMarketDimType(m) === 'city')
-        .slice(0, 5);
+    } else if (market.type === 'mega_region') {
+      const regions = marketsData.filter(m => m.type === 'region' && m.parent_id === marketId);
+      regions.forEach(region => {
+        const countries = marketsData.filter(m => m.type === 'country' && m.parent_id === region.id);
+        countries.forEach(country => {
+          cities = [...cities, ...marketsData.filter(m => m.type === 'city' && m.parent_id === country.id)];
+        });
+      });
     }
-    return [];
+    
+    return cities;
   };
-
-  // Return filtered products based on selected filters
-  const getFilteredProducts = () => {
-    let filtered = [...products];
+  
+  // Get all cities in TAM for a specific product
+  const getProductTamCities = (productId: string): Market[] => {
+    const tamCityIds = tamScopeState
+      .filter(ts => ts.product_id === productId)
+      .map(ts => ts.city_id);
+    
+    return marketsData.filter(m => m.type === 'city' && tamCityIds.includes(m.id));
+  };
+  
+  // Get all countries that have at least one city in TAM for a specific product
+  const getProductTamCountries = (productId: string): Market[] => {
+    const tamCities = getProductTamCities(productId);
+    const tamCountryIds = new Set(tamCities.map(city => city.parent_id).filter(Boolean) as string[]);
+    
+    return marketsData.filter(m => m.type === 'country' && tamCountryIds.has(m.id));
+  };
+  
+  // Get all regions that have at least one city in TAM for a specific product
+  const getProductTamRegions = (productId: string): Market[] => {
+    const tamCountries = getProductTamCountries(productId);
+    const tamRegionIds = new Set(tamCountries.map(country => country.parent_id).filter(Boolean) as string[]);
+    
+    return marketsData.filter(m => m.type === 'region' && tamRegionIds.has(m.id));
+  };
+  
+  // Check if user's location (region/country) is in TAM for a product
+  const isUserLocationInTam = (productId: string): boolean => {
+    // First check if user's country is in TAM
+    const userCountry = marketsData.find(m => m.type === 'country' && m.name === currentUser.country);
+    
+    if (userCountry) {
+      // Check if any city in this country is in TAM
+      const citiesInCountry = marketsData.filter(m => m.type === 'city' && m.parent_id === userCountry.id);
+      return citiesInCountry.some(city => tamScopeState.some(ts => ts.product_id === productId && ts.city_id === city.id));
+    }
+    
+    return false;
+  };
+  
+  // Function to get coverage value as a normalized cell for the heatmap
+  const getCoverageCell = (productId: string, marketId: string): HeatmapCell | null => {
+    const coverage = coverageDataState.find(c => 
+      c.product_id === productId && c.market_id === marketId
+    );
+    
+    if (!coverage) return null;
+    
+    let value: number;
+    
+    if (coverageType === 'city_percentage') {
+      value = coverage.city_percentage;
+    } else if (coverageType === 'gb_weighted') {
+      value = coverage.gb_weighted;
+    } else {
+      // TAM percentage - for demo purposes, let's calculate it based on other metrics
+      // In a real implementation, this would come from the database or be calculated server-side
+      value = coverage.tam_percentage || (coverage.city_percentage * 1.2 > 100 ? 100 : coverage.city_percentage * 1.2);
+    }
+    
+    // If useTam is true, adjust the calculation for TAM-only markets
+    if (useTam) {
+      const market = getMarketById(marketId);
+      if (!market) return null;
+      
+      // For demo purposes, we'll simply adjust the value by a factor
+      // In a real implementation, this would be calculated differently
+      if (isMarketInTam(productId, marketId)) {
+        value = Math.min(value * 1.15, 100); // Slightly boost TAM markets
+      } else {
+        value = Math.max(value * 0.85, 0); // Slightly reduce non-TAM markets
+      }
+    }
+    
+    const blocker = blockersData.find(b => 
+      b.product_id === productId && 
+      b.market_id === marketId && 
+      !b.resolved
+    );
+    
+    return {
+      productId,
+      marketId,
+      coverage: value,
+      status: blocker ? 'blocked' : value >= 95 ? 'green' : value >= 70 ? 'yellow' : 'red',
+      hasBlocker: !!blocker,
+      blockerId: blocker?.id
+    };
+  };
+  
+  // Helper functions for data access
+  const getProductById = (productId: string) => productsData.find(p => p.id === productId);
+  const getMarketById = (marketId: string) => marketsData.find(m => m.id === marketId);
+  const getBlockerById = (blockerId: string) => blockersData.find(b => b.id === blockerId);
+  
+  // Function to add a new blocker
+  const addBlocker = (blocker: Omit<Blocker, "id" | "created_at">) => {
+    const newBlocker: Blocker = {
+      ...blocker,
+      id: `b-${blockersData.length + 1}`,
+      created_at: new Date().toISOString(),
+    };
+    
+    setBlockersData(prev => [...prev, newBlocker]);
+  };
+  
+  // Function to update an existing blocker
+  const updateBlocker = (blockerId: string, updates: Partial<Blocker>) => {
+    setBlockersData(prev => prev.map(blocker => 
+      blocker.id === blockerId 
+        ? { ...blocker, ...updates, updated_at: new Date().toISOString() } 
+        : blocker
+    ));
+  };
+  
+  // Function to add a new cell comment
+  const addCellComment = (comment: Omit<CellComment, "comment_id" | "created_at">) => {
+    const newComment: CellComment = {
+      ...comment,
+      comment_id: `c-${cellCommentsState.length + 1}`,
+      created_at: new Date().toISOString(),
+    };
+    
+    setCellCommentsState(prev => [...prev, newComment]);
+  };
+  
+  // Function to update an existing cell comment
+  const updateCellComment = (commentId: string, updates: Partial<CellComment>) => {
+    setCellCommentsState(prev => prev.map(comment => 
+      comment.comment_id === commentId 
+        ? { 
+            ...comment, 
+            ...updates, 
+            ...(updates.answer ? { 
+              status: 'ANSWERED', 
+              answered_at: new Date().toISOString() 
+            } : {}) 
+          } 
+        : comment
+    ));
+  };
+  
+  // Function to update coverage data
+  const updateCoverage = (productId: string, marketId: string, value: number) => {
+    setCoverageDataState(prev => prev.map(c => 
+      c.product_id === productId && c.market_id === marketId
+        ? { ...c, [coverageType]: value, updated_at: new Date().toISOString() }
+        : c
+    ));
+  };
+  
+  // Function to get visible markets based on current drill-down level
+  const getVisibleMarkets = (): Market[] => {
+    if (currentLevel === 'mega_region') {
+      return marketsData.filter(m => m.type === 'mega_region');
+    }
+    
+    if (!selectedParent) return [];
+    
+    return marketsData.filter(m => m.type === currentLevel && m.parent_id === selectedParent);
+  };
+  
+  // Function to get filtered products based on user selections
+  const getFilteredProducts = (): Product[] => {
+    let filtered = productsData;
     
     if (selectedLOBs.length > 0) {
       filtered = filtered.filter(p => selectedLOBs.includes(p.line_of_business));
@@ -475,309 +299,90 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       filtered = filtered.filter(p => selectedSubTeams.includes(p.sub_team));
     }
     
+    if (hideFullCoverage) {
+      filtered = filtered.filter(product => {
+        const markets = getVisibleMarkets();
+        return markets.some(market => {
+          const cell = getCoverageCell(product.id, market.id);
+          return cell && cell.coverage < 95;
+        });
+      });
+    }
+    
     return filtered;
   };
-
-  // Get coverage cell data - updating to provide realistic data
-  const getCoverageCell = (productId: string, marketId: string): HeatmapCell | undefined => {
-    const market = getMarketById(marketId);
-    if (!market) return undefined;
-    
-    // First check if we have real coverage data
-    if (coverageFacts.length > 0) {
-      const fact = coverageFacts.find(cf => cf.product_id === productId && cf.city_id === marketId);
-      if (fact) {
-        const hasBlocker = blockers.some(b => 
-          b.product_id === productId && 
-          b.market_id === marketId &&
-          !b.resolved
-        );
-        
-        const blockerId = hasBlocker ? 
-          blockers.find(b => b.product_id === productId && b.market_id === marketId && !b.resolved)?.id : 
-          undefined;
-        
-        return {
-          productId,
-          marketId,
-          coverage: fact.status === 'LIVE' ? 100 : 0,
-          status: fact.status,
-          hasBlocker,
-          blockerId
-        };
-      }
-    }
-    
-    // For regions and countries, aggregate coverage from child markets
-    let coverage = 0;
-    let totalMarkets = 0;
-    let hasAnyBlocker = false;
-    let blockerId: string | undefined = undefined;
-    
-    // Get all markets that should be included in the calculation
-    const getRelevantMarkets = () => {
-      if (getMarketDimType(market) === 'region') {
-        // For regions, get countries in this region
-        return markets.filter(m => 
-          m.region === market.region && 
-          getMarketDimType(m) === 'city' && 
-          (!useTam || isMarketInTam(m.city_id, productId))
-        );
-      } else if (getMarketDimType(market) === 'country') {
-        // For countries, get cities in this country
-        return markets.filter(m => 
-          m.country_code === market.country_code && 
-          getMarketDimType(m) === 'city' && 
-          (!useTam || isMarketInTam(m.city_id, productId))
-        );
-      }
-      return [];
-    };
-    
-    const relevantMarkets = getRelevantMarkets();
-    
-    if (getMarketDimType(market) === 'region' || getMarketDimType(market) === 'country') {
-      relevantMarkets.forEach(m => {
-        totalMarkets++;
-        const cityCell = getCoverageCell(productId, m.city_id);
-        if (cityCell) {
-          coverage += cityCell.coverage;
-          if (cityCell.hasBlocker) {
-            hasAnyBlocker = true;
-            if (!blockerId) blockerId = cityCell.blockerId;
-          }
-        }
-      });
-    } else {
-      // For cities, generate a synthetic coverage value if we don't have real data
-      const seed = (parseInt(productId.replace(/\D/g, '')) + parseInt(marketId.replace(/\D/g, '')) || 1) % 100;
-      coverage = Math.min(100, Math.max(0, seed)); // 0-100%
-      
-      // Determine if this city-product pair has a blocker
-      hasAnyBlocker = blockers.some(b => 
-        b.product_id === productId && 
-        b.market_id === marketId &&
-        !b.resolved
-      );
-      
-      blockerId = hasAnyBlocker ? 
-        blockers.find(b => b.product_id === productId && b.market_id === marketId && !b.resolved)?.id : 
-        undefined;
-        
-      // If TAM Only is selected and this city isn't in TAM, return undefined
-      if (useTam && !isMarketInTam(marketId, productId)) {
-        return undefined;
-      }
-    }
-    
-    // Calculate average coverage for aggregated markets
-    if (totalMarkets > 0) {
-      coverage = coverage / totalMarkets;
-    }
-    
-    return {
-      productId,
-      marketId,
-      coverage,
-      status: coverage >= 90 ? 'LIVE' : 'NOT_LIVE',
-      hasBlocker: hasAnyBlocker,
-      blockerId
-    };
-  };
   
-  // Helper function to determine if a market is in the TAM for a product
-  const isMarketInTam = (marketId: string, productId: string): boolean => {
-    // Simulate TAM logic - in a real app, this would check against tam_scope table
-    // For now, let's simulate that ~60% of markets are in TAM for each product
-    const hash = (marketId + productId).split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0);
-    
-    return Math.abs(hash % 100) < 60;
-  };
-
+  // Function to get product notes combined with blocker information
   const getProductNotes = (productId: string): string => {
     const product = getProductById(productId);
-    return product?.notes || '';
+    if (!product) return '';
+    
+    const productNotes = product.notes || '';
+    
+    const productBlockers = blockersData
+      .filter(blocker => blocker.product_id === productId && !blocker.resolved)
+      .map(blocker => `[${blocker.category}] ${blocker.note} (ETA: ${new Date(blocker.eta).toLocaleDateString()})`)
+      .join('\n');
+    
+    return [productNotes, productBlockers].filter(Boolean).join('\n\n');
   };
-
-  const getMarketsForRegion = (region: string): MarketDim[] => {
-    return markets.filter(m => m.region === region && getMarketDimType(m) === 'country');
+  
+  // Function to get all markets
+  const getAllMarkets = (): Market[] => {
+    return marketsData;
   };
-
-  const getMarketsForCountry = (countryCode: string): MarketDim[] => {
-    return markets.filter(m => m.country_code === countryCode && getMarketDimType(m) === 'city');
-  };
-
-  const getCoverageStatusForCityProduct = (cityId: string, productId: string): string => {
-    const coverageFact = coverageFacts.find(cf => cf.city_id === cityId && cf.product_id === productId);
-    return coverageFact?.status || 'NOT_LIVE';
-  };
-
-  const getBlockerById = (blockerId: string): Blocker | undefined => {
-    return blockers.find(b => b.id === blockerId);
-  };
-
-  const addBlocker = async (blocker: Omit<Blocker, 'id' | 'created_at' | 'updated_at'>): Promise<void> => {
-    try {
-      // Since the 'blockers' table doesn't exist in Supabase, we'll simulate adding a blocker
-      const newBlocker: Blocker = {
-        ...blocker,
-        id: `blocker_${Date.now()}`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      setBlockers([...blockers, newBlocker]);
-      console.log("Added new blocker:", newBlocker);
-    } catch (error) {
-      console.error("Error adding blocker:", error);
-      throw error;
-    }
-  };
-
-  const updateBlocker = async (blocker: Partial<Blocker> & { id: string }): Promise<void> => {
-    try {
-      // Since the 'blockers' table doesn't exist in Supabase, we'll simulate updating a blocker
-      const updatedBlockers = blockers.map(b => 
-        b.id === blocker.id ? { ...b, ...blocker, updated_at: new Date().toISOString() } : b
-      );
-      
-      setBlockers(updatedBlockers);
-      console.log("Updated blocker:", blocker.id);
-    } catch (error) {
-      console.error("Error updating blocker:", error);
-      throw error;
-    }
-  };
-
-  // Mock implementations for TAM-related functions
-  const getProductTamRegions = (productId: string): Market[] => {
-    const tamRegions = ['APAC', 'US/CAN'].includes(user.region) ? [user.region] : ['EMEA', 'LATAM'];
-    return tamRegions.map(region => {
-      const marketDim = markets.find(m => m.region === region) || markets[0];
-      return marketDimToMarket(marketDim);
-    });
-  };
-
-  const getProductTamCountries = (productId: string): Market[] => {
-    // Get a few countries as part of the TAM
-    const tamCountries = markets
-      .filter(m => getMarketDimType(m) === 'country')
-      .filter((_, index) => index % 3 === 0)
-      .slice(0, 5);
-    return marketDimsToMarkets(tamCountries);
-  };
-
-  const getProductTamCities = (productId: string): Market[] => {
-    // Get a few cities as part of the TAM
-    const tamCities = markets
-      .filter(m => getMarketDimType(m) === 'city')
-      .filter((_, index) => index % 4 === 0)
-      .slice(0, 10);
-    return marketDimsToMarkets(tamCities);
-  };
-
-  const isUserLocationInTam = (productId: string): boolean => {
-    return Math.random() > 0.5; // 50% chance of being in TAM
-  };
-
-  const addCellComment = async (comment: Omit<CellComment, 'comment_id' | 'created_at'>): Promise<void> => {
-    try {
-      const { data, error } = await supabase
-        .from('cell_comment')
-        .insert({
-          product_id: comment.product_id,
-          city_id: comment.city_id,
-          author_id: comment.author_id,
-          question: comment.question,
-          answer: comment.answer,
-          status: comment.status,
-          answered_at: comment.answered_at,
-          tam_escalation: comment.tam_escalation || false
-        })
-        .select();
-      
-      if (error) throw error;
-      
-      console.log("Added comment:", data);
-    } catch (error) {
-      console.error("Error adding cell comment:", error);
-      throw error;
-    }
-  };
-
+  
   return (
-    <DashboardContext.Provider 
-      value={{ 
-        user, 
-        products, 
-        blockers,
-        markets,
-        getProductById, 
-        getMarketById, 
-        getAllMarkets,
-        getVisibleMarkets,
-        getFilteredProducts,
-        getCoverageCell,
-        
-        // New drill-down navigation
-        drillLevel,
-        setDrillLevel,
-        selectedRegion,
-        setSelectedRegion,
-        selectedCountry,
-        setSelectedCountry,
-        
-        // Keep old navigation for compatibility
-        currentLevel,
-        setCurrentLevel,
-        selectedParent,
-        setSelectedParent,
-        
+    <DashboardContext.Provider
+      value={{
+        markets: marketsData,
+        products: productsData,
+        coverageData: coverageDataState,
+        blockers: blockersData,
+        user: currentUser,
         coverageType,
         setCoverageType,
-        getProductNotes,
         selectedLOBs,
         setSelectedLOBs,
         selectedSubTeams,
         setSelectedSubTeams,
         hideFullCoverage,
         setHideFullCoverage,
-        useTam,
-        setUseTam,
-        getMarketsForRegion,
-        getMarketsForCountry,
-        getCoverageStatusForCityProduct,
-        loadingState,
+        currentLevel,
+        setCurrentLevel,
+        selectedParent,
+        setSelectedParent,
+        getCoverageCell,
+        getProductById,
+        getMarketById,
         getBlockerById,
         addBlocker,
         updateBlocker,
-        getProductTamRegions,
-        getProductTamCountries,
+        updateCoverage,
+        getVisibleMarkets,
+        getFilteredProducts,
+        getProductNotes,
+        getAllMarkets,
+        useTam,
+        setUseTam,
+        isMarketInTam,
         getProductTamCities,
+        getProductTamCountries,
+        getProductTamRegions,
         isUserLocationInTam,
         addCellComment,
-        
-        // New helper methods
-        resetToLevel,
-        getColumnsForCurrentLevel,
-        handleCellClick,
-        
-        // Add the new helper function to the context
-        isMarketInTam
+        updateCellComment
       }}
     >
       {children}
     </DashboardContext.Provider>
   );
-};
+}
 
-export const useDashboard = () => {
+export function useDashboard() {
   const context = useContext(DashboardContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useDashboard must be used within a DashboardProvider");
   }
   return context;
-};
+}

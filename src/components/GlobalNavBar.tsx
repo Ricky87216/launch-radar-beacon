@@ -53,17 +53,18 @@ const GlobalNavBar = () => {
   }, [toggleSidebar, navigate]);
 
   // Determine if the user has admin privileges
+  // Fix: Check for admin role using the correct role type from the User interface
   const hasAdminAccess = user?.role === 'admin' || user?.role === 'editor';
 
   return (
-    <header className="sticky top-0 z-50 h-14 w-full border-b bg-white">
+    <header className="sticky top-0 z-50 h-14 w-full border-b bg-background">
       <div className="container flex h-14 items-center px-4">
         <div className="flex items-center mr-4">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={toggleSidebar} 
-            className="mr-2 text-[var(--uber-black)]"
+            className="mr-2"
             aria-label="Toggle menu"
           >
             <Menu className="h-5 w-5" />
@@ -73,15 +74,14 @@ const GlobalNavBar = () => {
             variant="ghost" 
             size="icon" 
             onClick={handleBackClick}
-            className="mr-2 text-[var(--uber-black)]" 
+            className="mr-2" 
             title="Back (Alt+←)"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
           
-          <Link to="/" className="flex items-center">
-            <img src="https://d1a3f4spazzrp4.cloudfront.net/uber/uber-logo.svg" alt="Uber" height="24" className="h-6" />
-            <span className="ml-2 font-semibold">First Launch Coverage</span>
+          <Link to="/" className="flex items-center font-semibold">
+            <span>Global First Launch Coverage</span>
           </Link>
         </div>
         
@@ -94,6 +94,7 @@ const GlobalNavBar = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
+                  {/* Fix: Use user.name for the avatar since avatarUrl doesn't exist */}
                   <AvatarImage src="" />
                   <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>

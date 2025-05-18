@@ -1,4 +1,3 @@
-
 import { Filter, Check } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
 import { 
@@ -47,21 +46,29 @@ export default function Sidebar() {
       </div>
       
       <div className="mb-6">
-        <h3 className="text-sm font-medium mb-2">Coverage Calculation</h3>
+        <h3 className="text-sm font-medium mb-2">Coverage Type</h3>
         <div className="flex items-center space-x-2 mb-2">
           <button
             onClick={() => setCoverageType('city_percentage')}
-            className={`px-3 py-1 text-sm rounded-md bg-primary text-white`}
+            className={`px-3 py-1 text-sm rounded-md ${
+              coverageType === 'city_percentage' 
+                ? 'bg-primary text-white' 
+                : 'bg-gray-100 hover:bg-gray-200'
+            }`}
           >
             City %
           </button>
+          <button
+            onClick={() => setCoverageType('gb_weighted')}
+            className={`px-3 py-1 text-sm rounded-md ${
+              coverageType === 'gb_weighted' 
+                ? 'bg-primary text-white' 
+                : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+          >
+            GB Weighted
+          </button>
         </div>
-        {useTam && (
-          <div className="mt-2 text-xs text-amber-600 flex items-center">
-            <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1"></span>
-            TAM Mode Active
-          </div>
-        )}
       </div>
       
       <div className="mb-6">

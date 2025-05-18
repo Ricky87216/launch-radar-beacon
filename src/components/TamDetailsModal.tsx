@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Search, AlertTriangle } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
-import { Market, marketDimsToMarkets, getMarketDimType, getMarketDimName, getMarketDimParentId } from "../types";
+import { Market } from "../types";
 import { toast } from "@/components/ui/sonner";
 
 interface TamDetailsModalProps {
@@ -25,13 +25,9 @@ export function TamDetailsModal({ isOpen, onClose, productId }: TamDetailsModalP
     getProductTamCities,
     isUserLocationInTam,
     user,
-    getAllMarkets, 
+    markets,
     addCellComment
   } = useDashboard();
-  
-  // Convert MarketDim[] to Market[] for compatibility
-  const allMarkets = getAllMarkets();
-  const markets = marketDimsToMarkets(allMarkets);
   
   const product = getProductById(productId);
   const [activeTab, setActiveTab] = useState("regions");
@@ -94,29 +90,23 @@ export function TamDetailsModal({ isOpen, onClose, productId }: TamDetailsModalP
     
     try {
       // Find the user's city or country market ID
-      const userCountry = allMarkets.find(m => 
-        getMarketDimType(m) === 'country' && 
-        getMarketDimName(m) === user.country
-      );
+      const userCountry = markets.find(m => m.type === 'country' && m.name === user.country);
       
       if (userCountry) {
         // We'll use the first city in the user's country for the escalation
-        const userCity = allMarkets.find(m => 
-          getMarketDimType(m) === 'city' && 
-          getMarketDimParentId(m) === userCountry.country_code
-        );
+        const userCity = markets.find(m => m.type === 'city' && m.parent_id === userCountry.id);
         
         if (userCity) {
           // Add a new comment with TAM escalation flag
-          await addCellComment({
+          addCellComment({
             product_id: productId,
-            city_id: userCity.city_id,
+            city_id: userCity.id,
             author_id: user.id,
             question: `TAM Escalation: ${escalationText}`,
             answer: null,
             status: 'OPEN',
             tam_escalation: true,
-            answered_at: null 
+            answered_at: null // Adding this field to fix the type error
           });
           
           toast.success("TAM escalation submitted successfully!");

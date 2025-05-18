@@ -23,7 +23,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
-import { getMarketDimName, getMarketDimType } from "../types";
 
 interface PreferencesModalProps {
   open: boolean;
@@ -32,15 +31,15 @@ interface PreferencesModalProps {
 
 export default function PreferencesModal({ open, onClose }: PreferencesModalProps) {
   const { toast } = useToast();
-  const { getAllMarkets, getMarketById, user } = useDashboard();
+  const { getAllMarkets, user } = useDashboard();
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
 
   const markets = getAllMarkets();
-  const regions = markets.filter(m => getMarketDimType(m) === 'region');
-  const countries = markets.filter(m => getMarketDimType(m) === 'country');
+  const regions = markets.filter(m => m.type === 'region');
+  const countries = markets.filter(m => m.type === 'country');
 
   // Load user preferences
   useEffect(() => {
@@ -142,8 +141,8 @@ export default function PreferencesModal({ open, onClose }: PreferencesModalProp
   };
 
   const getMarketName = (id: string) => {
-    const market = getMarketById(id);
-    return market ? getMarketDimName(market) : id;
+    const market = markets.find(m => m.id === id);
+    return market ? market.name : id;
   };
 
   return (
@@ -212,17 +211,17 @@ export default function PreferencesModal({ open, onClose }: PreferencesModalProp
             <p className="text-sm text-muted-foreground mb-2">Select regions you want to track</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {regions.map(region => (
-                <div key={region.city_id} className="flex items-center space-x-2">
+                <div key={region.id} className="flex items-center space-x-2">
                   <Checkbox 
-                    id={`region-${region.city_id}`} 
-                    checked={selectedRegions.includes(region.city_id)}
-                    onCheckedChange={() => toggleRegion(region.city_id)}
+                    id={`region-${region.id}`} 
+                    checked={selectedRegions.includes(region.id)}
+                    onCheckedChange={() => toggleRegion(region.id)}
                   />
                   <label 
-                    htmlFor={`region-${region.city_id}`}
+                    htmlFor={`region-${region.id}`}
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
-                    {getMarketDimName(region)}
+                    {region.name}
                   </label>
                 </div>
               ))}
@@ -235,17 +234,17 @@ export default function PreferencesModal({ open, onClose }: PreferencesModalProp
             <p className="text-sm text-muted-foreground mb-2">Select specific countries you want to track</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 max-h-60 overflow-y-auto">
               {countries.map(country => (
-                <div key={country.city_id} className="flex items-center space-x-2">
+                <div key={country.id} className="flex items-center space-x-2">
                   <Checkbox 
-                    id={`country-${country.city_id}`} 
-                    checked={selectedCountries.includes(country.city_id)}
-                    onCheckedChange={() => toggleCountry(country.city_id)}
+                    id={`country-${country.id}`} 
+                    checked={selectedCountries.includes(country.id)}
+                    onCheckedChange={() => toggleCountry(country.id)}
                   />
                   <label 
-                    htmlFor={`country-${country.city_id}`}
+                    htmlFor={`country-${country.id}`}
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
-                    {getMarketDimName(country)}
+                    {country.name}
                   </label>
                 </div>
               ))}
