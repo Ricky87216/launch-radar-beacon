@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,8 +24,8 @@ interface ProductCardModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Default mock screenshot URL - this represents a stylized Uber app interface
-const DEFAULT_SCREENSHOT = "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80";
+// Default mock screenshot URL - this represents a real Uber app interface
+const DEFAULT_SCREENSHOT = "https://media.wired.com/photos/59fb679f8e9fc3082ad64894/master/w_2560%2Cc_limit/uber-TA.jpg";
 
 const ProductCardModal = ({ 
   productId, 
@@ -107,47 +106,12 @@ const ProductCardModal = ({
   const renderMockScreenshot = () => {
     return (
       <div className="border border-gray-200 rounded-md shadow-md overflow-hidden mb-4">
-        {/* App header */}
-        <div className="bg-black text-white p-3 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 rounded-full bg-white"></div>
-            <span className="text-sm font-medium">Uber</span>
-          </div>
-          <div className="flex space-x-2">
-            <div className="w-2 h-2 rounded-full bg-white"></div>
-            <div className="w-2 h-2 rounded-full bg-white"></div>
-          </div>
-        </div>
-        
-        {/* App content */}
-        <div className="bg-gradient-to-b from-gray-50 to-white p-4">
-          {/* Map placeholder */}
-          <div className="bg-gray-200 h-32 rounded mb-3 flex items-center justify-center">
-            <span className="text-gray-500 text-sm">Map View</span>
-          </div>
-          
-          {/* Where to? input */}
-          <div className="bg-white rounded-full shadow p-3 mb-3 flex items-center">
-            <div className="w-2 h-2 rounded-full bg-black mr-2"></div>
-            <span className="text-sm text-gray-600">Where to?</span>
-          </div>
-          
-          {/* Ride options */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="bg-white p-2 rounded shadow-sm flex flex-col items-center">
-              <div className="w-6 h-6 rounded bg-gray-200 mb-1"></div>
-              <span className="text-xs">UberX</span>
-            </div>
-            <div className="bg-white p-2 rounded shadow-sm flex flex-col items-center">
-              <div className="w-6 h-6 rounded bg-gray-200 mb-1"></div>
-              <span className="text-xs">Comfort</span>
-            </div>
-            <div className="bg-white p-2 rounded shadow-sm flex flex-col items-center">
-              <div className="w-6 h-6 rounded bg-gray-200 mb-1"></div>
-              <span className="text-xs">XL</span>
-            </div>
-          </div>
-        </div>
+        <img 
+          src={DEFAULT_SCREENSHOT}
+          alt="Uber app interface"
+          className="w-full h-auto rounded-md shadow-inner"
+          onError={() => setScreenshotError(true)}
+        />
       </div>
     );
   };
