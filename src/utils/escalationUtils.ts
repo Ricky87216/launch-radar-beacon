@@ -1,8 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { EscalationStatus, mapAppStatusToDatabaseStatus } from "@/types";
-
-export type MarketType = 'city' | 'country' | 'region';
+import { EscalationStatus, DatabaseEscalationStatus, MarketType, mapAppStatusToDatabaseStatus } from "@/types";
 
 export interface EscalationFormData {
   poc: string;

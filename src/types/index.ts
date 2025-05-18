@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   name: string;
@@ -84,6 +85,35 @@ export interface HeatmapCell {
   hasBlocker: boolean;
   blockerId?: string;
 }
+
+// Define escalation status types
+export type EscalationStatus = 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
+export type DatabaseEscalationStatus = 'OPEN' | 'DISCUSSION' | 'BLOCKED' | 'LAUNCHING' | 'ALIGNED';
+export type MarketType = 'city' | 'country' | 'region';
+
+// Maps the application status to the corresponding database status
+export const mapAppStatusToDatabaseStatus = (appStatus: EscalationStatus): DatabaseEscalationStatus => {
+  const statusMap: Record<EscalationStatus, DatabaseEscalationStatus> = {
+    'SUBMITTED': 'OPEN',
+    'IN_DISCUSSION': 'DISCUSSION',
+    'RESOLVED_BLOCKED': 'BLOCKED',
+    'RESOLVED_LAUNCHING': 'LAUNCHING',
+    'RESOLVED_LAUNCHED': 'ALIGNED'
+  };
+  return statusMap[appStatus];
+};
+
+// Maps the database status to the corresponding application status
+export const mapDatabaseStatusToAppStatus = (dbStatus: DatabaseEscalationStatus): EscalationStatus => {
+  const statusMap: Record<DatabaseEscalationStatus, EscalationStatus> = {
+    'OPEN': 'SUBMITTED',
+    'DISCUSSION': 'IN_DISCUSSION',
+    'BLOCKED': 'RESOLVED_BLOCKED',
+    'LAUNCHING': 'RESOLVED_LAUNCHING',
+    'ALIGNED': 'RESOLVED_LAUNCHED'
+  };
+  return statusMap[dbStatus];
+};
 
 export const marketDimToMarket = (marketDim: MarketDim): Market => ({
   id: marketDim.city_id,

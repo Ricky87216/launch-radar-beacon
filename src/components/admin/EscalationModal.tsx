@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Shield } from "lucide-react";
 import { useDashboard } from "@/context/DashboardContext";
 import { loadEscalationHistory } from "@/utils/escalationUtils";
-import { Market, marketDimToMarket, MarketType, getMarketDimType } from "@/types";
+import { Market, marketDimToMarket, MarketType } from "@/types";
 
 import {
   Dialog,
@@ -50,7 +50,8 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
     name: "Unknown Market",
     type: (marketType === 'state' ? 'country' : marketType) as MarketType, // Cast to MarketType for compatibility
     parent_id: null,
-    geo_path: ""
+    geo_path: "",
+    gb_weight: 0 // Adding the required gb_weight property
   };
   
   // Load history data when modal opens and tab is history
