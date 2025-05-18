@@ -1,3 +1,4 @@
+
 import { useMemo, useState, useEffect } from "react";
 import { 
   ChevronRight, 
@@ -179,6 +180,32 @@ export default function HeatmapGrid({ onEscalate, onShowBlocker }: HeatmapGridPr
       setSelectedParent(null);
       toast.info("Going back to mega region view");
     }
+  };
+  
+  // Function to get cell color based on coverage value
+  const getCellColor = (coverage: number) => {
+    if (coverage >= 95) return 'bg-heatmap-green';
+    if (coverage >= 70) return 'bg-heatmap-yellow';
+    return 'bg-heatmap-red';
+  };
+  
+  // Function to get formatted coverage value
+  const getFormattedCoverage = (value: number) => {
+    return `${value.toFixed(1)}%`;
+  };
+  
+  // Get product-specific blockers
+  const getProductBlockers = (productId: string) => {
+    return blockers
+      .filter(blocker => blocker.product_id === productId && !blocker.resolved)
+      .map(blocker => `[${blocker.category}] ${blocker.note} (ETA: ${new Date(blocker.eta).toLocaleDateString()})`)
+      .join('\n');
+  };
+  
+  // Function to open TAM modal
+  const handleOpenTamModal = (productId: string) => {
+    setSelectedProductForTam(productId);
+    setIsTamModalOpen(true);
   };
   
   // Fixed: Make sure this function correctly handles escalation
