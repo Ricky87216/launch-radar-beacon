@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Shield } from "lucide-react";
 import { useDashboard } from "@/context/DashboardContext";
 import { loadEscalationHistory } from "@/utils/escalationUtils";
+import { useNavigate } from "react-router-dom";
 
 import {
   Dialog,
@@ -37,9 +38,11 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
   marketId,
   marketType,
 }) => {
+  const navigate = useNavigate();
   const { getProductById, getMarketById, user } = useDashboard();
   const [activeTab, setActiveTab] = useState("create");
   const [history, setHistory] = useState<any[]>([]);
+  const [showSuccess, setShowSuccess] = useState(false);
   
   const product = getProductById(productId);
   const market = getMarketById(marketId);
@@ -55,46 +58,79 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
     }
   }, [isOpen, activeTab, productId, marketId, marketType]);
   
+  const handleFormSuccess = () => {
+    setShowSuccess(true);
+    // Automatically close after 3 seconds
+    setTimeout(() => {
+      onClose();
+      navigate("/escalations");
+    }, 3000);
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-red-500" />
-            <span>Escalate Blocked Status</span>
-          </DialogTitle>
-          <DialogDescription>
-            Request an escalation to count this blocked market as launched.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full">
-            <TabsTrigger value="create" className="flex-1">Escalate</TabsTrigger>
-            <TabsTrigger value="history" className="flex-1">History</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="create" className="space-y-4 pt-4">
-            <EscalationForm 
-              productId={productId}
-              marketId={marketId}
-              marketType={marketType}
-              product={product}
-              market={market}
-              onClose={onClose}
-              userName={user?.name || "Unknown user"}
-            />
-          </TabsContent>
-          
-          <TabsContent value="history" className="pt-4">
-            <EscalationHistory history={history} />
-            <div className="mt-6 flex justify-end">
-              <Button variant="outline" onClick={onClose}>
-                Close
+        {showSuccess ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-green-500" />
+                <span>Escalation Submitted</span>
+              </DialogTitle>
+              <DialogDescription>
+                Your escalation has been submitted successfully.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center py-6">
+              <p className="mb-4 text-center">
+                You will be redirected to the Escalation Log shortly.
+              </p>
+              <Button onClick={() => navigate("/escalations")}>
+                View Escalation Log Now
               </Button>
             </div>
-          </TabsContent>
-        </Tabs>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-red-500" />
+                <span>Escalate Blocked Status</span>
+              </DialogTitle>
+              <DialogDescription>
+                Request an escalation to count this blocked market as launched.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="w-full">
+                <TabsTrigger value="create" className="flex-1">Escalate</TabsTrigger>
+                <TabsTrigger value="history" className="flex-1">History</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="create" className="space-y-4 pt-4">
+                <EscalationForm 
+                  productId={productId}
+                  marketId={marketId}
+                  marketType={marketType}
+                  product={product}
+                  market={market}
+                  onClose={handleFormSuccess}
+                  userName={user?.name || "Unknown user"}
+                />
+              </TabsContent>
+              
+              <TabsContent value="history" className="pt-4">
+                <EscalationHistory history={history} />
+                <div className="mt-6 flex justify-end">
+                  <Button variant="outline" onClick={onClose}>
+                    Close
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

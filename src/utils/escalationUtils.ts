@@ -11,6 +11,14 @@ export interface EscalationFormData {
   reasonType: string;
 }
 
+export interface ExtendedEscalationFormData extends EscalationFormData {
+  techPoc?: string;
+  techSponsor?: string;
+  opsPoc?: string;
+  opsSponsor?: string;
+  additionalStakeholders?: string;
+}
+
 export const getMarketIdField = (marketType: MarketType) => {
   switch (marketType) {
     case 'city':
@@ -86,6 +94,106 @@ export const submitEscalation = async (
     .from("escalation")
     .insert(insertData as any)
     .select();
+};
+
+export const updateEscalationStatus = async (
+  escalationId: string,
+  newStatus: EscalationStatus,
+  note: string = ""
+) => {
+  // Convert app status to database status
+  const dbStatus = mapAppStatusToDatabaseStatus(newStatus);
+  
+  // Get current status first
+  const { data: currentEscalation } = await supabase
+    .from("escalation")
+    .select("status")
+    .eq("esc_id", escalationId)
+    .single();
+    
+  if (!currentEscalation) {
+    throw new Error("Escalation not found");
+  }
+  
+  // Update the escalation status
+  const updateData = {
+    status: dbStatus,
+    ...(newStatus === 'RESOLVED_LAUNCHED' ? { aligned_at: new Date().toISOString() } : {}),
+    ...(newStatus.startsWith('RESOLVED_') ? { resolved_at: new Date().toISOString() } : {})
+  };
+  
+  const { data, error } = await supabase
+    .from("escalation")
+    .update(updateData as any)
+    .eq("esc_id", escalationId)
+    .select();
+    
+  if (error) throw error;
+  
+  // Log the status change in history
+  await supabase
+    .from("escalation_history")
+    .insert({
+      escalation_id: escalationId,
+      user_id: "Current user", // This should be the actual user ID in production
+      old_status: currentEscalation.status,
+      new_status: dbStatus,
+      notes: note || `Status changed to ${newStatus}`
+    } as any);
+    
+  return data;
+};
+
+export const addEscalationComment = async (
+  escalationId: string,
+  userId: string,
+  comment: string
+) => {
+  // Get current status first
+  const { data: currentEscalation } = await supabase
+    .from("escalation")
+    .select("status")
+    .eq("esc_id", escalationId)
+    .single();
+    
+  if (!currentEscalation) {
+    throw new Error("Escalation not found");
+  }
+  
+  // Add comment to history without changing status
+  return await supabase
+    .from("escalation_history")
+    .insert({
+      escalation_id: escalationId,
+      user_id: userId,
+      old_status: currentEscalation.status,
+      new_status: currentEscalation.status, // Same status, just adding a comment
+      notes: comment
+    } as any);
+};
+
+export const getEscalationDetails = async (escalationId: string) => {
+  // Get the escalation details
+  const { data, error } = await supabase
+    .from("escalation")
+    .select("*")
+    .eq("esc_id", escalationId)
+    .single();
+  
+  if (error) throw error;
+  
+  // Get the comments/history
+  const { data: historyData } = await supabase
+    .from("escalation_history")
+    .select("*")
+    .eq("escalation_id", escalationId)
+    .order("changed_at", { ascending: false });
+    
+  return {
+    ...data,
+    status: mapDatabaseStatusToAppStatus(data.status),
+    history: historyData || []
+  };
 };
 
 export const logEscalationAction = async (product: string, market: string) => {

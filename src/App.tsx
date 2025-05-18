@@ -50,6 +50,7 @@ function App() {
                     <Route path="/admin/escalations" element={<Escalations />} />
                     <Route path="/admin/product-meta" element={<ProductMeta />} />
                     <Route path="/escalations" element={<EscalationLog />} />
+                    <Route path="/escalations/:id" element={<EscalationLog />} />
                     <Route path="/index" element={<Index />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

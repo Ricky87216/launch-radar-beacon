@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -16,11 +17,23 @@ import {
   ShieldCheck,
   ShieldOff,
   ShieldQuestion,
-  MessageSquare
+  MessageSquare,
+  Search,
+  Filter
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { EscalationStatus, mapDatabaseStatusToAppStatus } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import EscalationDetail from "@/components/admin/EscalationDetail";
 
 interface EscalationHistoryItem {
   id: string;
@@ -32,65 +45,143 @@ interface EscalationHistoryItem {
   changed_at: string;
   product_name?: string;
   market_name?: string;
+  impact_type?: string;
 }
 
 const EscalationLog = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { id: selectedEscalationId } = useParams<{ id: string }>();
+  
   const [isLoading, setIsLoading] = useState(true);
   const [historyItems, setHistoryItems] = useState<EscalationHistoryItem[]>([]);
+  const [filters, setFilters] = useState({
+    status: "all",
+    search: "",
+  });
+  const [filteredItems, setFilteredItems] = useState<EscalationHistoryItem[]>([]);
+  
+  // Statistics state
+  const [stats, setStats] = useState({
+    totalEscalations: 0,
+    pendingEscalations: 0,
+    resolvedEscalations: 0,
+  });
 
   useEffect(() => {
-    const fetchEscalationHistory = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Get the escalation history
-        const { data: historyData, error } = await supabase
-          .from("escalation_history")
-          .select("*, escalation!inner(*)")
-          .order("changed_at", { ascending: false });
-          
-        if (error) throw error;
-        
-        // Enrich the data with product and market names
-        const enrichedData = (historyData || []).map((item) => {
-          const escalation = item.escalation;
-          
-          // Determine market name based on scope level
-          let marketName = 'Unknown';
-          if (escalation.scope_level === 'CITY' && escalation.city_id) {
-            marketName = escalation.city_id;
-          } else if (escalation.scope_level === 'COUNTRY' && escalation.country_code) {
-            marketName = escalation.country_code;
-          } else if (escalation.scope_level === 'REGION' && escalation.region) {
-            marketName = escalation.region;
-          }
-          
-          return {
-            ...item,
-            // Convert database statuses to application statuses
-            old_status: item.old_status ? mapDatabaseStatusToAppStatus(item.old_status) : null,
-            new_status: mapDatabaseStatusToAppStatus(item.new_status),
-            product_name: escalation.product_id || 'Unknown product',
-            market_name: marketName,
-          } as EscalationHistoryItem;
-        });
-        
-        setHistoryItems(enrichedData);
-      } catch (error) {
-        console.error("Error fetching escalation history:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load escalation history.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchEscalationHistory();
-  }, [toast]);
+  }, []);
+  
+  // Apply filters whenever filter state or history items change
+  useEffect(() => {
+    applyFilters();
+  }, [filters, historyItems]);
+
+  const fetchEscalationHistory = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get the escalation history
+      const { data: historyData, error } = await supabase
+        .from("escalation_history")
+        .select("*, escalation!inner(*)")
+        .order("changed_at", { ascending: false });
+          
+      if (error) throw error;
+      
+      // Get all unique escalation IDs
+      const escalationIds = [...new Set(historyData?.map(item => item.escalation_id) || [])];
+      
+      // Get the latest status for each escalation
+      const latestStatuses = await Promise.all(
+        escalationIds.map(async (escId) => {
+          const { data } = await supabase
+            .from("escalation")
+            .select("esc_id, product_id, scope_level, city_id, country_code, region, status, reason_type")
+            .eq("esc_id", escId)
+            .single();
+            
+          return data;
+        })
+      );
+      
+      // Filter out nulls
+      const validStatuses = latestStatuses.filter(Boolean);
+      
+      // Calculate statistics
+      const total = validStatuses.length;
+      const pending = validStatuses.filter(
+        status => ["OPEN", "ALIGNED"].includes(status.status)
+      ).length;
+      const resolved = validStatuses.filter(
+        status => ["RESOLVED"].includes(status.status)
+      ).length;
+      
+      setStats({
+        totalEscalations: total,
+        pendingEscalations: pending,
+        resolvedEscalations: resolved,
+      });
+      
+      // Enrich the data with product and market names
+      const enrichedData = (historyData || []).map((item) => {
+        const escalation = item.escalation;
+        
+        // Determine market name based on scope level
+        let marketName = 'Unknown';
+        if (escalation.scope_level === 'CITY' && escalation.city_id) {
+          marketName = escalation.city_id;
+        } else if (escalation.scope_level === 'COUNTRY' && escalation.country_code) {
+          marketName = escalation.country_code;
+        } else if (escalation.scope_level === 'REGION' && escalation.region) {
+          marketName = escalation.region;
+        }
+        
+        return {
+          ...item,
+          // Convert database statuses to application statuses
+          old_status: item.old_status ? mapDatabaseStatusToAppStatus(item.old_status) : null,
+          new_status: mapDatabaseStatusToAppStatus(item.new_status),
+          product_name: escalation.product_id || 'Unknown product',
+          market_name: marketName,
+          impact_type: escalation.reason_type,
+        } as EscalationHistoryItem;
+      });
+      
+      setHistoryItems(enrichedData);
+    } catch (error) {
+      console.error("Error fetching escalation history:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load escalation history.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const applyFilters = () => {
+    let filtered = [...historyItems];
+    
+    // Filter by status
+    if (filters.status !== "all") {
+      filtered = filtered.filter(item => item.new_status === filters.status);
+    }
+    
+    // Filter by search term
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        item => 
+          (item.product_name?.toLowerCase().includes(searchTerm)) ||
+          (item.market_name?.toLowerCase().includes(searchTerm)) ||
+          (item.notes?.toLowerCase().includes(searchTerm))
+      );
+    }
+    
+    setFilteredItems(filtered);
+  };
 
   const getStatusIcon = (status: EscalationStatus | null) => {
     switch (status) {
@@ -135,6 +226,15 @@ const EscalationLog = () => {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
+  
+  const handleEscalationClick = (escalationId: string) => {
+    navigate(`/escalations/${escalationId}`);
+  };
+
+  // Show escalation detail page if an ID is selected
+  if (selectedEscalationId) {
+    return <EscalationDetail />;
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -145,6 +245,79 @@ const EscalationLog = () => {
         </p>
       </div>
       
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="border rounded-lg p-4 bg-white">
+          <div className="text-sm text-[var(--uber-gray-60)] mb-1">Total Escalations</div>
+          <div className="text-2xl font-bold">{stats.totalEscalations}</div>
+        </div>
+        
+        <div className="border rounded-lg p-4 bg-white">
+          <div className="text-sm text-[var(--uber-gray-60)] mb-1">Pending Resolution</div>
+          <div className="text-2xl font-bold">{stats.pendingEscalations}</div>
+        </div>
+        
+        <div className="border rounded-lg p-4 bg-white">
+          <div className="text-sm text-[var(--uber-gray-60)] mb-1">Resolved</div>
+          <div className="text-2xl font-bold">{stats.resolvedEscalations}</div>
+        </div>
+      </div>
+      
+      {/* Filters */}
+      <div className="bg-white p-4 border rounded-lg">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="w-full md:w-1/4">
+            <label className="block text-sm mb-1 text-[var(--uber-gray-60)]">Filter by Status</label>
+            <Select
+              value={filters.status}
+              onValueChange={(value) => setFilters({ ...filters, status: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="SUBMITTED">Submitted</SelectItem>
+                <SelectItem value="IN_DISCUSSION">In Discussion</SelectItem>
+                <SelectItem value="RESOLVED_BLOCKED">Resolved - Blocked</SelectItem>
+                <SelectItem value="RESOLVED_LAUNCHING">Resolved - Launching</SelectItem>
+                <SelectItem value="RESOLVED_LAUNCHED">Resolved - Launched</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex-1">
+            <label className="block text-sm mb-1 text-[var(--uber-gray-60)]">Search</label>
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-[var(--uber-gray-60)]" />
+              <Input
+                className="pl-8"
+                placeholder="Search products, markets, or comments..."
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-end">
+            <Button variant="outline" onClick={() => setFilters({ status: "all", search: "" })}>
+              Reset
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Results count */}
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-[var(--uber-gray-60)]">
+          {filteredItems.length} items {filters.status !== "all" || filters.search ? "(filtered)" : ""}
+        </div>
+        
+        <Button onClick={() => fetchEscalationHistory()}>
+          Refresh
+        </Button>
+      </div>
+      
       <div className="border rounded-lg bg-white">
         <Table className="table-striped">
           <TableHeader>
@@ -152,6 +325,7 @@ const EscalationLog = () => {
               <TableHead className="font-semibold">Date & Time</TableHead>
               <TableHead className="font-semibold">Product</TableHead>
               <TableHead className="font-semibold">Market</TableHead>
+              <TableHead className="font-semibold">Type</TableHead>
               <TableHead className="font-semibold">Status Change</TableHead>
               <TableHead className="font-semibold">User</TableHead>
               <TableHead className="font-semibold">Notes</TableHead>
@@ -160,22 +334,35 @@ const EscalationLog = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">
+                <TableCell colSpan={7} className="text-center py-10">
                   Loading escalation history...
                 </TableCell>
               </TableRow>
-            ) : historyItems.length === 0 ? (
+            ) : filteredItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">
+                <TableCell colSpan={7} className="text-center py-10">
                   No escalation history found.
                 </TableCell>
               </TableRow>
             ) : (
-              historyItems.map((item) => (
-                <TableRow key={item.id}>
+              filteredItems.map((item) => (
+                <TableRow 
+                  key={item.id} 
+                  className="cursor-pointer hover:bg-[var(--uber-gray-10)]"
+                  onClick={() => handleEscalationClick(item.escalation_id)}
+                >
                   <TableCell>{format(new Date(item.changed_at), "MMM d, yyyy h:mm a")}</TableCell>
                   <TableCell>{item.product_name}</TableCell>
                   <TableCell>{item.market_name}</TableCell>
+                  <TableCell>
+                    {item.impact_type ? (
+                      <Badge variant="outline" className="text-xs">
+                        {item.impact_type}
+                      </Badge>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <div className="flex items-center">
@@ -199,10 +386,14 @@ const EscalationLog = () => {
                   </TableCell>
                   <TableCell>
                     <span className="text-xs font-mono">
-                      {item.user_id.substring(0, 8)}
+                      {typeof item.user_id === 'string' ? 
+                        item.user_id.substring(0, 8) : 
+                        'Unknown'}
                     </span>
                   </TableCell>
-                  <TableCell>{item.notes || "-"}</TableCell>
+                  <TableCell className="max-w-[200px] truncate" title={item.notes || ""}>
+                    {item.notes || "-"}
+                  </TableCell>
                 </TableRow>
               ))
             )}

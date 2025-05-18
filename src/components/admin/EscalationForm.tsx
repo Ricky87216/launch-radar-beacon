@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { Product, Market } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,14 @@ interface EscalationFormProps {
   userName: string;
 }
 
+interface ExtendedEscalationFormData extends EscalationFormData {
+  techPoc: string;
+  techSponsor: string;
+  opsPoc: string;
+  opsSponsor: string;
+  additionalStakeholders: string;
+}
+
 const EscalationForm: React.FC<EscalationFormProps> = ({
   productId,
   marketId, 
@@ -29,12 +38,18 @@ const EscalationForm: React.FC<EscalationFormProps> = ({
   userName,
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<EscalationFormData>({
+  const [formData, setFormData] = useState<ExtendedEscalationFormData>({
     poc: "",
     reason: "",
     businessCaseUrl: "",
     reasonType: "",
+    techPoc: "",
+    techSponsor: "",
+    opsPoc: "",
+    opsSponsor: "",
+    additionalStakeholders: "",
   });
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,8 +67,16 @@ const EscalationForm: React.FC<EscalationFormProps> = ({
     setIsSubmitting(true);
     
     try {
+      // Extract the core escalation data
+      const coreEscalationData: EscalationFormData = {
+        poc: formData.poc,
+        reason: formData.reason,
+        businessCaseUrl: formData.businessCaseUrl,
+        reasonType: formData.reasonType
+      };
+      
       const { data, error } = await submitEscalation(
-        formData,
+        coreEscalationData,
         productId,
         marketId,
         marketType,
@@ -63,6 +86,9 @@ const EscalationForm: React.FC<EscalationFormProps> = ({
       if (error) {
         throw error;
       }
+      
+      // Store extended POC information in additional storage if needed
+      // This would be implemented later with a separate table for stakeholders
       
       toast({
         title: "Escalation submitted",
@@ -75,7 +101,9 @@ const EscalationForm: React.FC<EscalationFormProps> = ({
         market?.name || "Unknown market"
       );
       
+      // Redirect to escalation log
       onClose();
+      navigate("/escalations");
     } catch (error) {
       console.error("Error submitting escalation:", error);
       toast({
@@ -100,6 +128,7 @@ const EscalationForm: React.FC<EscalationFormProps> = ({
       </div>
       
       <div className="space-y-4">
+        {/* Main Escalation Information */}
         <div>
           <Label htmlFor="poc" className="text-right">
             Point of Contact <span className="text-red-500">*</span>
@@ -164,6 +193,96 @@ const EscalationForm: React.FC<EscalationFormProps> = ({
               setFormData({ ...formData, businessCaseUrl: e.target.value })
             }
             placeholder="https://..."
+            className="mt-1"
+          />
+        </div>
+        
+        {/* Technical Team Section */}
+        <div className="pt-2 border-t">
+          <h3 className="text-sm font-medium mb-2">Technical Team</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="techPoc" className="text-right">
+                Tech Team POC
+              </Label>
+              <Input
+                id="techPoc"
+                value={formData.techPoc}
+                onChange={(e) =>
+                  setFormData({ ...formData, techPoc: e.target.value })
+                }
+                placeholder="Tech point of contact"
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="techSponsor" className="text-right">
+                Exec Tech Sponsor
+              </Label>
+              <Input
+                id="techSponsor"
+                value={formData.techSponsor}
+                onChange={(e) =>
+                  setFormData({ ...formData, techSponsor: e.target.value })
+                }
+                placeholder="Tech executive sponsor"
+                className="mt-1"
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Operations Team Section */}
+        <div className="pt-2 border-t">
+          <h3 className="text-sm font-medium mb-2">Operations Team</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="opsPoc" className="text-right">
+                Ops POC
+              </Label>
+              <Input
+                id="opsPoc"
+                value={formData.opsPoc}
+                onChange={(e) =>
+                  setFormData({ ...formData, opsPoc: e.target.value })
+                }
+                placeholder="Operations point of contact"
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="opsSponsor" className="text-right">
+                Exec Ops Sponsor
+              </Label>
+              <Input
+                id="opsSponsor"
+                value={formData.opsSponsor}
+                onChange={(e) =>
+                  setFormData({ ...formData, opsSponsor: e.target.value })
+                }
+                placeholder="Operations executive sponsor"
+                className="mt-1"
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Additional Stakeholders */}
+        <div>
+          <Label htmlFor="additionalStakeholders" className="text-right">
+            Additional Stakeholders
+          </Label>
+          <Input
+            id="additionalStakeholders"
+            value={formData.additionalStakeholders}
+            onChange={(e) =>
+              setFormData({ ...formData, additionalStakeholders: e.target.value })
+            }
+            placeholder="Comma-separated list of additional stakeholders"
             className="mt-1"
           />
         </div>
