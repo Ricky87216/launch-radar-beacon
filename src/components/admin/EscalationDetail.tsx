@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,13 +22,18 @@ import { EscalationStatus, mapDatabaseStatusToAppStatus, mapAppStatusToDatabaseS
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+// Updated Comment interface to match the structure from escalation_history
 interface Comment {
   id: string;
   escalation_id: string;
   user_id: string;
-  user_name: string;
-  content: string;
-  created_at: string;
+  user_name?: string;
+  old_status?: string | null;
+  new_status?: string;
+  notes?: string | null;
+  changed_at: string;
+  content?: string; // For compatibility with older code
+  created_at?: string; // For compatibility with older code
 }
 
 interface Escalation {
@@ -124,7 +130,7 @@ const EscalationDetail: React.FC = () => {
         marketName = escalationData.region;
       }
       
-      const enrichedEscalation = {
+      const enrichedEscalation: Escalation = {
         ...escalationData,
         // Convert database status to application status
         status: mapDatabaseStatusToAppStatus(escalationData.status),
@@ -157,13 +163,15 @@ const EscalationDetail: React.FC = () => {
       setSubmittingComment(true);
       
       // Add a note with the comment to escalation history
-      await supabase.from("escalation_history").insert({
+      const { error } = await supabase.from("escalation_history").insert({
         escalation_id: escalation.esc_id,
         user_id: "Current User", // Ideally this would be the current user's ID
         old_status: mapAppStatusToDatabaseStatus(escalation.status),
         new_status: mapAppStatusToDatabaseStatus(escalation.status),
         notes: comment,
       });
+      
+      if (error) throw error;
       
       // Refresh escalation data to show new comment
       if (id) {
@@ -541,7 +549,7 @@ const EscalationDetail: React.FC = () => {
                     <div className="flex justify-between items-start">
                       <div className="font-medium">{comment.user_id}</div>
                       <div className="text-xs text-[var(--uber-gray-60)]">
-                        {format(new Date(comment.created_at), "MMM d, yyyy h:mm a")}
+                        {format(new Date(comment.changed_at), "MMM d, yyyy h:mm a")}
                       </div>
                     </div>
                     
@@ -555,7 +563,7 @@ const EscalationDetail: React.FC = () => {
                         </span>{" "}
                         to{" "}
                         <span className="font-medium">
-                          {formatStatusText(mapDatabaseStatusToAppStatus(comment.new_status))}
+                          {formatStatusText(mapDatabaseStatusToAppStatus(comment.new_status || ""))}
                         </span>
                       </div>
                     )}
@@ -576,3 +584,68 @@ const EscalationDetail: React.FC = () => {
 };
 
 export default EscalationDetail;
+
+// Helper function needed in component
+const handleStatusChange = async () => {
+  if (!newStatus || !escalation || newStatus === escalation.status) return;
+  
+  try {
+    setChangingStatus(true);
+    
+    // Convert app status to database status for the update
+    const dbStatus = mapAppStatusToDatabaseStatus(newStatus);
+    
+    // Force type assertion here since we know our status values match the database
+    const { error } = await supabase
+      .from("escalation")
+      .update({ 
+        status: dbStatus as any,
+        ...(newStatus === 'RESOLVED_LAUNCHED' ? { aligned_at: new Date().toISOString() } : {}),
+        ...(newStatus.startsWith('RESOLVED_') ? { resolved_at: new Date().toISOString() } : {})
+      })
+      .eq("esc_id", escalation.esc_id);
+    
+    if (error) throw error;
+    
+    // Add a note to history for the status change
+    // For history, we use database status values
+    const oldDbStatus = mapAppStatusToDatabaseStatus(escalation.status);
+    const newDbStatus = mapAppStatusToDatabaseStatus(newStatus);
+    
+    // Force type assertion here since we know our status values match the database
+    await supabase.from("escalation_history").insert({
+      escalation_id: escalation.esc_id,
+      user_id: "Current User", // Ideally this would be the current user's ID
+      old_status: oldDbStatus as any,
+      new_status: newDbStatus as any,
+      notes: statusNote || `Status changed from ${escalation.status} to ${newStatus}`,
+    });
+    
+    toast({
+      title: "Status updated",
+      description: `Escalation status updated to ${newStatus.replace('_', ' ').toLowerCase()}.`,
+    });
+    
+    // Refresh data
+    if (id) {
+      fetchEscalationDetails(id);
+    }
+    
+    // Clear status note
+    setStatusNote("");
+    
+  } catch (error) {
+    console.error("Error updating escalation status:", error);
+    toast({
+      title: "Error",
+      description: "Failed to update escalation status.",
+      variant: "destructive",
+    });
+  } finally {
+    setChangingStatus(false);
+  }
+};
+
+const formatStatusText = (status: string) => {
+  return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+};

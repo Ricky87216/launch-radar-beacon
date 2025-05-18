@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { EscalationStatus, mapAppStatusToDatabaseStatus } from "@/types";
+import { EscalationStatus, mapAppStatusToDatabaseStatus, mapDatabaseStatusToAppStatus } from "@/types";
 
 export type MarketType = 'city' | 'country' | 'region';
 
