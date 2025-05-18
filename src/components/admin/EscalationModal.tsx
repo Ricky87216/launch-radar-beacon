@@ -62,7 +62,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
         // Convert 'mega_region' to 'region' and 'state' to 'country' for compatibility with escalationUtils
         let compatibleType: 'region' | 'country' | 'city';
         
-        if (marketType === 'mega_region' || marketType === 'region') {
+        if (marketType === 'region' || marketType.includes('mega')) {
           compatibleType = 'region';
         } else if (marketType === 'state' || marketType === 'country') {
           compatibleType = 'country';
@@ -80,7 +80,7 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
   // Convert marketType for proper form handling
   // Convert 'mega_region' to 'region' and 'state' to 'country' for compatibility with EscalationForm
   let safeMarketType: 'region' | 'country' | 'city';
-  if (marketType === 'mega_region' || marketType === 'region') {
+  if (marketType === 'region' || marketType.includes('mega')) {
     safeMarketType = 'region';
   } else if (marketType === 'state' || marketType === 'country') {
     safeMarketType = 'country';

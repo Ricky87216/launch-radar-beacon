@@ -40,6 +40,20 @@ export interface MarketDim {
   country_code: string;
 }
 
+export interface Coverage {
+  product_id: string;
+  market_id: string;
+  city_percentage: number;
+  gb_weighted: number;
+  tam_percentage: number;
+  updated_at: string;
+}
+
+export interface TamScope {
+  product_id: string;
+  city_id: string;
+}
+
 export interface CoverageFact {
   id: number;
   updated_at: string;

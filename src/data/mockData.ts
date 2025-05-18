@@ -15,58 +15,58 @@ export const currentUser: User = {
 // Mock Markets Data
 export const markets: Market[] = [
   // Mega Regions
-  { id: "mr-1", name: "US&C", type: "mega_region", parent_id: null, geo_path: "/US&C" },
-  { id: "mr-2", name: "EMEA", type: "mega_region", parent_id: null, geo_path: "/EMEA" },
-  { id: "mr-3", name: "APAC", type: "mega_region", parent_id: null, geo_path: "/APAC" },
-  { id: "mr-4", name: "Latam", type: "mega_region", parent_id: null, geo_path: "/Latam" },
+  { id: "mr-1", name: "US&C", type: "mega_region", parent_id: null, geo_path: "/US&C", gb_weight: 0.25 },
+  { id: "mr-2", name: "EMEA", type: "mega_region", parent_id: null, geo_path: "/EMEA", gb_weight: 0.35 },
+  { id: "mr-3", name: "APAC", type: "mega_region", parent_id: null, geo_path: "/APAC", gb_weight: 0.30 },
+  { id: "mr-4", name: "Latam", type: "mega_region", parent_id: null, geo_path: "/Latam", gb_weight: 0.10 },
   
   // Regions
-  { id: "r-1", name: "North America", type: "region", parent_id: "mr-1", geo_path: "/US&C/North America" },
-  { id: "r-2", name: "South America", type: "region", parent_id: "mr-4", geo_path: "/Latam/South America" },
-  { id: "r-3", name: "Western Europe", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Western Europe" },
-  { id: "r-4", name: "Eastern Europe", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Eastern Europe" },
-  { id: "r-5", name: "Middle East", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Middle East" },
-  { id: "r-6", name: "East Asia", type: "region", parent_id: "mr-3", geo_path: "/APAC/East Asia" },
-  { id: "r-7", name: "South Asia", type: "region", parent_id: "mr-3", geo_path: "/APAC/South Asia" },
-  { id: "r-8", name: "Oceania", type: "region", parent_id: "mr-3", geo_path: "/APAC/Oceania" },
+  { id: "r-1", name: "North America", type: "region", parent_id: "mr-1", geo_path: "/US&C/North America", gb_weight: 0.20 },
+  { id: "r-2", name: "South America", type: "region", parent_id: "mr-4", geo_path: "/Latam/South America", gb_weight: 0.10 },
+  { id: "r-3", name: "Western Europe", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Western Europe", gb_weight: 0.15 },
+  { id: "r-4", name: "Eastern Europe", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Eastern Europe", gb_weight: 0.10 },
+  { id: "r-5", name: "Middle East", type: "region", parent_id: "mr-2", geo_path: "/EMEA/Middle East", gb_weight: 0.10 },
+  { id: "r-6", name: "East Asia", type: "region", parent_id: "mr-3", geo_path: "/APAC/East Asia", gb_weight: 0.15 },
+  { id: "r-7", name: "South Asia", type: "region", parent_id: "mr-3", geo_path: "/APAC/South Asia", gb_weight: 0.10 },
+  { id: "r-8", name: "Oceania", type: "region", parent_id: "mr-3", geo_path: "/APAC/Oceania", gb_weight: 0.05 },
   
   // Countries
-  { id: "c-1", name: "USA", type: "country", parent_id: "r-1", geo_path: "/US&C/North America/USA" },
-  { id: "c-2", name: "Canada", type: "country", parent_id: "r-1", geo_path: "/US&C/North America/Canada" },
-  { id: "c-3", name: "Brazil", type: "country", parent_id: "r-2", geo_path: "/Latam/South America/Brazil" },
-  { id: "c-4", name: "UK", type: "country", parent_id: "r-3", geo_path: "/EMEA/Western Europe/UK" },
-  { id: "c-5", name: "Germany", type: "country", parent_id: "r-3", geo_path: "/EMEA/Western Europe/Germany" },
-  { id: "c-6", name: "Poland", type: "country", parent_id: "r-4", geo_path: "/EMEA/Eastern Europe/Poland" },
-  { id: "c-7", name: "UAE", type: "country", parent_id: "r-5", geo_path: "/EMEA/Middle East/UAE" },
-  { id: "c-8", name: "Japan", type: "country", parent_id: "r-6", geo_path: "/APAC/East Asia/Japan" },
-  { id: "c-9", name: "India", type: "country", parent_id: "r-7", geo_path: "/APAC/South Asia/India" },
-  { id: "c-10", name: "Australia", type: "country", parent_id: "r-8", geo_path: "/APAC/Oceania/Australia" },
+  { id: "c-1", name: "USA", type: "country", parent_id: "r-1", geo_path: "/US&C/North America/USA", gb_weight: 0.15 },
+  { id: "c-2", name: "Canada", type: "country", parent_id: "r-1", geo_path: "/US&C/North America/Canada", gb_weight: 0.05 },
+  { id: "c-3", name: "Brazil", type: "country", parent_id: "r-2", geo_path: "/Latam/South America/Brazil", gb_weight: 0.08 },
+  { id: "c-4", name: "UK", type: "country", parent_id: "r-3", geo_path: "/EMEA/Western Europe/UK", gb_weight: 0.07 },
+  { id: "c-5", name: "Germany", type: "country", parent_id: "r-3", geo_path: "/EMEA/Western Europe/Germany", gb_weight: 0.08 },
+  { id: "c-6", name: "Poland", type: "country", parent_id: "r-4", geo_path: "/EMEA/Eastern Europe/Poland", gb_weight: 0.05 },
+  { id: "c-7", name: "UAE", type: "country", parent_id: "r-5", geo_path: "/EMEA/Middle East/UAE", gb_weight: 0.06 },
+  { id: "c-8", name: "Japan", type: "country", parent_id: "r-6", geo_path: "/APAC/East Asia/Japan", gb_weight: 0.09 },
+  { id: "c-9", name: "India", type: "country", parent_id: "r-7", geo_path: "/APAC/South Asia/India", gb_weight: 0.10 },
+  { id: "c-10", name: "Australia", type: "country", parent_id: "r-8", geo_path: "/APAC/Oceania/Australia", gb_weight: 0.05 },
   
   // Cities
-  { id: "city-1", name: "New York", type: "city", parent_id: "c-1", geo_path: "/US&C/North America/USA/New York" },
-  { id: "city-2", name: "San Francisco", type: "city", parent_id: "c-1", geo_path: "/US&C/North America/USA/San Francisco" },
-  { id: "city-3", name: "Toronto", type: "city", parent_id: "c-2", geo_path: "/US&C/North America/Canada/Toronto" },
-  { id: "city-4", name: "São Paulo", type: "city", parent_id: "c-3", geo_path: "/Latam/South America/Brazil/São Paulo" },
-  { id: "city-5", name: "London", type: "city", parent_id: "c-4", geo_path: "/EMEA/Western Europe/UK/London" },
-  { id: "city-6", name: "Manchester", type: "city", parent_id: "c-4", geo_path: "/EMEA/Western Europe/UK/Manchester" },
-  { id: "city-7", name: "Berlin", type: "city", parent_id: "c-5", geo_path: "/EMEA/Western Europe/Germany/Berlin" },
-  { id: "city-8", name: "Warsaw", type: "city", parent_id: "c-6", geo_path: "/EMEA/Eastern Europe/Poland/Warsaw" },
-  { id: "city-9", name: "Dubai", type: "city", parent_id: "c-7", geo_path: "/EMEA/Middle East/UAE/Dubai" },
-  { id: "city-10", name: "Tokyo", type: "city", parent_id: "c-8", geo_path: "/APAC/East Asia/Japan/Tokyo" },
-  { id: "city-11", name: "Mumbai", type: "city", parent_id: "c-9", geo_path: "/APAC/South Asia/India/Mumbai" },
-  { id: "city-12", name: "Sydney", type: "city", parent_id: "c-10", geo_path: "/APAC/Oceania/Australia/Sydney" }
+  { id: "city-1", name: "New York", type: "city", parent_id: "c-1", geo_path: "/US&C/North America/USA/New York", gb_weight: 0.03 },
+  { id: "city-2", name: "San Francisco", type: "city", parent_id: "c-1", geo_path: "/US&C/North America/USA/San Francisco", gb_weight: 0.02 },
+  { id: "city-3", name: "Toronto", type: "city", parent_id: "c-2", geo_path: "/US&C/North America/Canada/Toronto", gb_weight: 0.03 },
+  { id: "city-4", name: "São Paulo", type: "city", parent_id: "c-3", geo_path: "/Latam/South America/Brazil/São Paulo", gb_weight: 0.05 },
+  { id: "city-5", name: "London", type: "city", parent_id: "c-4", geo_path: "/EMEA/Western Europe/UK/London", gb_weight: 0.04 },
+  { id: "city-6", name: "Manchester", type: "city", parent_id: "c-4", geo_path: "/EMEA/Western Europe/UK/Manchester", gb_weight: 0.01 },
+  { id: "city-7", name: "Berlin", type: "city", parent_id: "c-5", geo_path: "/EMEA/Western Europe/Germany/Berlin", gb_weight: 0.03 },
+  { id: "city-8", name: "Warsaw", type: "city", parent_id: "c-6", geo_path: "/EMEA/Eastern Europe/Poland/Warsaw", gb_weight: 0.03 },
+  { id: "city-9", name: "Dubai", type: "city", parent_id: "c-7", geo_path: "/EMEA/Middle East/UAE/Dubai", gb_weight: 0.04 },
+  { id: "city-10", name: "Tokyo", type: "city", parent_id: "c-8", geo_path: "/APAC/East Asia/Japan/Tokyo", gb_weight: 0.06 },
+  { id: "city-11", name: "Mumbai", type: "city", parent_id: "c-9", geo_path: "/APAC/South Asia/India/Mumbai", gb_weight: 0.05 },
+  { id: "city-12", name: "Sydney", type: "city", parent_id: "c-10", geo_path: "/APAC/Oceania/Australia/Sydney", gb_weight: 0.03 }
 ];
 
 // Now let's add additional coverage data for the Latam mega region
 export const products: Product[] = [
-  { id: "p-1", name: "Product Alpha", line_of_business: "Mobility", sub_team: "Rider", status: "Active", launch_date: "2023-01-15" },
-  { id: "p-2", name: "Product Beta", line_of_business: "Mobility", sub_team: "Earner", status: "Active", launch_date: "2023-02-20" },
-  { id: "p-3", name: "Product Gamma", line_of_business: "Delivery", sub_team: "Delivery Marketplace", status: "Active", launch_date: "2023-03-10" },
-  { id: "p-4", name: "Product Delta", line_of_business: "Core Services", sub_team: "Safety", status: "In Development", launch_date: null },
-  { id: "p-5", name: "Product Epsilon", line_of_business: "Mobility", sub_team: "AV", status: "Active", launch_date: "2023-04-05" },
-  { id: "p-6", name: "Product Zeta", line_of_business: "Delivery", sub_team: "Earner", status: "Active", launch_date: "2023-05-12" },
-  { id: "p-7", name: "Product Eta", line_of_business: "Core Services", sub_team: "GR", status: "In Development", launch_date: null },
-  { id: "p-8", name: "Product Theta", line_of_business: "Mobility", sub_team: "Mobility Marketplace", status: "Active", launch_date: "2023-06-18" }
+  { id: "p-1", name: "Product Alpha", line_of_business: "Mobility", sub_team: "Rider", status: "Active", launch_date: "2023-01-15", notes: "" },
+  { id: "p-2", name: "Product Beta", line_of_business: "Mobility", sub_team: "Earner", status: "Active", launch_date: "2023-02-20", notes: "" },
+  { id: "p-3", name: "Product Gamma", line_of_business: "Delivery", sub_team: "Delivery Marketplace", status: "Active", launch_date: "2023-03-10", notes: "" },
+  { id: "p-4", name: "Product Delta", line_of_business: "Core Services", sub_team: "Safety", status: "In Development", launch_date: null, notes: "" },
+  { id: "p-5", name: "Product Epsilon", line_of_business: "Mobility", sub_team: "AV", status: "Active", launch_date: "2023-04-05", notes: "" },
+  { id: "p-6", name: "Product Zeta", line_of_business: "Delivery", sub_team: "Earner", status: "Active", launch_date: "2023-05-12", notes: "" },
+  { id: "p-7", name: "Product Eta", line_of_business: "Core Services", sub_team: "GR", status: "In Development", launch_date: null, notes: "" },
+  { id: "p-8", name: "Product Theta", line_of_business: "Mobility", sub_team: "Mobility Marketplace", status: "Active", launch_date: "2023-06-18", notes: "" }
 ];
 
 // Generate random coverage data
