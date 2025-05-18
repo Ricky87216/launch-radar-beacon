@@ -1,27 +1,21 @@
-
 import React, { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useDashboard } from '@/context/DashboardContext';
 import { useSidebar } from '@/components/ui/sidebar';
 import GlobalBreadcrumb from './GlobalBreadcrumb';
-
 const GlobalNavBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toggleSidebar } = useSidebar();
-  const { user } = useDashboard();
-
+  const {
+    toggleSidebar
+  } = useSidebar();
+  const {
+    user
+  } = useDashboard();
   const handleBackClick = () => {
     if (window.history.length > 1) {
       window.history.back();
@@ -38,14 +32,13 @@ const GlobalNavBar = () => {
         event.preventDefault();
         handleBackClick();
       }
-      
+
       // Ctrl+K for sidebar search (this will be implemented in GlobalSidebar)
       if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
         event.preventDefault();
         toggleSidebar();
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
@@ -54,34 +47,20 @@ const GlobalNavBar = () => {
 
   // Determine if the user has admin privileges
   const hasAdminAccess = user?.role === 'admin' || user?.role === 'editor';
-
-  return (
-    <header className="sticky top-0 z-50 h-14 w-full border-b bg-white">
+  return <header className="sticky top-0 z-50 h-14 w-full border-b bg-white">
       <div className="container flex h-14 items-center px-4">
         <div className="flex items-center mr-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleSidebar} 
-            className="mr-2 text-[var(--uber-black)]"
-            aria-label="Toggle menu"
-          >
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="mr-2 text-[var(--uber-black)]" aria-label="Toggle menu">
             <Menu className="h-5 w-5" />
           </Button>
           
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleBackClick}
-            className="mr-2 text-[var(--uber-black)]" 
-            title="Back (Alt+←)"
-          >
+          <Button variant="ghost" size="icon" onClick={handleBackClick} className="mr-2 text-[var(--uber-black)]" title="Back (Alt+←)">
             <ChevronLeft className="h-5 w-5" />
           </Button>
           
           <Link to="/" className="flex items-center">
-            <img src="https://d1a3f4spazzrp4.cloudfront.net/uber/uber-logo.svg" alt="Uber" height="24" className="h-6" />
-            <span className="ml-2 font-semibold">First Launch Coverage</span>
+            <img alt="Uber" height="24" className="h-6" src="/lovable-uploads/659408ad-46e7-4fca-8f22-36b2349142cf.png" />
+            <span className="ml-2 font-semibold">Global First Launch Coverage</span>
           </Link>
         </div>
         
@@ -109,8 +88,7 @@ const GlobalNavBar = () => {
                 <Link to="/">Global Dashboard</Link>
               </DropdownMenuItem>
               
-              {hasAdminAccess && (
-                <>
+              {hasAdminAccess && <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/admin/bulk-edit">Ops Update Center</Link>
@@ -118,8 +96,7 @@ const GlobalNavBar = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/admin/answer-hub">Answer Hub</Link>
                   </DropdownMenuItem>
-                </>
-              )}
+                </>}
               
               <DropdownMenuSeparator />
               <DropdownMenuItem>Help</DropdownMenuItem>
@@ -129,8 +106,6 @@ const GlobalNavBar = () => {
           </DropdownMenu>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 export default GlobalNavBar;
