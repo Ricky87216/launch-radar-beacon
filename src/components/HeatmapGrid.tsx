@@ -1,3 +1,4 @@
+
 import { useMemo, useState, useEffect } from "react";
 import { 
   ChevronRight, 
@@ -516,7 +517,7 @@ export default function HeatmapGrid() {
         marketType={escalationModal.marketType}
       />
       
-      {/* Country Drawer */}
+      {/* Country Drawer - Fixed styling to match requirements */}
       <Drawer open={countryDrawer.isOpen} onOpenChange={(open) => {
         if (!open) setCountryDrawer(prev => ({ ...prev, isOpen: false }));
       }}>
@@ -544,7 +545,7 @@ export default function HeatmapGrid() {
                   return (
                     <div 
                       key={country.country_code}
-                      className="flex items-center justify-between p-3 border rounded-md bg-white cursor-pointer hover:bg-gray-50"
+                      className="countryCard bg-white border border-gray-300 rounded-md p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50"
                       onClick={() => {
                         if (productId) {
                           openCityModal(country.country_code, country.country_name, productId);
@@ -561,10 +562,12 @@ export default function HeatmapGrid() {
                             <span>Coverage</span>
                             <span>{cell ? `${cell.coverage.toFixed(1)}%` : '0%'}</span>
                           </div>
-                          <Progress
-                            value={cell ? cell.coverage : 0}
-                            className="h-2"
-                          />
+                          <div className="h-1 w-full bg-gray-200 rounded-full">
+                            <div 
+                              className="h-1 bg-black rounded-full" 
+                              style={{ width: `${cell ? cell.coverage : 0}%` }}
+                            ></div>
+                          </div>
                         </div>
                         <ChevronRight className="h-4 w-4 text-gray-400" />
                       </div>
@@ -582,7 +585,7 @@ export default function HeatmapGrid() {
         </DrawerContent>
       </Drawer>
       
-      {/* City Modal */}
+      {/* City Modal - Enhanced with proper styling */}
       <Dialog open={cityModal.isOpen} onOpenChange={(open) => {
         if (!open) setCityModal(prev => ({ ...prev, isOpen: false }));
       }}>
@@ -602,6 +605,7 @@ export default function HeatmapGrid() {
                 <TableRow>
                   <TableHead>City</TableHead>
                   <TableHead className="text-right">Status</TableHead>
+                  <TableHead className="text-right w-16">Coverage</TableHead>
                   <TableHead className="text-right w-8"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -609,6 +613,7 @@ export default function HeatmapGrid() {
                 {cityModal.isOpen && cityModal.countryCode && getMarketsForCountry(cityModal.countryCode)
                   .map(city => {
                     const status = getCoverageStatusForCityProduct(city.city_id, cityModal.productId);
+                    const coverage = status === 'LIVE' ? 100 : 0;
                     
                     return (
                       <TableRow key={city.city_id}>
@@ -617,6 +622,9 @@ export default function HeatmapGrid() {
                           <Badge className={`${getStatusBadgeColor(status)}`}>
                             {status}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {status === 'LIVE' ? '100%' : '0%'}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button 
