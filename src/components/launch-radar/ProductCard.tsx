@@ -33,7 +33,7 @@ export function ProductCard({ product, openProductCard, getMarketById, viewEscal
   };
   
   return (
-    <Card key={product.id} className="overflow-hidden">
+    <Card key={product.id} className="overflow-hidden w-full">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle 
