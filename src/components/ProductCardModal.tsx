@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,8 +24,8 @@ interface ProductCardModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Using GIF URL instead of local image
-const DEFAULT_SCREENSHOT = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExanFobWZ5OXJ5ZjZ3ODk4Nzhwb2t0eTN0ZnQ2Nzc5bmwwZDBiZXJ5YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/7TkoMPUaLNwwo/giphy.gif";
+// Using the new GIF URL provided by the user
+const DEFAULT_SCREENSHOT = "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExazdhOGI3aTg1aTB0eWFjMXozZTV3MWEzaTgwOHNnaXpmazdsYWxmcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/egvP3fIFgJPzZihAI3/giphy.gif";
 
 const ProductCardModal = ({ 
   productId, 
@@ -116,18 +115,21 @@ const ProductCardModal = ({
       );
     }
     
-    // Use the GIF
+    // Use the GIF with reduced height and added title
     return (
-      <div className="border border-gray-200 rounded-md shadow-md overflow-hidden mb-4">
-        <img 
-          src={screenshotUrl} 
-          alt={`${productName} animation`}
-          className="w-full h-auto rounded-md shadow-inner" 
-          onError={() => {
-            console.log("GIF failed to load, showing fallback");
-            setScreenshotError(true);
-          }}
-        />
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold mb-1">Product Visual</h3>
+        <div className="border border-gray-200 rounded-md shadow-md overflow-hidden">
+          <img 
+            src={screenshotUrl} 
+            alt={`${productName} animation`}
+            className="w-full h-auto max-h-32 rounded-md shadow-inner object-cover" 
+            onError={() => {
+              console.log("GIF failed to load, showing fallback");
+              setScreenshotError(true);
+            }}
+          />
+        </div>
       </div>
     );
   };
