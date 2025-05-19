@@ -382,8 +382,9 @@ export default function HowTo() {
                       <div>
                         <p className="font-medium">Review Personalized Blockers</p>
                         <p className="text-muted-foreground text-sm">
-                          Your dashboard will now display only products with blockers in your 
-                          selected regions and countries, allowing for focused attention.
+                          Your dashboard will now display a vertical stack of products with blockers in your 
+                          selected regions and countries, allowing for focused attention. Each product card includes
+                          detailed information about blockers, including any escalation notes when available.
                         </p>
                       </div>
                     </li>
@@ -411,6 +412,10 @@ export default function HowTo() {
                     <li className="flex items-start">
                       <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 mr-2"></div>
                       <span>Switch between personalized and global views as needed</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 mr-2"></div>
+                      <span>View detailed escalation notes and status updates for each blocker</span>
                     </li>
                   </ul>
                 </div>
@@ -550,6 +555,7 @@ export default function HowTo() {
                                 <li>• Reason category</li>
                                 <li>• Business case URL (if available)</li>
                                 <li>• Technical and operational stakeholders</li>
+                                <li>• Detailed notes explaining the issue and context</li>
                               </ul>
                               <li>5. Submit the escalation for review</li>
                             </ol>
@@ -568,11 +574,13 @@ export default function HowTo() {
                               <li>• Complete history of each escalation</li>
                               <li>• Current status (Submitted, In Discussion, Resolved)</li>
                               <li>• Resolution outcomes (Launched, Blocked, Deferred)</li>
-                              <li>• Comments and notes from stakeholders</li>
+                              <li>• Notes and comments from stakeholders</li>
+                              <li>• Full escalation history with timestamps</li>
                             </ul>
                             <p className="text-sm">
                               You can filter the log by product, market, status, and date range 
-                              to find specific escalations.
+                              to find specific escalations. Escalation details are also visible directly
+                              in the My Coverage view for escalated blockers affecting your selected markets.
                             </p>
                           </div>
                         </NavigationMenuContent>
