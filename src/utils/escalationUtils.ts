@@ -49,6 +49,8 @@ export const getScopeLevel = (marketType: MarketType): "CITY" | "COUNTRY" | "REG
 
 export const loadEscalationHistory = async (productId: string, marketId: string, marketType: MarketType) => {
   try {
+    console.log("Loading escalation history for:", { productId, marketId, marketType });
+    
     // Look for existing escalation first
     const { data: escalations } = await supabase
       .from("escalation")
@@ -59,6 +61,7 @@ export const loadEscalationHistory = async (productId: string, marketId: string,
     
     if (escalations && escalations.length > 0) {
       const escalationId = escalations[0].esc_id;
+      console.log("Found escalation ID:", escalationId);
       
       // Now get history for this escalation
       const { data: historyData } = await supabase
@@ -67,8 +70,10 @@ export const loadEscalationHistory = async (productId: string, marketId: string,
         .eq("escalation_id", escalationId)
         .order("changed_at", { ascending: false });
       
+      console.log("Loaded history items:", historyData?.length || 0);
       return historyData || [];
     }
+    console.log("No escalations found");
     return [];
   } catch (error) {
     console.error("Failed to load escalation history:", error);

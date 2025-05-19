@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -100,8 +101,8 @@ const EscalationForm: React.FC<EscalationFormProps> = ({
         market?.name || "Unknown market"
       );
       
-      // Call onClose to trigger the success state in parent component
-      // This is the critical fix needed
+      // Call onClose to trigger parent's success handler
+      // This is where we ensure the redirect happens through the modal
       onClose();
       
     } catch (error) {

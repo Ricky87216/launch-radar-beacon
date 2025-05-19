@@ -58,12 +58,12 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
     console.log("Form submission successful, showing success state");
     setShowSuccess(true);
     
-    // Automatically navigate to escalation log after a short delay
+    // Immediately navigate to escalation log - reduced delay
     setTimeout(() => {
       console.log("Redirecting to escalation log");
       onClose();
       navigate("/escalations");
-    }, 1500);
+    }, 800);
   };
   
   if (showSuccess) {
