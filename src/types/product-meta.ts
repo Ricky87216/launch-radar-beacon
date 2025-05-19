@@ -6,7 +6,7 @@ export interface ProductMeta {
   pm_poc: string | null;
   prod_ops_poc: string | null;
   prd_link: string | null;
-  figma_link: string | null;
+  figma_link?: string | null; // Made optional with ?
   description: string | null;
   launch_date: string | null;
   xp_plan: string | null;
