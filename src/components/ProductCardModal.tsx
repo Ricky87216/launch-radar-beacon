@@ -40,6 +40,7 @@ const ProductCardModal = ({
   const [statusSummary, setStatusSummary] = useState<ProductStatusSummary | null>(null);
   const [blockerCounts, setBlockerCounts] = useState<{unresolved: number, total: number}>({ unresolved: 0, total: 0 });
   const [screenshotError, setScreenshotError] = useState(false);
+  const [fullScreenImageOpen, setFullScreenImageOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
 
@@ -116,15 +117,18 @@ const ProductCardModal = ({
       );
     }
     
-    // Adjusted container to properly display the full GIF with better scaling
+    // Adjusted container with twice the height and made clickable
     return (
       <div className="mb-4">
         <h3 className="text-sm font-semibold mb-1">Product Visual</h3>
-        <div className="border border-gray-200 rounded-md shadow-md overflow-hidden flex justify-center">
+        <div 
+          className="border border-gray-200 rounded-md shadow-md overflow-hidden flex justify-center cursor-pointer"
+          onClick={() => setFullScreenImageOpen(true)}
+        >
           <img 
             src={screenshotUrl} 
             alt={`${productName} animation`}
-            className="h-24 w-auto object-contain my-2" 
+            className="h-48 w-auto object-contain my-2" 
             onError={() => {
               console.log("GIF failed to load, showing fallback");
               setScreenshotError(true);
@@ -132,6 +136,25 @@ const ProductCardModal = ({
           />
         </div>
       </div>
+    );
+  };
+
+  // Fullscreen image dialog
+  const renderFullScreenImageDialog = () => {
+    const screenshotUrl = getScreenshotUrl();
+    
+    if (!screenshotUrl) return null;
+    
+    return (
+      <Dialog open={fullScreenImageOpen} onOpenChange={setFullScreenImageOpen}>
+        <DialogContent className="max-w-4xl p-2 flex items-center justify-center">
+          <img 
+            src={screenshotUrl} 
+            alt={`${productName} animation (full size)`}
+            className="max-w-full max-h-[80vh] object-contain" 
+          />
+        </DialogContent>
+      </Dialog>
     );
   };
 
@@ -265,6 +288,7 @@ const ProductCardModal = ({
           </>
         )}
       </DialogContent>
+      {renderFullScreenImageDialog()}
     </Dialog>
   );
 };
