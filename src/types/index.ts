@@ -173,4 +173,5 @@ export interface Escalation {
   raised_by: string;
   created_at: string;
   reason_type?: string;
+  notes?: string; // Added the notes property to fix the TypeScript error
 }
