@@ -36,7 +36,7 @@ export function OnboardingCallout() {
           <BookOpen className="h-5 w-5 text-blue-600" />
           <AlertDescription className="text-blue-700">
             <span className="font-medium">New to the dashboard?</span> Check out our{" "}
-            <Link to="/howto" className="text-blue-700 underline hover:text-blue-900 font-medium">
+            <Link to="/how-to" className="text-blue-700 underline hover:text-blue-900 font-medium">
               how-to guide
             </Link>{" "}
             to get started with our Global Launch Coverage Dashboard.
