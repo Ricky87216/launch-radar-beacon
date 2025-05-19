@@ -12,16 +12,14 @@ import GlobalBreadcrumb from './GlobalBreadcrumb';
 const GlobalNavBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toggleSidebar } = useSidebar();
   const {
-    toggleSidebar,
+    user,
     setCurrentLevel,
     setSelectedParent,
     setSelectedLOBs,
     setSelectedSubTeams,
     setHideFullCoverage
-  } = useSidebar();
-  const {
-    user
   } = useDashboard();
   
   // Current path parts to determine navigation level

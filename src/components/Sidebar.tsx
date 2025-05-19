@@ -1,3 +1,4 @@
+
 import { Filter } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
 import { getLinesOfBusiness, getSubTeams } from "../data/mockData";
@@ -26,8 +27,10 @@ export default function Sidebar({ personalFilters }: SidebarProps) {
     useTam,
     setUseTam
   } = useDashboard();
+  
   const linesOfBusiness = getLinesOfBusiness();
   const subTeams = getSubTeams();
+  
   const toggleLOB = (lob: string) => {
     if (selectedLOBs.includes(lob)) {
       setSelectedLOBs(selectedLOBs.filter(l => l !== lob));
@@ -35,6 +38,7 @@ export default function Sidebar({ personalFilters }: SidebarProps) {
       setSelectedLOBs([...selectedLOBs, lob]);
     }
   };
+  
   const toggleSubTeam = (subTeam: string) => {
     if (selectedSubTeams.includes(subTeam)) {
       setSelectedSubTeams(selectedSubTeams.filter(st => st !== subTeam));
@@ -42,6 +46,7 @@ export default function Sidebar({ personalFilters }: SidebarProps) {
       setSelectedSubTeams([...selectedSubTeams, subTeam]);
     }
   };
+  
   return <aside className="bg-gray-50 border-r w-64 min-w-64 h-full overflow-y-auto p-4">
       <div className="flex items-center mb-6">
         <Filter className="h-5 w-5 mr-2" />
