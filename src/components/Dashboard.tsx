@@ -9,6 +9,7 @@ import EscalationModal from "./admin/EscalationModal";
 import Sidebar from "./Sidebar";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Star } from "lucide-react";
+import { OnboardingCallout } from "./OnboardingCallout";
 
 export default function Dashboard() {
   const [blockerModalOpen, setBlockerModalOpen] = useState(false);
@@ -93,6 +94,7 @@ export default function Dashboard() {
     <div className={`flex h-full ${isMobile ? 'pb-16' : ''}`}>
       <Sidebar personalFilters={personalizedFilters} />
       <main className="flex-1 overflow-hidden">
+        <OnboardingCallout />
         {personalizedFilters.isPersonalView && (
           <Alert className="mb-2 mx-4 mt-4 bg-blue-50 border-blue-200">
             <AlertTitle className="flex items-center">
