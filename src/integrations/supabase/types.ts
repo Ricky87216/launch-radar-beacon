@@ -238,6 +238,36 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          name: string
+          resolved: boolean
+          response: string | null
+          response_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          name: string
+          resolved?: boolean
+          response?: string | null
+          response_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          name?: string
+          resolved?: boolean
+          response?: string | null
+          response_at?: string | null
+        }
+        Relationships: []
+      }
       market_dim: {
         Row: {
           city_id: string

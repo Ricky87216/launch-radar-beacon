@@ -103,6 +103,9 @@ const GlobalNavBar = () => {
               <DropdownMenuItem asChild>
                 <Link to="/">Global Dashboard</Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/feedback">Feedback</Link>
+              </DropdownMenuItem>
               
               {hasAdminAccess && <>
                   <DropdownMenuSeparator />
