@@ -1,3 +1,4 @@
+
 import { useMemo, useState, useEffect } from "react";
 import { ChevronRight, AlertTriangle, Info, Flag, ChevronLeft } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
@@ -13,13 +14,23 @@ import ProductNameTrigger from "./ProductNameTrigger";
 import EscalationModal from "./admin/EscalationModal";
 import EscalationBadge from "./EscalationBadge";
 import { ScrollArea } from "./ui/scroll-area";
+
+export interface PersonalFilters {
+  regions: string[];
+  countries: string[];
+  isPersonalView: boolean;
+}
+
 interface HeatmapGridProps {
   onEscalate?: (productId: string, marketId: string) => void;
   onShowBlocker?: (productId: string, marketId: string, blockerId?: string) => void;
+  personalFilters?: PersonalFilters;
 }
+
 export default function HeatmapGrid({
   onEscalate,
-  onShowBlocker
+  onShowBlocker,
+  personalFilters = { regions: [], countries: [], isPersonalView: false }
 }: HeatmapGridProps) {
   const {
     getVisibleMarkets,

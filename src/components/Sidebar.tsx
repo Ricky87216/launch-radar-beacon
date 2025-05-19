@@ -4,7 +4,16 @@ import { getLinesOfBusiness, getSubTeams } from "../data/mockData";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-export default function Sidebar() {
+
+interface SidebarProps {
+  personalFilters?: {
+    regions: string[];
+    countries: string[];
+    isPersonalView: boolean;
+  }
+}
+
+export default function Sidebar({ personalFilters }: SidebarProps) {
   const {
     selectedLOBs,
     setSelectedLOBs,

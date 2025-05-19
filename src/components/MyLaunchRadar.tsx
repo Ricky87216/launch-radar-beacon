@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -27,17 +26,6 @@ interface ProductBlocker {
   totalCount: number;
   blockers: Blocker[];
   lastUpdated: string;
-}
-
-// Extended blocker interface to include escalation data
-interface ExtendedBlocker extends Blocker {
-  escalation?: {
-    id: string;
-    status: EscalationStatus;
-    raised_by: string;
-    created_at: string;
-    reason_type?: string;
-  };
 }
 
 export default function MyLaunchRadar() {

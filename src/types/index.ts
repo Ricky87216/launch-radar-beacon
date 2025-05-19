@@ -1,4 +1,3 @@
-
 // Market dimensions
 export interface Market {
   id: string;
@@ -44,12 +43,13 @@ export interface Blocker {
   owner: string;
   eta: string;
   note: string;
-  jira_url: string | null;
+  jira_url?: string;
   escalated: boolean;
   created_at: string;
   updated_at: string;
   resolved: boolean;
   stale: boolean;
+  escalation?: Escalation; // Add the optional escalation property
 }
 
 // User type
@@ -88,7 +88,15 @@ export interface CellComment {
 }
 
 // Escalation status type - our updated application type
-export type EscalationStatus = 'SUBMITTED' | 'IN_DISCUSSION' | 'RESOLVED_BLOCKED' | 'RESOLVED_LAUNCHING' | 'RESOLVED_LAUNCHED';
+export type EscalationStatus = 
+  | 'SUBMITTED' 
+  | 'IN_REVIEW' 
+  | 'IN_DISCUSSION' 
+  | 'ALIGNED' 
+  | 'ESCALATED_TO_LEGAL' 
+  | 'RESOLVED_APPROVED' 
+  | 'RESOLVED_EXCEPTION' 
+  | 'RESOLVED_REJECTED';
 
 // Database status type - the actual statuses in the Supabase database
 export type DatabaseEscalationStatus = 'OPEN' | 'ALIGNED' | 'RESOLVED';
@@ -99,11 +107,19 @@ export const mapAppStatusToDatabaseStatus = (status: EscalationStatus): Database
   switch (status) {
     case 'SUBMITTED':
       return 'OPEN';
+    case 'IN_REVIEW':
+      return 'ALIGNED';
     case 'IN_DISCUSSION':
       return 'ALIGNED';
-    case 'RESOLVED_BLOCKED':
-    case 'RESOLVED_LAUNCHING':
-    case 'RESOLVED_LAUNCHED':
+    case 'ALIGNED':
+      return 'ALIGNED';
+    case 'ESCALATED_TO_LEGAL':
+      return 'ALIGNED';
+    case 'RESOLVED_APPROVED':
+      return 'RESOLVED';
+    case 'RESOLVED_EXCEPTION':
+      return 'RESOLVED';
+    case 'RESOLVED_REJECTED':
       return 'RESOLVED';
     default:
       return 'OPEN';
@@ -114,7 +130,7 @@ export const mapAppStatusToDatabaseStatus = (status: EscalationStatus): Database
 export const mapDatabaseStatusToAppStatus = (status: string): EscalationStatus => {
   // Check if the status is already one of our valid EscalationStatus values
   const validStatuses: EscalationStatus[] = [
-    'SUBMITTED', 'IN_DISCUSSION', 'RESOLVED_BLOCKED', 'RESOLVED_LAUNCHING', 'RESOLVED_LAUNCHED'
+    'SUBMITTED', 'IN_REVIEW', 'IN_DISCUSSION', 'ALIGNED', 'ESCALATED_TO_LEGAL', 'RESOLVED_APPROVED', 'RESOLVED_EXCEPTION', 'RESOLVED_REJECTED'
   ];
   
   if (validStatuses.includes(status as EscalationStatus)) {
@@ -134,3 +150,10 @@ export const mapDatabaseStatusToAppStatus = (status: string): EscalationStatus =
   }
 };
 
+export interface Escalation {
+  id: string;
+  status: EscalationStatus;
+  raised_by: string;
+  created_at: string;
+  reason_type?: string;
+}
