@@ -5,6 +5,7 @@ import { useDashboard } from "../context/DashboardContext";
 import HeatmapGrid from "./HeatmapGrid";
 import BlockerModal from "./BlockerModal";
 import EscalationModal from "./admin/EscalationModal";
+import Sidebar from "./Sidebar";
 
 export default function Dashboard() {
   const [blockerModalOpen, setBlockerModalOpen] = useState(false);
@@ -41,7 +42,8 @@ export default function Dashboard() {
   };
   
   return (
-    <div className={`flex flex-col h-full ${isMobile ? 'pb-16' : ''}`}>
+    <div className={`flex h-full ${isMobile ? 'pb-16' : ''}`}>
+      <Sidebar />
       <main className="flex-1 overflow-hidden">
         <HeatmapGrid 
           onEscalate={openEscalationModal} 

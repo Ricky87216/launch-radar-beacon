@@ -1,8 +1,13 @@
 
+import { DashboardProvider } from "../context/DashboardContext";
 import Dashboard from "../components/Dashboard";
 
 const Index = () => {
-  return <Dashboard />;
+  return (
+    <DashboardProvider>
+      <Dashboard />
+    </DashboardProvider>
+  );
 };
 
 export default Index;

@@ -1,9 +1,13 @@
-import { Filter, Check } from "lucide-react";
+
+import { Filter } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
 import { 
   getLinesOfBusiness, 
   getSubTeams 
 } from "../data/mockData";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Sidebar() {
   const { 
@@ -39,31 +43,32 @@ export default function Sidebar() {
   };
   
   return (
-    <aside className="bg-sidebar border-r w-64 min-w-64 h-full overflow-y-auto p-4">
+    <aside className="bg-gray-50 border-r w-64 min-w-64 h-full overflow-y-auto p-4">
       <div className="flex items-center mb-6">
         <Filter className="h-5 w-5 mr-2" />
         <h2 className="text-lg font-medium">Filters</h2>
       </div>
       
+      {/* Coverage Type */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium mb-2">Coverage Type</h3>
-        <div className="flex items-center space-x-2 mb-2">
+        <h3 className="font-medium text-base mb-3">Coverage Type</h3>
+        <div className="flex space-x-2 mb-2">
           <button
             onClick={() => setCoverageType('city_percentage')}
-            className={`px-3 py-1 text-sm rounded-md ${
+            className={`px-4 py-2 text-sm rounded-md ${
               coverageType === 'city_percentage' 
-                ? 'bg-primary text-white' 
-                : 'bg-gray-100 hover:bg-gray-200'
+                ? 'bg-gray-900 text-white' 
+                : 'bg-gray-100 text-gray-900'
             }`}
           >
             City %
           </button>
           <button
             onClick={() => setCoverageType('gb_weighted')}
-            className={`px-3 py-1 text-sm rounded-md ${
+            className={`px-4 py-2 text-sm rounded-md ${
               coverageType === 'gb_weighted' 
-                ? 'bg-primary text-white' 
-                : 'bg-gray-100 hover:bg-gray-200'
+                ? 'bg-gray-900 text-white' 
+                : 'bg-gray-100 text-gray-900'
             }`}
           >
             GB Weighted
@@ -71,86 +76,89 @@ export default function Sidebar() {
         </div>
       </div>
       
+      {/* Addressable Markets */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium mb-2">Addressable Markets</h3>
-        <div className="flex flex-col space-y-2">
-          <div
-            className="flex items-center cursor-pointer p-1 hover:bg-gray-100 rounded"
-            onClick={() => setUseTam(false)}
-          >
-            <div className={`w-4 h-4 rounded-full border mr-2 flex items-center justify-center ${
-              !useTam ? 'bg-primary border-primary' : 'border-gray-300'
-            }`}>
-              {!useTam && <div className="w-2 h-2 rounded-full bg-white"></div>}
-            </div>
-            <span className="text-sm">All Markets</span>
+        <h3 className="font-medium text-base mb-3">Addressable Markets</h3>
+        <RadioGroup 
+          value={useTam ? "tam_only" : "all_markets"}
+          onValueChange={(value) => setUseTam(value === "tam_only")}
+        >
+          <div className="flex items-center space-x-2 mb-2">
+            <RadioGroupItem value="all_markets" id="all_markets" />
+            <Label htmlFor="all_markets">All Markets</Label>
           </div>
-          <div
-            className="flex items-center cursor-pointer p-1 hover:bg-gray-100 rounded"
-            onClick={() => setUseTam(true)}
-          >
-            <div className={`w-4 h-4 rounded-full border mr-2 flex items-center justify-center ${
-              useTam ? 'bg-primary border-primary' : 'border-gray-300'
-            }`}>
-              {useTam && <div className="w-2 h-2 rounded-full bg-white"></div>}
-            </div>
-            <span className="text-sm">TAM Only</span>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="tam_only" id="tam_only" />
+            <Label htmlFor="tam_only">TAM Only</Label>
           </div>
-        </div>
+        </RadioGroup>
       </div>
       
+      {/* Line of Business */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium mb-2">Line of Business</h3>
-        <div className="space-y-1">
+        <h3 className="font-medium text-base mb-3">Line of Business</h3>
+        <div className="space-y-2">
           {linesOfBusiness.map(lob => (
             <div 
               key={lob} 
-              className="flex items-center cursor-pointer p-1 hover:bg-gray-100 rounded"
-              onClick={() => toggleLOB(lob)}
+              className="flex items-center space-x-2"
             >
-              <div className={`w-4 h-4 rounded border mr-2 flex items-center justify-center ${
-                selectedLOBs.includes(lob) ? 'bg-primary border-primary' : 'border-gray-300'
-              }`}>
-                {selectedLOBs.includes(lob) && <Check className="h-3 w-3 text-white" />}
-              </div>
-              <span className="text-sm">{lob}</span>
+              <Checkbox 
+                id={`lob-${lob}`} 
+                checked={selectedLOBs.includes(lob)}
+                onCheckedChange={() => toggleLOB(lob)}
+              />
+              <label 
+                htmlFor={`lob-${lob}`} 
+                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {lob}
+              </label>
             </div>
           ))}
         </div>
       </div>
       
+      {/* Sub-Team */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium mb-2">Sub-Team</h3>
-        <div className="space-y-1">
+        <h3 className="font-medium text-base mb-3">Sub-Team</h3>
+        <div className="space-y-2">
           {subTeams.map(subTeam => (
             <div 
               key={subTeam} 
-              className="flex items-center cursor-pointer p-1 hover:bg-gray-100 rounded"
-              onClick={() => toggleSubTeam(subTeam)}
+              className="flex items-center space-x-2"
             >
-              <div className={`w-4 h-4 rounded border mr-2 flex items-center justify-center ${
-                selectedSubTeams.includes(subTeam) ? 'bg-primary border-primary' : 'border-gray-300'
-              }`}>
-                {selectedSubTeams.includes(subTeam) && <Check className="h-3 w-3 text-white" />}
-              </div>
-              <span className="text-sm">{subTeam}</span>
+              <Checkbox 
+                id={`subteam-${subTeam}`} 
+                checked={selectedSubTeams.includes(subTeam)}
+                onCheckedChange={() => toggleSubTeam(subTeam)}
+              />
+              <label 
+                htmlFor={`subteam-${subTeam}`} 
+                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {subTeam}
+              </label>
             </div>
           ))}
         </div>
       </div>
       
+      {/* Options */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium mb-2">Options</h3>
-        <div 
-          className="flex items-center cursor-pointer p-1 hover:bg-gray-100 rounded"
-          onClick={() => setHideFullCoverage(!hideFullCoverage)}
-        >
-          <div className={`w-4 h-4 rounded border mr-2 flex items-center justify-center ${
-            hideFullCoverage ? 'bg-primary border-primary' : 'border-gray-300'
-          }`}>
-            {hideFullCoverage && <Check className="h-3 w-3 text-white" />}
-          </div>
-          <span className="text-sm">Hide Full Coverage</span>
+        <h3 className="font-medium text-base mb-3">Options</h3>
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="hide-full-coverage" 
+            checked={hideFullCoverage}
+            onCheckedChange={(checked) => setHideFullCoverage(!!checked)}
+          />
+          <label 
+            htmlFor="hide-full-coverage" 
+            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Hide Full Coverage
+          </label>
         </div>
       </div>
     </aside>
