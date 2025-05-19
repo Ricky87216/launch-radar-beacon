@@ -1,11 +1,10 @@
-
 import { useMemo, useState, useEffect } from "react";
 import { 
   ChevronRight, 
   AlertTriangle, 
   Info,
   Flag,
-  ChevronDown
+  ChevronLeft
 } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
 import { Market, Product } from "../types";
@@ -277,7 +276,7 @@ export default function HeatmapGrid({ onEscalate, onShowBlocker }: HeatmapGridPr
         <div className="flex items-center mb-4">
           {currentLevel !== 'mega_region' && (
             <Button variant="ghost" onClick={handleDrillUp} className="text-sm text-gray-500">
-              <ChevronDown className="mr-1 h-4 w-4" />
+              <ChevronLeft className="mr-1 h-4 w-4" />
               Back to {currentLevel === 'city' ? 'Provinces' : currentLevel === 'country' ? 'Countries' : 'Mega Regions'}
             </Button>
           )}
