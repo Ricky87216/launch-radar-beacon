@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,13 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ChevronDown, FilterIcon, TrendingDown, TrendingUp } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,7 +37,15 @@ import {
   Label,
   Cell,
 } from "recharts";
-import { mockDailyAnalyticsData, mockTeamSnapshotData } from "@/data/analyticsData"; 
+import { 
+  mockDailyAnalyticsData, 
+  mockTeamSnapshotData, 
+  mockLOBSnapshotData,
+  mockRegionSnapshotData,
+  mockCountryData,
+  mockCityData
+} from "@/data/analyticsData"; 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Analytics = () => {
   const { toast } = useToast();
@@ -37,6 +53,13 @@ const Analytics = () => {
   const [selectedLOBs, setSelectedLOBs] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [filteredTeamData, setFilteredTeamData] = useState(mockTeamSnapshotData);
+  const [filteredLOBData, setFilteredLOBData] = useState(mockLOBSnapshotData);
+  const [filteredRegionData, setFilteredRegionData] = useState(mockRegionSnapshotData);
+  
+  // For country/city selector
+  const [selectedLocationType, setSelectedLocationType] = useState<"country" | "city">("country");
+  const [selectedLocation, setSelectedLocation] = useState<string>("");
+  const [locationData, setLocationData] = useState<any>(null);
   
   // Calculate metrics from data
   const latestGlobalTAM = mockDailyAnalyticsData[mockDailyAnalyticsData.length - 1].global_tam_pct;
@@ -77,19 +100,50 @@ const Analytics = () => {
     setSelectedTeams([]);
     setSelectedLOBs([]);
     setSelectedRegions([]);
+    setSelectedLocation("");
+    setLocationData(null);
+  };
+  
+  // Handle location selection
+  const handleLocationSelection = (value: string) => {
+    setSelectedLocation(value);
+    if (selectedLocationType === "country") {
+      const countryData = mockCountryData.find(c => c.country === value);
+      setLocationData(countryData);
+    } else {
+      const cityData = mockCityData.find(c => c.city === value);
+      setLocationData(cityData);
+    }
   };
   
   // Apply filters to team data
   useEffect(() => {
-    let filtered = [...mockTeamSnapshotData];
+    let filteredTeams = [...mockTeamSnapshotData];
     
     if (selectedTeams.length > 0) {
-      filtered = filtered.filter(team => selectedTeams.includes(team.product_team));
+      filteredTeams = filteredTeams.filter(team => selectedTeams.includes(team.product_team));
     }
     
-    // If we had LOB and region data in our team snapshot, we would filter here
+    if (selectedLOBs.length > 0) {
+      filteredTeams = filteredTeams.filter(team => selectedLOBs.includes(team.lob));
+    }
     
-    setFilteredTeamData(filtered);
+    setFilteredTeamData(filteredTeams);
+    
+    // Filter LOB data
+    let filteredLOBs = [...mockLOBSnapshotData];
+    if (selectedLOBs.length > 0) {
+      filteredLOBs = filteredLOBs.filter(lob => selectedLOBs.includes(lob.lob));
+    }
+    setFilteredLOBData(filteredLOBs);
+    
+    // Filter region data
+    let filteredRegions = [...mockRegionSnapshotData];
+    if (selectedRegions.length > 0) {
+      filteredRegions = filteredRegions.filter(region => selectedRegions.includes(region.region));
+    }
+    setFilteredRegionData(filteredRegions);
+    
   }, [selectedTeams, selectedLOBs, selectedRegions]);
   
   const getTAMColorClass = (tam: number) => {
@@ -165,21 +219,46 @@ const Analytics = () => {
             
             <div className="mb-4">
               <h4 className="font-medium mb-2 flex items-center">
+                Line of Business <ChevronDown size={16} className="ml-1" />
+              </h4>
+              <div className="space-y-2">
+                {mockLOBSnapshotData.map(lob => (
+                  <div key={lob.lob} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`lob-${lob.lob}`}
+                      checked={selectedLOBs.includes(lob.lob)}
+                      onCheckedChange={() => handleLOBFilter(lob.lob)}
+                    />
+                    <label 
+                      htmlFor={`lob-${lob.lob}`}
+                      className="text-sm"
+                    >
+                      {lob.lob}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <Separator className="my-3" />
+            
+            <div className="mb-4">
+              <h4 className="font-medium mb-2 flex items-center">
                 Region <ChevronDown size={16} className="ml-1" />
               </h4>
               <div className="space-y-2">
-                {["US/CAN", "EMEA", "APAC", "LATAM"].map(region => (
-                  <div key={region} className="flex items-center space-x-2">
+                {mockRegionSnapshotData.map(region => (
+                  <div key={region.region} className="flex items-center space-x-2">
                     <Checkbox 
-                      id={`region-${region}`}
-                      checked={selectedRegions.includes(region)}
-                      onCheckedChange={() => handleRegionFilter(region)}
+                      id={`region-${region.region}`}
+                      checked={selectedRegions.includes(region.region)}
+                      onCheckedChange={() => handleRegionFilter(region.region)}
                     />
                     <label 
-                      htmlFor={`region-${region}`}
+                      htmlFor={`region-${region.region}`}
                       className="text-sm"
                     >
-                      {region}
+                      {region.region}
                     </label>
                   </div>
                 ))}
@@ -357,36 +436,263 @@ const Analytics = () => {
               </CardContent>
             </Card>
             
-            {/* Summary Table */}
+            {/* Summary Tabs for Team, LOB, and Region */}
+            <Tabs defaultValue="team" className="mb-6">
+              <TabsList className="mb-4">
+                <TabsTrigger value="team">By Team</TabsTrigger>
+                <TabsTrigger value="lob">By Line of Business</TabsTrigger>
+                <TabsTrigger value="region">By Region</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="team">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle>Team Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Team</TableHead>
+                          <TableHead>LOB</TableHead>
+                          <TableHead className="text-right">TAM %</TableHead>
+                          <TableHead className="text-right">Avg Days → TAM</TableHead>
+                          <TableHead className="text-right">Open Blockers</TableHead>
+                          <TableHead className="text-right">Median Blocker Age</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredTeamData.map((team) => (
+                          <TableRow key={team.product_team}>
+                            <TableCell className="font-medium">{team.product_team}</TableCell>
+                            <TableCell>{team.lob}</TableCell>
+                            <TableCell className={`text-right font-bold ${getTAMColorClass(team.tam_pct)}`}>
+                              {team.tam_pct}%
+                            </TableCell>
+                            <TableCell className="text-right">{team.avg_days_to_tam} days</TableCell>
+                            <TableCell className="text-right">{team.open_blockers}</TableCell>
+                            <TableCell className="text-right">{team.median_blocker_age} days</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="lob">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle>Line of Business Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Line of Business</TableHead>
+                          <TableHead className="text-right">TAM %</TableHead>
+                          <TableHead className="text-right">Avg Days → TAM</TableHead>
+                          <TableHead className="text-right">Open Blockers</TableHead>
+                          <TableHead className="text-right">Median Blocker Age</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredLOBData.map((lob) => (
+                          <TableRow key={lob.lob}>
+                            <TableCell className="font-medium">{lob.lob}</TableCell>
+                            <TableCell className={`text-right font-bold ${getTAMColorClass(lob.tam_pct)}`}>
+                              {lob.tam_pct}%
+                            </TableCell>
+                            <TableCell className="text-right">{lob.avg_days_to_tam} days</TableCell>
+                            <TableCell className="text-right">{lob.open_blockers}</TableCell>
+                            <TableCell className="text-right">{lob.median_blocker_age} days</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="region">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle>Region Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Region</TableHead>
+                          <TableHead className="text-right">TAM %</TableHead>
+                          <TableHead className="text-right">Avg Days → TAM</TableHead>
+                          <TableHead className="text-right">Open Blockers</TableHead>
+                          <TableHead className="text-right">Median Blocker Age</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredRegionData.map((region) => (
+                          <TableRow key={region.region}>
+                            <TableCell className="font-medium">{region.region}</TableCell>
+                            <TableCell className={`text-right font-bold ${getTAMColorClass(region.tam_pct)}`}>
+                              {region.tam_pct}%
+                            </TableCell>
+                            <TableCell className="text-right">{region.avg_days_to_tam} days</TableCell>
+                            <TableCell className="text-right">{region.open_blockers}</TableCell>
+                            <TableCell className="text-right">{region.median_blocker_age} days</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+            
+            {/* Country/City Specific Metrics */}
             <Card className="mb-6">
               <CardHeader className="pb-2">
-                <CardTitle>Team Summary</CardTitle>
+                <CardTitle>Country/City Specific Metrics</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Team</TableHead>
-                      <TableHead className="text-right">TAM %</TableHead>
-                      <TableHead className="text-right">Avg Days → TAM</TableHead>
-                      <TableHead className="text-right">Open Blockers</TableHead>
-                      <TableHead className="text-right">Median Blocker Age</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTeamData.map((team) => (
-                      <TableRow key={team.product_team}>
-                        <TableCell className="font-medium">{team.product_team}</TableCell>
-                        <TableCell className={`text-right font-bold ${getTAMColorClass(team.tam_pct)}`}>
-                          {team.tam_pct}%
-                        </TableCell>
-                        <TableCell className="text-right">{team.avg_days_to_tam} days</TableCell>
-                        <TableCell className="text-right">{team.open_blockers}</TableCell>
-                        <TableCell className="text-right">{team.median_blocker_age} days</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Type</label>
+                    <RadioGroup 
+                      value={selectedLocationType}
+                      onValueChange={(val) => {
+                        setSelectedLocationType(val as "country" | "city");
+                        setSelectedLocation("");
+                        setLocationData(null);
+                      }}
+                      className="flex space-x-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="country" id="country" />
+                        <label htmlFor="country">Country</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="city" id="city" />
+                        <label htmlFor="city">City</label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Select {selectedLocationType === "country" ? "Country" : "City"}
+                    </label>
+                    <Select
+                      value={selectedLocation}
+                      onValueChange={handleLocationSelection}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue 
+                          placeholder={`Select a ${selectedLocationType === "country" ? "country" : "city"}`} 
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedLocationType === "country" 
+                          ? mockCountryData.map(country => (
+                              <SelectItem key={country.country} value={country.country}>
+                                {country.country}
+                              </SelectItem>
+                            ))
+                          : mockCityData.map(city => (
+                              <SelectItem key={city.city} value={city.city}>
+                                {city.city}
+                              </SelectItem>
+                            ))
+                        }
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                {locationData ? (
+                  <div className="mt-6">
+                    <div className="bg-gray-50 p-4 mb-4 rounded-md">
+                      <h3 className="text-lg font-semibold mb-2">
+                        {selectedLocationType === "country" 
+                          ? locationData.country 
+                          : `${locationData.city}, ${locationData.country}`}
+                      </h3>
+                      <p className="text-sm text-gray-600">Region: {locationData.region}</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="bg-white p-4 rounded-md border">
+                        <p className="text-sm text-gray-500">TAM Coverage</p>
+                        <p className={`text-2xl font-bold ${getTAMColorClass(locationData.tam_pct)}`}>
+                          {locationData.tam_pct}%
+                        </p>
+                      </div>
+                      
+                      <div className="bg-white p-4 rounded-md border">
+                        <p className="text-sm text-gray-500">Avg Days to TAM</p>
+                        <p className="text-2xl font-bold">{locationData.avg_days_to_tam} days</p>
+                      </div>
+                      
+                      <div className="bg-white p-4 rounded-md border">
+                        <p className="text-sm text-gray-500">Open Blockers</p>
+                        <p className="text-2xl font-bold">{locationData.open_blockers}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center mt-6 mb-2">
+                      <h4 className="font-medium">Blocker Details</h4>
+                      <Badge variant="outline" className="bg-gray-100">
+                        Median Age: {locationData.median_blocker_age} days
+                      </Badge>
+                    </div>
+                    
+                    {/* Mock blocker table */}
+                    {locationData.open_blockers > 0 && (
+                      <div className="border rounded-md overflow-hidden mt-2">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Product</TableHead>
+                              <TableHead>Category</TableHead>
+                              <TableHead>Owner</TableHead>
+                              <TableHead className="text-right">Age (days)</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {Array(Math.min(5, locationData.open_blockers)).fill(0).map((_, i) => (
+                              <TableRow key={i}>
+                                <TableCell>
+                                  {["Maps", "Driver", "Rider", "Pricing", "Marketplace"][i % 5]}
+                                </TableCell>
+                                <TableCell>
+                                  {["Legal", "Technical", "Product", "Localization", "Compliance"][i % 5]}
+                                </TableCell>
+                                <TableCell>
+                                  {["Team A", "Team B", "Team C", "Team D", "Team E"][i % 5]}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {Math.max(1, locationData.median_blocker_age - 2 + i)}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                    
+                    {locationData.open_blockers === 0 && (
+                      <div className="text-center py-8 bg-gray-50 rounded-md border">
+                        <p className="text-gray-500">No blockers for this location</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-gray-50 rounded-md">
+                    <p className="text-gray-500">
+                      Select a {selectedLocationType === "country" ? "country" : "city"} to view metrics
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
             
