@@ -8,7 +8,6 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 // Layout components
 import GlobalSidebar from "@/components/GlobalSidebar";
 import GlobalNavBar from "@/components/GlobalNavBar";
-import GlobalBreadcrumb from "@/components/GlobalBreadcrumb";
 
 // Pages
 import Index from "@/pages/Index";
@@ -38,7 +37,6 @@ function App() {
               <GlobalSidebar />
               <div className="flex-1 flex flex-col">
                 <GlobalNavBar />
-                <GlobalBreadcrumb />
                 <main className="flex-1 overflow-y-auto">
                   <Routes>
                     <Route path="/" element={<Dashboard />} />

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, ChevronLeft } from 'lucide-react';
@@ -7,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useDashboard } from '@/context/DashboardContext';
 import { useSidebar } from '@/components/ui/sidebar';
 import GlobalBreadcrumb from './GlobalBreadcrumb';
+
 const GlobalNavBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -16,12 +18,23 @@ const GlobalNavBar = () => {
   const {
     user
   } = useDashboard();
+  
+  // Current path parts to determine navigation level
+  const pathParts = location.pathname.split('/').filter(Boolean);
+  const isAtTopLevel = pathParts.length === 0 || (pathParts.length === 1 && pathParts[0] === '');
+  
   const handleBackClick = () => {
-    if (window.history.length > 1) {
-      window.history.back();
+    // If we're at a deeper level, navigate up one level
+    if (pathParts.length > 0) {
+      const newPath = '/' + pathParts.slice(0, -1).join('/');
+      navigate(newPath);
     } else {
       navigate('/');
     }
+  };
+
+  const handleHomeClick = () => {
+    navigate('/');
   };
 
   // Set up keyboard shortcuts
@@ -47,21 +60,24 @@ const GlobalNavBar = () => {
 
   // Determine if the user has admin privileges
   const hasAdminAccess = user?.role === 'admin' || user?.role === 'editor';
-  return <header className="sticky top-0 z-50 h-14 w-full border-b bg-white">
-      <div className="container flex h-14 items-center px-4">
+  
+  return <header className="sticky top-0 z-50 h-12 w-full border-b bg-white">
+      <div className="container flex h-12 items-center px-4">
         <div className="flex items-center mr-4">
           <Button variant="ghost" size="icon" onClick={toggleSidebar} className="mr-2 text-[var(--uber-black)]" aria-label="Toggle menu">
             <Menu className="h-5 w-5" />
           </Button>
           
-          <Button variant="ghost" size="icon" onClick={handleBackClick} className="mr-2 text-[var(--uber-black)]" title="Back (Alt+←)">
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
+          {!isAtTopLevel && (
+            <Button variant="ghost" size="icon" onClick={handleBackClick} className="mr-2 text-[var(--uber-black)]" title="Back (Alt+←)">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          )}
           
-          <Link to="/" className="flex items-center">
+          <div className="flex items-center cursor-pointer" onClick={handleHomeClick}>
             <img alt="Uber" height="24" className="h-6" src="/lovable-uploads/659408ad-46e7-4fca-8f22-36b2349142cf.png" />
             <span className="ml-2 font-semibold">Global First Launch Coverage</span>
-          </Link>
+          </div>
         </div>
         
         <div className="flex-1 flex justify-center">
@@ -108,4 +124,5 @@ const GlobalNavBar = () => {
       </div>
     </header>;
 };
+
 export default GlobalNavBar;
