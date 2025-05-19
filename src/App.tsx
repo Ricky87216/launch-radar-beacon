@@ -22,6 +22,7 @@ import Logs from "@/pages/admin/Logs";
 import EscalationLog from "@/pages/EscalationLog";
 import ProductMeta from "@/pages/admin/ProductMeta";
 import Analytics from "@/pages/Analytics";
+import HowTo from "@/pages/HowTo";
 import Dashboard from "@/components/Dashboard";
 
 // Create a client
@@ -43,6 +44,7 @@ function App() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/my" element={<MyLaunchRadar />} />
                     <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/how-to" element={<HowTo />} />
                     <Route path="/admin/bulk-edit" element={<BulkEdit />} />
                     <Route path="/admin/data-sync" element={<DataSync />} />
                     <Route path="/admin/answer-hub" element={<AnswerHub />} />
