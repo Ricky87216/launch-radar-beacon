@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -34,7 +35,8 @@ export default function MyLaunchRadar() {
     getMarketById, 
     getBlockerById,
     getCoverageCell,
-    getAllMarkets
+    getAllMarkets,
+    blockers
   } = useDashboard();
   
   const [loading, setLoading] = useState(true);
@@ -43,6 +45,8 @@ export default function MyLaunchRadar() {
   const [expandedProducts, setExpandedProducts] = useState<Record<string, boolean>>({});
   const [preferencesModalOpen, setPreferencesModalOpen] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  // Set to true to show example personalized view
+  const [showDemoView, setShowDemoView] = useState(true);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -63,7 +67,7 @@ export default function MyLaunchRadar() {
           if (error.code === 'PGRST116') {
             // Record not found, show preferences modal and instructions
             setShowInstructions(true);
-            setPreferencesModalOpen(true);
+            setPreferencesModalOpen(!showDemoView); // Only show preferences modal if we aren't showing demo
           } else {
             console.error('Error fetching user preferences:', error);
             toast({
@@ -72,28 +76,184 @@ export default function MyLaunchRadar() {
               description: "Failed to load your preferences. Please try again.",
             });
           }
-          setLoading(false);
+          
+          if (showDemoView) {
+            loadDemoData();
+          } else {
+            setLoading(false);
+          }
           return;
         }
 
         // Check if user has empty preferences
         if ((!data.regions || data.regions.length === 0) && 
             (!data.countries || data.countries.length === 0)) {
-          setShowInstructions(true);
+          setShowInstructions(!showDemoView);
         } else {
           setShowInstructions(false);
         }
 
         setUserPrefs(data);
-        await loadBlockersForUserPrefs(data.regions, data.countries);
+        if (showDemoView) {
+          loadDemoData();
+        } else {
+          await loadBlockersForUserPrefs(data.regions, data.countries);
+        }
       } catch (error) {
         console.error('Error in user preferences flow:', error);
-        setLoading(false);
+        
+        if (showDemoView) {
+          loadDemoData();
+        } else {
+          setLoading(false);
+        }
       }
     };
 
     fetchUserPreferences();
-  }, [user.id, navigate]);
+  }, [user.id, navigate, showDemoView]);
+
+  // Function to load demo data
+  const loadDemoData = () => {
+    setLoading(true);
+    
+    // Create demo preferences
+    setUserPrefs({
+      regions: ["mr-2"], // EMEA
+      countries: ["r-3", "r-4"] // UK and Germany
+    });
+    
+    // Create mock product blockers data
+    const mockProductBlockers: ProductBlocker[] = [
+      {
+        id: "p-1",
+        name: "Product Alpha",
+        coverage: 75,
+        blockedCount: 2,
+        totalCount: 8,
+        blockers: [
+          {
+            id: "demo-b1",
+            product_id: "p-1",
+            market_id: "city-5", // Westminster
+            category: "Regulatory",
+            owner: "Jane Smith",
+            eta: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+            note: "Waiting for local authority approval",
+            jira_url: "https://jira.example.com/issue/LAR-123",
+            escalated: false,
+            created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(), // 12 days ago
+            updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+            resolved: false,
+            stale: false
+          },
+          {
+            id: "demo-b2",
+            product_id: "p-1",
+            market_id: "city-6", // Camden
+            category: "Technical",
+            owner: "Mark Johnson",
+            eta: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
+            note: "Integration issue with local payment processor",
+            jira_url: "https://jira.example.com/issue/LAR-124",
+            escalated: true,
+            created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+            updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+            resolved: false,
+            stale: false
+          }
+        ],
+        lastUpdated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() // 1 day ago
+      },
+      {
+        id: "p-3",
+        name: "Product Gamma",
+        coverage: 50,
+        blockedCount: 4,
+        totalCount: 8,
+        blockers: [
+          {
+            id: "demo-b3",
+            product_id: "p-3",
+            market_id: "city-7", // Mitte (Berlin)
+            category: "Business",
+            owner: "Lisa Mueller",
+            eta: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
+            note: "Price point renegotiation with local partner",
+            jira_url: "https://jira.example.com/issue/LAR-125",
+            escalated: true,
+            created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(), // 20 days ago
+            updated_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
+            resolved: false,
+            stale: false
+          },
+          {
+            id: "demo-b4",
+            product_id: "p-3",
+            market_id: "c-9", // Munich
+            category: "Legal",
+            owner: "Hans Schmidt",
+            eta: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+            note: "Legal compliance review ongoing",
+            jira_url: "https://jira.example.com/issue/LAR-126",
+            escalated: false,
+            created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days ago
+            updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+            resolved: false,
+            stale: true
+          },
+          {
+            id: "demo-b5",
+            product_id: "p-3",
+            market_id: "c-8", // Berlin
+            category: "Partner",
+            owner: "Astrid Weber",
+            eta: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days from now
+            note: "Waiting for partner technical integration",
+            jira_url: "https://jira.example.com/issue/LAR-127",
+            escalated: false,
+            created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(), // 25 days ago
+            updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+            resolved: false,
+            stale: false
+          }
+        ],
+        lastUpdated: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days ago
+      },
+      {
+        id: "p-6",
+        name: "Product Zeta",
+        coverage: 87.5,
+        blockedCount: 1,
+        totalCount: 8,
+        blockers: [
+          {
+            id: "demo-b6",
+            product_id: "p-6",
+            market_id: "city-5", // Westminster
+            category: "Technical",
+            owner: "Emily Richards",
+            eta: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
+            note: "Backend system adaptation required for local regulations",
+            jira_url: "https://jira.example.com/issue/LAR-128",
+            escalated: false,
+            created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days ago
+            updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+            resolved: false,
+            stale: false
+          }
+        ],
+        lastUpdated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() // 1 day ago
+      }
+    ];
+    
+    // Set the data and turn off loading
+    setProductBlockers(mockProductBlockers);
+    setLoading(false);
+    
+    // Set one product as expanded by default
+    setExpandedProducts({ "p-3": true });
+  };
 
   const loadBlockersForUserPrefs = async (regions: string[], countries: string[]) => {
     if ((!regions || regions.length === 0) && (!countries || countries.length === 0)) {
@@ -125,7 +285,6 @@ export default function MyLaunchRadar() {
       // For each product x market combination, check if there's a blocker
       userMarkets.forEach(market => {
         // Simulate querying products with blockers in this market
-        const { blockers } = useDashboard();
         const marketsBlockers = blockers.filter(b => 
           b.market_id === market.id && 
           !b.resolved
@@ -214,6 +373,11 @@ export default function MyLaunchRadar() {
     return "bg-red-100 text-red-800";
   };
 
+  // Toggle between demo view and real view
+  const toggleDemoView = () => {
+    setShowDemoView(prev => !prev);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-4rem)]">
@@ -225,8 +389,8 @@ export default function MyLaunchRadar() {
     );
   }
 
-  // Show instructions when user has no preferences set
-  if (showInstructions) {
+  // Show instructions when user has no preferences set and we're not showing the demo
+  if (showInstructions && !showDemoView) {
     return (
       <div className="container mx-auto py-6 px-4 max-w-7xl">
         <div className="flex justify-between items-center mb-6">
@@ -239,13 +403,21 @@ export default function MyLaunchRadar() {
               Personalized view of products with blockers in your regions and countries
             </p>
           </div>
-          <Button 
-            onClick={() => navigate('/')}
-            className="flex items-center"
-          >
-            <Globe className="mr-2 h-4 w-4" />
-            Global View
-          </Button>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              onClick={toggleDemoView}
+            >
+              View Demo
+            </Button>
+            <Button 
+              onClick={() => navigate('/')}
+              className="flex items-center"
+            >
+              <Globe className="mr-2 h-4 w-4" />
+              Global View
+            </Button>
+          </div>
         </div>
 
         <Card className="shadow-md mb-6">
@@ -325,14 +497,24 @@ export default function MyLaunchRadar() {
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
-            onClick={() => setPreferencesModalOpen(true)}
-            className="flex items-center"
-          >
-            <Settings className="mr-2 h-4 w-4" />
-            Edit Preferences
-          </Button>
+          {!showDemoView && (
+            <Button 
+              variant="outline" 
+              onClick={() => setPreferencesModalOpen(true)}
+              className="flex items-center"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Edit Preferences
+            </Button>
+          )}
+          {showInstructions && (
+            <Button
+              variant="outline"
+              onClick={toggleDemoView}
+            >
+              {showDemoView ? "Hide Demo" : "View Demo"}
+            </Button>
+          )}
           <Button 
             onClick={() => navigate('/')}
             className="flex items-center"
@@ -342,6 +524,20 @@ export default function MyLaunchRadar() {
           </Button>
         </div>
       </div>
+
+      {/* Demo banner when in demo mode */}
+      {showDemoView && (
+        <Alert className="mb-6 bg-blue-50 border-blue-200">
+          <AlertTitle className="flex items-center">
+            <Star className="mr-2 h-4 w-4 text-blue-500" />
+            Demo Mode
+          </AlertTitle>
+          <AlertDescription>
+            This is a demo of the personalized coverage view. It shows how your dashboard will look after setting preferences 
+            for EMEA region plus UK and Germany markets.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* User preferences summary */}
       {userPrefs && (
