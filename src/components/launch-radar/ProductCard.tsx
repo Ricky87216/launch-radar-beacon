@@ -37,7 +37,7 @@ export function ProductCard({ product, openProductCard, getMarketById, viewEscal
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle 
-            className="text-lg cursor-pointer hover:underline"
+            className="text-lg cursor-pointer hover:underline break-words"
             onClick={() => openProductCard(product.id, product.name)}
           >
             {product.name}
@@ -46,7 +46,7 @@ export function ProductCard({ product, openProductCard, getMarketById, viewEscal
             {Math.round(product.coverage)}%
           </Badge>
         </div>
-        <CardDescription>
+        <CardDescription className="break-words">
           Cities Blocked: {product.blockedCount} / {product.totalCount} ({Math.round((product.blockedCount / product.totalCount) * 100)}%)
         </CardDescription>
       </CardHeader>

@@ -31,7 +31,6 @@ const GlobalSidebar = () => {
     { icon: Grid, label: 'Dashboard', href: '/' },
     { icon: BarChartIcon, label: 'Analytics', href: '/analytics' },
     { icon: Star, label: 'My Coverage', href: '/my' },
-    { icon: HelpCircle, label: 'How To Guide', href: '/how-to' },
     { 
       icon: ShieldAlert, 
       label: 'Escalations', 
@@ -54,6 +53,11 @@ const GlobalSidebar = () => {
       label: 'Data Sync', 
       href: '/admin/data-sync',
       requiresRole: ['admin', 'can_edit_status']
+    },
+    { 
+      icon: HelpCircle, 
+      label: 'How To Guide', 
+      href: '/how-to' 
     }
   ];
 

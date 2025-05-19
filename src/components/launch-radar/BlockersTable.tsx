@@ -32,6 +32,7 @@ export function BlockersTable({ blockers, getMarketById, viewEscalation }: Block
             <TableHead className="whitespace-nowrap">Owner</TableHead>
             <TableHead className="whitespace-nowrap">Created</TableHead>
             <TableHead className="whitespace-nowrap">ETA</TableHead>
+            <TableHead className="whitespace-nowrap">Notes</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -77,11 +78,25 @@ export function BlockersTable({ blockers, getMarketById, viewEscalation }: Block
                 <TableCell className="py-2 whitespace-nowrap">
                   {formatRelativeTime(blocker.eta)}
                 </TableCell>
+                <TableCell className="py-2 max-w-xs break-words">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="truncate">
+                          {(blocker as ExtendedBlocker).escalation?.notes || "-"}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-md">
+                        {(blocker as ExtendedBlocker).escalation?.notes || "No notes available"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
               </TableRow>
             ))}
           {blockers.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-4">
+              <TableCell colSpan={7} className="text-center py-4">
                 No blockers found
               </TableCell>
             </TableRow>
