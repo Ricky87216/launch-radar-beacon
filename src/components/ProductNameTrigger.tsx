@@ -20,7 +20,7 @@ const ProductNameTrigger = ({
       <span 
         onClick={() => setIsModalOpen(true)} 
         className={cn(
-          "text-slate-100 cursor-pointer hover:text-[var(--uber-green)] hover:underline transition-colors duration-200",
+          "text-slate-100 cursor-pointer hover:underline transition-colors duration-200",
           className
         )}
       >
