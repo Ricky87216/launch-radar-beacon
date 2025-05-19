@@ -39,7 +39,7 @@ export function OnboardingCallout() {
             <Link to="/howto" className="text-blue-700 underline hover:text-blue-900 font-medium">
               how-to guide
             </Link>{" "}
-            to get started with Uber's Launch Radar.
+            to get started with our Global Launch Coverage Dashboard.
           </AlertDescription>
         </div>
         <Button 
