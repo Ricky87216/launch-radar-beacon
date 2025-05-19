@@ -1,4 +1,3 @@
-
 import { useMemo, useState, useEffect } from "react";
 import { ChevronRight, AlertTriangle, Info, Flag, ChevronLeft } from "lucide-react";
 import { useDashboard } from "../context/DashboardContext";
@@ -183,10 +182,10 @@ export default function HeatmapGrid({
     }
   };
 
-  // Function to get cell color based on coverage value
+  // Function to get cell color based on coverage value - updated with more gentle thresholds
   const getCellColor = (coverage: number) => {
-    if (coverage >= 95) return 'bg-heatmap-green';
-    if (coverage >= 70) return 'bg-heatmap-yellow';
+    if (coverage >= 90) return 'bg-heatmap-green';
+    if (coverage >= 65) return 'bg-heatmap-yellow';
     return 'bg-heatmap-red';
   };
 

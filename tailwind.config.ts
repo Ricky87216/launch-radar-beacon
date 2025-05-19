@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -64,9 +63,9 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				heatmap: {
-					green: '#06C167',
-					yellow: '#FFB424',
-					red: '#E11900',
+					green: '#6FCF97', // Updated to soft green
+					yellow: '#F2C94C', // Updated to warm goldenrod
+					red: '#EB5757', // Updated to muted brick red
 				}
 			},
 			borderRadius: {

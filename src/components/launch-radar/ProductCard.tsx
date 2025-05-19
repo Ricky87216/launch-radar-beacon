@@ -27,9 +27,9 @@ export function ProductCard({ product, openProductCard, getMarketById, viewEscal
   const [expanded, setExpanded] = useState(false);
   
   const getCoverageColor = (coverage: number) => {
-    if (coverage >= 80) return "bg-green-100 text-green-800";
-    if (coverage >= 50) return "bg-yellow-100 text-yellow-800";
-    return "bg-red-100 text-red-800";
+    if (coverage >= 80) return "bg-green-100 text-green-800 border-[#6FCF97]";
+    if (coverage >= 50) return "bg-yellow-100 text-yellow-800 border-[#F2C94C]";
+    return "bg-red-100 text-red-800 border-[#EB5757]";
   };
   
   return (

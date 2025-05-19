@@ -1,3 +1,4 @@
+
 @import url("https://fonts.googleapis.com/css2?family=Uber+Move:wght@400;500;700&display=swap");
 
 @tailwind base;
@@ -12,9 +13,9 @@
     --uber-gray-60: #666666;
     --uber-gray-30: #AAAAAA;
     --uber-gray-10: #F6F6F6;
-    --uber-green: #06C167;
-    --uber-yellow: #FFB424;
-    --uber-red: #E11900;
+    --uber-green: #6FCF97; /* Updated to soft green */
+    --uber-yellow: #F2C94C; /* Updated to warm goldenrod */
+    --uber-red: #EB5757; /* Updated to muted brick red */
 
     /* Typography */
     --font-sans: "Uber Move", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
