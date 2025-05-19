@@ -309,7 +309,7 @@ export default function HeatmapGrid({
             </TableHeader>
             <TableBody>
               {products.map(product => <TableRow key={product.id}>
-                  <TableCell className="sticky left-0 z-10 border-b bg-zinc-800">
+                  <TableCell className="sticky left-0 z-10 border-b bg-neutral-900">
                     <div className="flex items-center justify-between">
                       <div className="mr-2">
                         <div className="text-sm font-medium">
