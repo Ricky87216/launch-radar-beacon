@@ -260,12 +260,7 @@ export default function HeatmapGrid({
               <ChevronLeft className="mr-1 h-4 w-4" />
               Back to {currentLevel === 'city' ? 'Provinces' : currentLevel === 'country' ? 'Countries' : 'Mega Regions'}
             </Button>}
-          <span className="text-sm text-gray-500 ml-2">
-            {currentLevel === 'mega_region' && 'Viewing Mega Regions'}
-            {currentLevel === 'region' && `Viewing Countries in ${getMarketById(selectedParent || "")?.name || ""}`}
-            {currentLevel === 'country' && `Viewing Provinces in ${getMarketById(selectedParent || "")?.name || ""}`}
-            {currentLevel === 'city' && `Viewing Cities in ${getMarketById(selectedParent || "")?.name || ""}`}
-          </span>
+          
           
           {/* Quick navigation buttons */}
           {currentLevel !== 'city'}
@@ -280,9 +275,7 @@ export default function HeatmapGrid({
         
         {/* Coverage type indicator */}
         <div className="text-sm text-gray-500 mb-4 flex items-center">
-          <span className="mr-2">
-            Showing: {coverageType === 'city_percentage' ? 'City Coverage %' : coverageType === 'gb_weighted' ? 'GB-Weighted Coverage %' : 'TAM Coverage %'}
-          </span>
+          
           
           {/* Drill-down instructions help */}
           {currentLevel !== 'city' && <div className="ml-4 text-xs bg-blue-50 p-1 rounded flex items-center">
