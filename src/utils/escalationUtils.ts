@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { EscalationStatus, DatabaseEscalationStatus, mapAppStatusToDatabaseStatus, mapDatabaseStatusToAppStatus } from "@/types";
 
@@ -158,6 +157,34 @@ export const submitEscalation = async (
   }
 };
 
+export const addEscalationComment = async (
+  escalationId: string,
+  userId: string,
+  comment: string
+) => {
+  // Get current status first
+  const { data: currentEscalation } = await supabase
+    .from("escalation")
+    .select("status")
+    .eq("esc_id", escalationId)
+    .single();
+    
+  if (!currentEscalation) {
+    throw new Error("Escalation not found");
+  }
+  
+  // Add comment to history without changing status
+  return await supabase
+    .from("escalation_history")
+    .insert({
+      escalation_id: escalationId,
+      user_id: userId,
+      old_status: currentEscalation.status,
+      new_status: currentEscalation.status, // Same status, just adding a comment
+      notes: comment
+    });
+};
+
 export const updateEscalationStatus = async (
   escalationId: string,
   newStatus: EscalationStatus,
@@ -204,34 +231,6 @@ export const updateEscalationStatus = async (
     });
     
   return data;
-};
-
-export const addEscalationComment = async (
-  escalationId: string,
-  userId: string,
-  comment: string
-) => {
-  // Get current status first
-  const { data: currentEscalation } = await supabase
-    .from("escalation")
-    .select("status")
-    .eq("esc_id", escalationId)
-    .single();
-    
-  if (!currentEscalation) {
-    throw new Error("Escalation not found");
-  }
-  
-  // Add comment to history without changing status
-  return await supabase
-    .from("escalation_history")
-    .insert({
-      escalation_id: escalationId,
-      user_id: userId,
-      old_status: currentEscalation.status,
-      new_status: currentEscalation.status, // Same status, just adding a comment
-      notes: comment
-    });
 };
 
 export const getEscalationDetails = async (escalationId: string) => {

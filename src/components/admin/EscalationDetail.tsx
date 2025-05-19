@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboard } from "@/context/DashboardContext";
@@ -21,7 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import { EscalationStatus, DatabaseEscalationStatus, mapDatabaseStatusToAppStatus, mapAppStatusToDatabaseStatus } from "@/types";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { EscalationHistoryItem } from "@/utils/escalationUtils";
+import { EscalationHistoryItem, addEscalationComment, updateEscalationStatus } from "@/utils/escalationUtils";
 
 // Interface for escalation history/comments with consistent typing
 interface Comment extends EscalationHistoryItem {
@@ -57,6 +56,7 @@ interface Escalation {
 const EscalationDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { getProductById, getMarketById } = useDashboard();
   
@@ -68,11 +68,20 @@ const EscalationDetail: React.FC = () => {
   const [statusNote, setStatusNote] = useState("");
   const [changingStatus, setChangingStatus] = useState(false);
   
+  // Check if there's prefetched data in the location state
+  const escalationFromState = location.state?.escalation;
+  
   useEffect(() => {
-    if (id) {
+    if (escalationFromState) {
+      // Use the escalation data from location state (for mock data)
+      setEscalation(escalationFromState);
+      setNewStatus(escalationFromState.status);
+      setLoading(false);
+    } else if (id) {
+      // Otherwise fetch from the database
       fetchEscalationDetails(id);
     }
-  }, [id]);
+  }, [id, escalationFromState]);
   
   const fetchEscalationDetails = async (escalationId: string) => {
     try {
@@ -154,32 +163,56 @@ const EscalationDetail: React.FC = () => {
     try {
       setSubmittingComment(true);
       
-      // Get the database status value
-      const dbStatus = mapAppStatusToDatabaseStatus(escalation.status);
-      
-      // Add a note with the comment to escalation history
-      const { error } = await supabase.from("escalation_history").insert({
-        escalation_id: escalation.esc_id,
-        user_id: "Current User", // Ideally this would be the current user's ID
-        old_status: dbStatus,
-        new_status: dbStatus,
-        notes: comment,
-      });
-      
-      if (error) throw error;
-      
-      // Refresh escalation data to show new comment
-      if (id) {
-        fetchEscalationDetails(id);
+      // If this is a mock escalation (from state), add the comment locally
+      if (escalationFromState) {
+        const now = new Date().toISOString();
+        const newComment: Comment = {
+          id: `mock-comment-${Date.now()}`,
+          escalation_id: escalation.esc_id,
+          user_id: "Current User",
+          old_status: mapAppStatusToDatabaseStatus(escalation.status),
+          new_status: mapAppStatusToDatabaseStatus(escalation.status),
+          notes: comment,
+          changed_at: now
+        };
+        
+        setEscalation({
+          ...escalation,
+          comments: [newComment, ...escalation.comments]
+        });
+        
+        toast({
+          title: "Comment added",
+          description: "Your comment has been added successfully.",
+        });
+      } else {
+        // Get the database status value
+        const dbStatus = mapAppStatusToDatabaseStatus(escalation.status);
+        
+        // Add a note with the comment to escalation history
+        const { error } = await supabase.from("escalation_history").insert({
+          escalation_id: escalation.esc_id,
+          user_id: "Current User", // Ideally this would be the current user's ID
+          old_status: dbStatus,
+          new_status: dbStatus,
+          notes: comment,
+        });
+        
+        if (error) throw error;
+        
+        // Refresh escalation data to show new comment
+        if (id) {
+          fetchEscalationDetails(id);
+        }
+        
+        toast({
+          title: "Comment added",
+          description: "Your comment has been added successfully.",
+        });
       }
       
       // Clear comment input
       setComment("");
-      
-      toast({
-        title: "Comment added",
-        description: "Your comment has been added successfully.",
-      });
       
     } catch (error) {
       console.error("Error adding comment:", error);
@@ -199,39 +232,68 @@ const EscalationDetail: React.FC = () => {
     try {
       setChangingStatus(true);
       
-      // Convert app status to database status for the update
-      const dbStatus = mapAppStatusToDatabaseStatus(newStatus);
-      const currentDbStatus = mapAppStatusToDatabaseStatus(escalation.status);
-      
-      // Update the escalation status
-      const { error } = await supabase
-        .from("escalation")
-        .update({ 
-          status: dbStatus,
-          ...(newStatus === 'RESOLVED_LAUNCHED' ? { aligned_at: new Date().toISOString() } : {}),
-          ...(newStatus.startsWith('RESOLVED_') ? { resolved_at: new Date().toISOString() } : {})
-        })
-        .eq("esc_id", escalation.esc_id);
-      
-      if (error) throw error;
-      
-      // Add a note to history for the status change
-      await supabase.from("escalation_history").insert({
-        escalation_id: escalation.esc_id,
-        user_id: "Current User", // Ideally this would be the current user's ID
-        old_status: currentDbStatus,
-        new_status: dbStatus,
-        notes: statusNote || `Status changed from ${escalation.status} to ${newStatus}`,
-      });
-      
-      toast({
-        title: "Status updated",
-        description: `Escalation status updated to ${newStatus.replace('_', ' ').toLowerCase()}.`,
-      });
-      
-      // Refresh data
-      if (id) {
-        fetchEscalationDetails(id);
+      // If this is a mock escalation (from state), update the status locally
+      if (escalationFromState) {
+        const now = new Date().toISOString();
+        const newComment: Comment = {
+          id: `mock-status-${Date.now()}`,
+          escalation_id: escalation.esc_id,
+          user_id: "Current User",
+          old_status: mapAppStatusToDatabaseStatus(escalation.status),
+          new_status: mapAppStatusToDatabaseStatus(newStatus),
+          notes: statusNote || `Status changed from ${escalation.status} to ${newStatus}`,
+          changed_at: now
+        };
+        
+        const updatedEscalation = {
+          ...escalation,
+          status: newStatus,
+          comments: [newComment, ...escalation.comments],
+          ...(newStatus === 'RESOLVED_LAUNCHED' ? { aligned_at: now } : {}),
+          ...(newStatus.startsWith('RESOLVED_') ? { resolved_at: now } : {})
+        };
+        
+        setEscalation(updatedEscalation);
+        
+        toast({
+          title: "Status updated",
+          description: `Escalation status updated to ${newStatus.replace('_', ' ').toLowerCase()}.`,
+        });
+      } else {
+        // Convert app status to database status for the update
+        const dbStatus = mapAppStatusToDatabaseStatus(newStatus);
+        const currentDbStatus = mapAppStatusToDatabaseStatus(escalation.status);
+        
+        // Update the escalation status
+        const { error } = await supabase
+          .from("escalation")
+          .update({ 
+            status: dbStatus,
+            ...(newStatus === 'RESOLVED_LAUNCHED' ? { aligned_at: new Date().toISOString() } : {}),
+            ...(newStatus.startsWith('RESOLVED_') ? { resolved_at: new Date().toISOString() } : {})
+          })
+          .eq("esc_id", escalation.esc_id);
+        
+        if (error) throw error;
+        
+        // Add a note to history for the status change
+        await supabase.from("escalation_history").insert({
+          escalation_id: escalation.esc_id,
+          user_id: "Current User", // Ideally this would be the current user's ID
+          old_status: currentDbStatus,
+          new_status: dbStatus,
+          notes: statusNote || `Status changed from ${escalation.status} to ${newStatus}`,
+        });
+        
+        toast({
+          title: "Status updated",
+          description: `Escalation status updated to ${newStatus.replace('_', ' ').toLowerCase()}.`,
+        });
+        
+        // Refresh data
+        if (id) {
+          fetchEscalationDetails(id);
+        }
       }
       
       // Clear status note

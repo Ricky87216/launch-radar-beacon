@@ -359,7 +359,81 @@ const EscalationLog = () => {
       .join(' ');
   };
   
+  const constructEscalations = (historyItems: EscalationHistoryItem[]) => {
+    const escalationsMap = new Map();
+    
+    // Create a map of escalation_id to array of history items
+    historyItems.forEach(item => {
+      if (!escalationsMap.has(item.escalation_id)) {
+        escalationsMap.set(item.escalation_id, []);
+      }
+      escalationsMap.get(item.escalation_id).push(item);
+    });
+    
+    // For each unique escalation, construct a full escalation object
+    const result = [];
+    for (const [escalationId, items] of escalationsMap.entries()) {
+      // Sort items by changed_at in descending order
+      const sortedItems = [...items].sort((a, b) => 
+        new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime()
+      );
+      
+      // The most recent item has the current status
+      const latestItem = sortedItems[0];
+      
+      // Find the first (earliest) item which would have the original reason/info
+      const firstItem = sortedItems[sortedItems.length - 1];
+      
+      result.push({
+        esc_id: escalationId,
+        product_id: latestItem.product_name || "Unknown",
+        product_name: latestItem.product_name,
+        scope_level: "CITY", // Assuming city for mock data
+        city_id: latestItem.market_name,
+        country_code: null,
+        region: null,
+        market_name: latestItem.market_name,
+        raised_by: firstItem.user_id,
+        poc: firstItem.user_id,
+        reason: firstItem.notes || "No reason provided",
+        reason_type: latestItem.impact_type,
+        business_case_url: null,
+        status: latestItem.new_status,
+        created_at: firstItem.changed_at,
+        aligned_at: latestItem.new_status === 'RESOLVED_LAUNCHED' ? latestItem.changed_at : null,
+        resolved_at: latestItem.new_status.startsWith('RESOLVED_') ? latestItem.changed_at : null,
+        comments: sortedItems.map(item => ({
+          ...item,
+          // For mock data, we use the same status format
+          old_status: item.old_status,
+          new_status: item.new_status
+        }))
+      });
+    }
+    
+    return result;
+  };
+  
   const handleEscalationClick = (escalationId: string) => {
+    if (historyItems.length > 0) {
+      // For mock data, construct the complete escalation to pass to the detail view
+      const items = historyItems.filter(item => item.escalation_id === escalationId);
+      if (items.length > 0) {
+        // Check if this is mock data
+        if (escalationId.startsWith('esc-')) {
+          const escalations = constructEscalations([...items]);
+          if (escalations.length > 0) {
+            // Navigate with the constructed escalation as state
+            navigate(`/escalations/${escalationId}`, { 
+              state: { escalation: escalations[0] } 
+            });
+            return;
+          }
+        }
+      }
+    }
+    
+    // If not mock data or construction failed, navigate normally
     navigate(`/escalations/${escalationId}`);
   };
 
