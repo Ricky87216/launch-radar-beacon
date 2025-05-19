@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -16,8 +15,6 @@ import { EscalationStatus, Blocker, ExtendedBlocker } from "@/types";
 import PreferencesModal from "./PreferencesModal";
 import { useProductCard } from "@/hooks/use-product-card";
 import EscalationBadge from "./EscalationBadge";
-
-import type { Blocker } from "../types";
 
 interface ProductBlocker {
   id: string;
