@@ -20,6 +20,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         watch: "bg-[#276EF1] text-white hover:bg-[#1E54B7]", // Uber blue for watch button
+        success: "bg-[#6FCF97] text-white hover:bg-[#5BBF87]", // Success button using the new soft green
       },
       size: {
         default: "h-10 px-4 py-2",
