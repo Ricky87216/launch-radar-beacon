@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Grid, Star, AlertTriangle, Wrench, Database, Search, ShieldAlert, BarChartIcon, HelpCircle } from 'lucide-react';
+import { Grid, Star, AlertTriangle, Wrench, Database, Search, ShieldAlert, BarChartIcon, HelpCircle, MessageSquare } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { 
   Sidebar, 
@@ -58,6 +58,11 @@ const GlobalSidebar = () => {
       icon: HelpCircle, 
       label: 'How To Guide', 
       href: '/how-to' 
+    },
+    { 
+      icon: MessageSquare, 
+      label: 'Feedback', 
+      href: '/feedback' 
     }
   ];
 

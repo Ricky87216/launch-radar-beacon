@@ -23,6 +23,7 @@ import ProductMeta from "@/pages/admin/ProductMeta";
 import Analytics from "@/pages/Analytics";
 import HowTo from "@/pages/HowTo";
 import Dashboard from "@/components/Dashboard";
+import Feedback from "@/pages/Feedback";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ function App() {
                     <Route path="/my" element={<MyLaunchRadar />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/how-to" element={<HowTo />} />
+                    <Route path="/feedback" element={<Feedback />} />
                     <Route path="/admin/bulk-edit" element={<BulkEdit />} />
                     <Route path="/admin/data-sync" element={<DataSync />} />
                     <Route path="/admin/answer-hub" element={<AnswerHub />} />
