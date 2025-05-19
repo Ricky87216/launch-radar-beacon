@@ -268,9 +268,7 @@ export default function HeatmapGrid({
           </span>
           
           {/* Quick navigation buttons */}
-          {currentLevel !== 'city' && <Button variant="outline" size="sm" onClick={jumpToCityLevel} className="ml-4 text-xs">
-              Jump to City Level
-            </Button>}
+          {currentLevel !== 'city'}
           
           {/* TAM Mode Pill - shown when TAM filter is active */}
           {useTam && <div className="ml-auto">
