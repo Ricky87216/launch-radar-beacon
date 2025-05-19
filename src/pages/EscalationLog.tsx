@@ -139,7 +139,7 @@ const EscalationLog = () => {
       });
       
       // Enrich the data with product and market names
-      const enrichedData = (historyData || []).map((item) => {
+      let enrichedData = (historyData || []).map((item) => {
         const escalation = item.escalation;
         if (!escalation) return null;
         
@@ -164,6 +164,23 @@ const EscalationLog = () => {
         } as EscalationHistoryItem;
       }).filter(Boolean) as EscalationHistoryItem[];
       
+      // Add a mock escalation history item if there's no data
+      if (enrichedData.length === 0) {
+        const mockItems = generateMockEscalationItems();
+        enrichedData = [...mockItems, ...enrichedData];
+        
+        // Update statistics to reflect the mock data
+        setStats({
+          totalEscalations: mockItems.length,
+          pendingEscalations: mockItems.filter(item => 
+            item.new_status === 'SUBMITTED' || item.new_status === 'IN_DISCUSSION'
+          ).length,
+          resolvedEscalations: mockItems.filter(item => 
+            item.new_status.startsWith('RESOLVED_')
+          ).length,
+        });
+      }
+      
       console.log("Enriched history data:", enrichedData);
       setHistoryItems(enrichedData);
     } catch (error) {
@@ -173,9 +190,107 @@ const EscalationLog = () => {
         description: "Failed to load escalation history.",
         variant: "destructive",
       });
+      
+      // Even if there's an error, add mock data so the user can see how it works
+      const mockItems = generateMockEscalationItems();
+      setHistoryItems(mockItems);
+      
+      // Update statistics to reflect the mock data
+      setStats({
+        totalEscalations: mockItems.length,
+        pendingEscalations: mockItems.filter(item => 
+          item.new_status === 'SUBMITTED' || item.new_status === 'IN_DISCUSSION'
+        ).length,
+        resolvedEscalations: mockItems.filter(item => 
+          item.new_status.startsWith('RESOLVED_')
+        ).length,
+      });
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  // Generate mock escalation history items
+  const generateMockEscalationItems = (): EscalationHistoryItem[] => {
+    const now = new Date();
+    const hourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    return [
+      {
+        id: 'mock-1',
+        escalation_id: 'esc-12345',
+        user_id: 'John Doe',
+        old_status: null,
+        new_status: 'SUBMITTED',
+        notes: 'Market is blocked due to regulatory restrictions, but we have the needed approvals',
+        changed_at: now.toISOString(),
+        product_name: 'UberEats',
+        market_name: 'San Francisco',
+        impact_type: 'Regulatory'
+      },
+      {
+        id: 'mock-2',
+        escalation_id: 'esc-12345',
+        user_id: 'Jane Smith',
+        old_status: 'SUBMITTED',
+        new_status: 'IN_DISCUSSION',
+        notes: 'Legal team reviewing documentation',
+        changed_at: hourAgo.toISOString(),
+        product_name: 'UberEats',
+        market_name: 'San Francisco',
+        impact_type: 'Regulatory'
+      },
+      {
+        id: 'mock-3',
+        escalation_id: 'esc-67890',
+        user_id: 'Mike Johnson',
+        old_status: null,
+        new_status: 'SUBMITTED',
+        notes: 'Market is ready for launch but blocked by technical integration',
+        changed_at: dayAgo.toISOString(),
+        product_name: 'UberX',
+        market_name: 'Chicago',
+        impact_type: 'Technical'
+      },
+      {
+        id: 'mock-4',
+        escalation_id: 'esc-67890',
+        user_id: 'Sarah Williams',
+        old_status: 'SUBMITTED',
+        new_status: 'RESOLVED_LAUNCHED',
+        notes: 'Technical issue resolved, escalation approved',
+        changed_at: hourAgo.toISOString(),
+        product_name: 'UberX',
+        market_name: 'Chicago',
+        impact_type: 'Technical'
+      },
+      {
+        id: 'mock-5',
+        escalation_id: 'esc-24680',
+        user_id: 'Alex Davis',
+        old_status: null,
+        new_status: 'SUBMITTED',
+        notes: 'Operational readiness confirmed but partner integration pending',
+        changed_at: weekAgo.toISOString(),
+        product_name: 'Uber Reserve',
+        market_name: 'Tokyo',
+        impact_type: 'Operational'
+      },
+      {
+        id: 'mock-6',
+        escalation_id: 'esc-24680',
+        user_id: 'Chris Miller',
+        old_status: 'SUBMITTED',
+        new_status: 'RESOLVED_BLOCKED',
+        notes: 'Partner integration delays unresolved, marking as blocked',
+        changed_at: dayAgo.toISOString(),
+        product_name: 'Uber Reserve',
+        market_name: 'Tokyo',
+        impact_type: 'Operational'
+      }
+    ];
   };
   
   const applyFilters = () => {
