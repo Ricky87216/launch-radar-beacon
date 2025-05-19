@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -115,15 +116,15 @@ const ProductCardModal = ({
       );
     }
     
-    // Use the GIF with reduced height and added title
+    // Adjusted container to properly display the full GIF with better scaling
     return (
       <div className="mb-4">
         <h3 className="text-sm font-semibold mb-1">Product Visual</h3>
-        <div className="border border-gray-200 rounded-md shadow-md overflow-hidden">
+        <div className="border border-gray-200 rounded-md shadow-md overflow-hidden flex justify-center">
           <img 
             src={screenshotUrl} 
             alt={`${productName} animation`}
-            className="w-full h-auto max-h-32 rounded-md shadow-inner object-cover" 
+            className="h-24 w-auto object-contain my-2" 
             onError={() => {
               console.log("GIF failed to load, showing fallback");
               setScreenshotError(true);
