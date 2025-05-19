@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { EscalationStatus, DatabaseEscalationStatus, mapAppStatusToDatabaseStatus, mapDatabaseStatusToAppStatus } from "@/types";
 
@@ -205,15 +206,21 @@ export const updateEscalationStatus = async (
   }
   
   // Update the escalation status
-  const updateData = {
-    status: dbStatus,
-    ...(newStatus === 'RESOLVED_LAUNCHED' ? { aligned_at: new Date().toISOString() } : {}),
-    ...(newStatus.startsWith('RESOLVED_') ? { resolved_at: new Date().toISOString() } : {})
+  const updateData: any = {
+    status: dbStatus
   };
+  
+  if (newStatus === 'RESOLVED_LAUNCHED' || newStatus === 'ALIGNED') {
+    updateData.aligned_at = new Date().toISOString();
+  }
+  
+  if (newStatus.startsWith('RESOLVED_')) {
+    updateData.resolved_at = new Date().toISOString();
+  }
   
   const { data, error } = await supabase
     .from("escalation")
-    .update(updateData as any)
+    .update(updateData)
     .eq("esc_id", escalationId)
     .select();
     

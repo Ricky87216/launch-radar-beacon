@@ -74,7 +74,8 @@ const EscalationBadge: React.FC<EscalationBadgeProps> = ({
           <div className={`inline-flex ${className}`} onClick={handleClick}>
             {escalationStatus === 'SUBMITTED' || escalationStatus === 'IN_DISCUSSION' || 
              escalationStatus === 'IN_REVIEW' || escalationStatus === 'ALIGNED' || 
-             escalationStatus === 'ESCALATED_TO_LEGAL' ? (
+             escalationStatus === 'ESCALATED_TO_LEGAL' || escalationStatus === 'RESOLVED_BLOCKED' ||
+             escalationStatus === 'RESOLVED_LAUNCHING' ? (
               <Shield className="h-4 w-4 text-amber-500 ml-1" />
             ) : escalationStatus.startsWith('RESOLVED_') ? (
               <ShieldCheck className="h-4 w-4 text-green-500 ml-1" />
@@ -84,7 +85,8 @@ const EscalationBadge: React.FC<EscalationBadgeProps> = ({
         <TooltipContent>
           {escalationStatus === 'SUBMITTED' || escalationStatus === 'IN_DISCUSSION' || 
            escalationStatus === 'IN_REVIEW' || escalationStatus === 'ALIGNED' || 
-           escalationStatus === 'ESCALATED_TO_LEGAL' 
+           escalationStatus === 'ESCALATED_TO_LEGAL' || escalationStatus === 'RESOLVED_BLOCKED' ||
+           escalationStatus === 'RESOLVED_LAUNCHING' 
             ? "Escalation pending approval" 
             : escalationStatus.startsWith('RESOLVED_')
               ? "Counts as launched via escalation" 

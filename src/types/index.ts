@@ -1,3 +1,4 @@
+
 // Market dimensions
 export interface Market {
   id: string;
@@ -52,6 +53,12 @@ export interface Blocker {
   escalation?: Escalation; // Add the optional escalation property
 }
 
+// Extended Blocker with additional data for UI display
+export interface ExtendedBlocker extends Blocker {
+  product_name?: string;
+  market_name?: string;
+}
+
 // User type
 export interface User {
   id: string;
@@ -96,7 +103,10 @@ export type EscalationStatus =
   | 'ESCALATED_TO_LEGAL' 
   | 'RESOLVED_APPROVED' 
   | 'RESOLVED_EXCEPTION' 
-  | 'RESOLVED_REJECTED';
+  | 'RESOLVED_REJECTED'
+  | 'RESOLVED_BLOCKED'
+  | 'RESOLVED_LAUNCHING'
+  | 'RESOLVED_LAUNCHED';
 
 // Database status type - the actual statuses in the Supabase database
 export type DatabaseEscalationStatus = 'OPEN' | 'ALIGNED' | 'RESOLVED';
@@ -121,6 +131,12 @@ export const mapAppStatusToDatabaseStatus = (status: EscalationStatus): Database
       return 'RESOLVED';
     case 'RESOLVED_REJECTED':
       return 'RESOLVED';
+    case 'RESOLVED_BLOCKED':
+      return 'RESOLVED';
+    case 'RESOLVED_LAUNCHING':
+      return 'RESOLVED';
+    case 'RESOLVED_LAUNCHED':
+      return 'RESOLVED';
     default:
       return 'OPEN';
   }
@@ -130,7 +146,8 @@ export const mapAppStatusToDatabaseStatus = (status: EscalationStatus): Database
 export const mapDatabaseStatusToAppStatus = (status: string): EscalationStatus => {
   // Check if the status is already one of our valid EscalationStatus values
   const validStatuses: EscalationStatus[] = [
-    'SUBMITTED', 'IN_REVIEW', 'IN_DISCUSSION', 'ALIGNED', 'ESCALATED_TO_LEGAL', 'RESOLVED_APPROVED', 'RESOLVED_EXCEPTION', 'RESOLVED_REJECTED'
+    'SUBMITTED', 'IN_REVIEW', 'IN_DISCUSSION', 'ALIGNED', 'ESCALATED_TO_LEGAL', 'RESOLVED_APPROVED', 
+    'RESOLVED_EXCEPTION', 'RESOLVED_REJECTED', 'RESOLVED_BLOCKED', 'RESOLVED_LAUNCHING', 'RESOLVED_LAUNCHED'
   ];
   
   if (validStatuses.includes(status as EscalationStatus)) {
