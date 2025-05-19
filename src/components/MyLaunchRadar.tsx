@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -11,7 +12,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; 
-import { EscalationStatus } from "@/types";
+import { EscalationStatus, Blocker, ExtendedBlocker } from "@/types";
 import PreferencesModal from "./PreferencesModal";
 import { useProductCard } from "@/hooks/use-product-card";
 import EscalationBadge from "./EscalationBadge";
