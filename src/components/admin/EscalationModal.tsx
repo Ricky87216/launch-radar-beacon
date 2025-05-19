@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Shield } from "lucide-react";
 import { useDashboard } from "@/context/DashboardContext";
@@ -54,13 +55,15 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
   }, [isOpen, activeTab, productId, marketId, marketType]);
   
   const handleFormSuccess = () => {
+    console.log("Form submission successful, showing success state");
     setShowSuccess(true);
-    // Automatically close after 3 seconds and navigate to escalation log
+    
+    // Automatically navigate to escalation log after a short delay
     setTimeout(() => {
+      console.log("Redirecting to escalation log");
       onClose();
-      // Redirect to escalation log
       navigate("/escalations");
-    }, 3000);
+    }, 1500);
   };
   
   if (showSuccess) {
@@ -78,9 +81,12 @@ const EscalationModal: React.FC<EscalationModalProps> = ({
       >
         <div className="flex flex-col items-center justify-center py-6">
           <p className="mb-4 text-center">
-            You will be redirected to the Escalation Log shortly.
+            Redirecting to the Escalation Log...
           </p>
-          <Button onClick={() => navigate("/escalations")}>
+          <Button onClick={() => {
+            onClose();
+            navigate("/escalations");
+          }}>
             View Escalation Log Now
           </Button>
         </div>

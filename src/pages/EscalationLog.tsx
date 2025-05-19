@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -53,6 +53,7 @@ interface EscalationHistoryItem {
 const EscalationLog = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { id: selectedEscalationId } = useParams<{ id: string }>();
   const isMobile = useIsMobile();
   
@@ -74,9 +75,9 @@ const EscalationLog = () => {
   // Automatically fetch escalation data when the component mounts
   // or when the route parameters change (like when navigating to this page)
   useEffect(() => {
-    console.log("EscalationLog mounted or route changed");
+    console.log("EscalationLog mounted or route changed:", location.pathname);
     fetchEscalationHistory();
-  }, [selectedEscalationId]);
+  }, [selectedEscalationId, location.pathname]);
   
   // Apply filters whenever filter state or history items change
   useEffect(() => {

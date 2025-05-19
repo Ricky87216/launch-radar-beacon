@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -101,9 +100,8 @@ const EscalationForm: React.FC<EscalationFormProps> = ({
         market?.name || "Unknown market"
       );
       
-      // Close modal and redirect to escalation log page
-      // Note: We need to make sure onClose gets called first to trigger
-      // the parent component's success handling
+      // Call onClose to trigger the success state in parent component
+      // This is the critical fix needed
       onClose();
       
     } catch (error) {
