@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
 import { useDashboard } from "../context/DashboardContext";
 import { formatRelativeTime } from "../utils/dateUtils";
-import { Star, ChevronDown, ChevronUp, Settings, Globe, ArrowRight } from "lucide-react";
+import { Star, ChevronDown, ChevronUp, Settings, Globe, ArrowRight, Calendar, User, AlertTriangle, Link } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,10 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; 
+import { EscalationStatus } from "@/types";
 import PreferencesModal from "./PreferencesModal";
+import { useProductCard } from "@/hooks/use-product-card";
+import EscalationBadge from "./EscalationBadge";
 
 import type { Blocker } from "../types";
 
@@ -24,6 +27,17 @@ interface ProductBlocker {
   totalCount: number;
   blockers: Blocker[];
   lastUpdated: string;
+}
+
+// Extended blocker interface to include escalation data
+interface ExtendedBlocker extends Blocker {
+  escalation?: {
+    id: string;
+    status: EscalationStatus;
+    raised_by: string;
+    created_at: string;
+    reason_type?: string;
+  };
 }
 
 export default function MyLaunchRadar() {
@@ -38,6 +52,7 @@ export default function MyLaunchRadar() {
     getAllMarkets,
     blockers
   } = useDashboard();
+  const { openProductCard } = useProductCard();
   
   const [loading, setLoading] = useState(true);
   const [userPrefs, setUserPrefs] = useState<{ regions: string[], countries: string[] } | null>(null);
@@ -123,7 +138,7 @@ export default function MyLaunchRadar() {
       countries: ["r-3", "r-4"] // UK and Germany
     });
     
-    // Create mock product blockers data
+    // Create mock product blockers data with extended escalation info
     const mockProductBlockers: ProductBlocker[] = [
       {
         id: "p-1",
@@ -145,7 +160,14 @@ export default function MyLaunchRadar() {
             created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(), // 12 days ago
             updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
             resolved: false,
-            stale: false
+            stale: false,
+            escalation: {
+              id: "esc-1",
+              status: "IN_REVIEW",
+              raised_by: "Jane Smith",
+              created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+              reason_type: "Regulatory"
+            }
           },
           {
             id: "demo-b2",
@@ -160,7 +182,14 @@ export default function MyLaunchRadar() {
             created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
             updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
             resolved: false,
-            stale: false
+            stale: false,
+            escalation: {
+              id: "esc-2",
+              status: "ALIGNED",
+              raised_by: "Alex Thompson",
+              created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+              reason_type: "Technical"
+            }
           }
         ],
         lastUpdated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() // 1 day ago
@@ -185,7 +214,14 @@ export default function MyLaunchRadar() {
             created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(), // 20 days ago
             updated_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
             resolved: false,
-            stale: false
+            stale: false,
+            escalation: {
+              id: "esc-3",
+              status: "ESCALATED_TO_LEGAL",
+              raised_by: "Lisa Mueller",
+              created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+              reason_type: "Business"
+            }
           },
           {
             id: "demo-b4",
@@ -200,7 +236,14 @@ export default function MyLaunchRadar() {
             created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days ago
             updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
             resolved: false,
-            stale: true
+            stale: true,
+            escalation: {
+              id: "esc-4",
+              status: "SUBMITTED",
+              raised_by: "Hans Schmidt",
+              created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+              reason_type: "Legal"
+            }
           },
           {
             id: "demo-b5",
@@ -240,7 +283,14 @@ export default function MyLaunchRadar() {
             created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days ago
             updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
             resolved: false,
-            stale: false
+            stale: false,
+            escalation: {
+              id: "esc-6",
+              status: "RESOLVED_EXCEPTION",
+              raised_by: "Emily Richards",
+              created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+              reason_type: "Technical"
+            }
           }
         ],
         lastUpdated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() // 1 day ago
@@ -376,6 +426,32 @@ export default function MyLaunchRadar() {
   // Toggle between demo view and real view
   const toggleDemoView = () => {
     setShowDemoView(prev => !prev);
+  };
+
+  // Function to handle navigation to escalation
+  const viewEscalation = (escalationId: string) => {
+    navigate(`/escalations/${escalationId}`);
+  };
+
+  // Function to navigate to personalized dashboard
+  const viewPersonalizedDashboard = () => {
+    if (!userPrefs || (!userPrefs.regions.length && !userPrefs.countries.length)) {
+      toast({
+        title: "No preferences set",
+        description: "Please set your preferences first",
+      });
+      return;
+    }
+    
+    // Navigate to dashboard with filter params
+    const params = new URLSearchParams();
+    if (userPrefs.regions.length) {
+      params.append('regions', userPrefs.regions.join(','));
+    }
+    if (userPrefs.countries.length) {
+      params.append('countries', userPrefs.countries.join(','));
+    }
+    navigate(`/?${params.toString()}&personalView=true`);
   };
 
   if (loading) {
@@ -515,6 +591,15 @@ export default function MyLaunchRadar() {
               {showDemoView ? "Hide Demo" : "View Demo"}
             </Button>
           )}
+          {/* New button for personalized dashboard */}
+          <Button 
+            variant="outline"
+            onClick={viewPersonalizedDashboard}
+            className="flex items-center"
+          >
+            <Star className="mr-2 h-4 w-4" />
+            Filtered Dashboard
+          </Button>
           <Button 
             onClick={() => navigate('/')}
             className="flex items-center"
@@ -572,7 +657,12 @@ export default function MyLaunchRadar() {
             <Card key={product.id} className="overflow-hidden">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg">{product.name}</CardTitle>
+                  <CardTitle 
+                    className="text-lg cursor-pointer hover:underline"
+                    onClick={() => openProductCard(product.id, product.name)}
+                  >
+                    {product.name}
+                  </CardTitle>
                   <Badge className={getCoverageColor(product.coverage)}>
                     {Math.round(product.coverage)}%
                   </Badge>
@@ -606,23 +696,25 @@ export default function MyLaunchRadar() {
                 </div>
                 
                 {expandedProducts[product.id] && (
-                  <div className="border rounded-md overflow-hidden">
+                  <div className="border rounded-md overflow-x-auto">
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
-                          <TableHead className="w-[100px]">Market</TableHead>
-                          <TableHead className="w-[100px]">ETA</TableHead>
-                          <TableHead>Owner</TableHead>
+                          <TableHead className="whitespace-nowrap">Market</TableHead>
+                          <TableHead className="whitespace-nowrap">Status</TableHead>
+                          <TableHead className="whitespace-nowrap">Type</TableHead>
+                          <TableHead className="whitespace-nowrap">Owner</TableHead>
+                          <TableHead className="whitespace-nowrap">Created</TableHead>
+                          <TableHead className="whitespace-nowrap">ETA</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {/* Show at most 5 blockers, sorted by most recent */}
+                        {/* Show blockers, sorted by most recent */}
                         {product.blockers
                           .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-                          .slice(0, 5)
                           .map(blocker => (
                             <TableRow key={blocker.id}>
-                              <TableCell className="py-2">
+                              <TableCell className="py-2 whitespace-nowrap">
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -636,21 +728,35 @@ export default function MyLaunchRadar() {
                                   </Tooltip>
                                 </TooltipProvider>
                               </TableCell>
-                              <TableCell className="py-2">{formatRelativeTime(blocker.eta)}</TableCell>
-                              <TableCell className="py-2">{blocker.owner}</TableCell>
+                              <TableCell className="py-2 whitespace-nowrap">
+                                {(blocker as ExtendedBlocker).escalation ? (
+                                  <EscalationBadge 
+                                    status={(blocker as ExtendedBlocker).escalation!.status} 
+                                    onClick={() => viewEscalation((blocker as ExtendedBlocker).escalation!.id)}
+                                    className="cursor-pointer"
+                                  />
+                                ) : (
+                                  <Badge variant="outline">No Escalation</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="py-2 whitespace-nowrap">
+                                {(blocker as ExtendedBlocker).escalation?.reason_type || blocker.category || "N/A"}
+                              </TableCell>
+                              <TableCell className="py-2 whitespace-nowrap">
+                                {(blocker as ExtendedBlocker).escalation?.raised_by || blocker.owner}
+                              </TableCell>
+                              <TableCell className="py-2 whitespace-nowrap">
+                                {formatRelativeTime((blocker as ExtendedBlocker).escalation?.created_at || blocker.created_at)}
+                              </TableCell>
+                              <TableCell className="py-2 whitespace-nowrap">
+                                {formatRelativeTime(blocker.eta)}
+                              </TableCell>
                             </TableRow>
                           ))}
-                        {product.blockers.length > 5 && (
+                        {product.blockers.length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={3} className="text-center text-sm py-2">
-                              <Button 
-                                variant="link" 
-                                className="p-0 h-auto"
-                                // In a real app, this would open the blocker modal or navigate to a detail page
-                                onClick={() => console.log("View all blockers for", product.name)}
-                              >
-                                View all {product.blockers.length} blockers
-                              </Button>
+                            <TableCell colSpan={6} className="text-center py-4">
+                              No blockers found
                             </TableCell>
                           </TableRow>
                         )}
