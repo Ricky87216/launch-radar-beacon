@@ -261,7 +261,6 @@ export default function HeatmapGrid({
               Back to {currentLevel === 'city' ? 'Provinces' : currentLevel === 'country' ? 'Countries' : 'Mega Regions'}
             </Button>}
           
-          
           {/* Quick navigation buttons */}
           {currentLevel !== 'city'}
           
@@ -275,13 +274,7 @@ export default function HeatmapGrid({
         
         {/* Coverage type indicator */}
         <div className="text-sm text-gray-500 mb-4 flex items-center">
-          
-          
-          {/* Drill-down instructions help */}
-          {currentLevel !== 'city' && <div className="ml-4 text-xs bg-blue-50 p-1 rounded flex items-center">
-              <Info className="h-3 w-3 mr-1 text-blue-500" />
-              <span>Use <ChevronRight className="inline h-3 w-3" /> to drill down to more detailed data</span>
-            </div>}
+          {/* Removed the blue instruction div here */}
         </div>
         
         {/* Heatmap grid */}
@@ -308,9 +301,18 @@ export default function HeatmapGrid({
                         </div>
                         <div className="text-xs text-gray-500">{product.line_of_business} - {product.sub_team}</div>
                       </div>
-                      <button onClick={() => handleOpenTamModal(product.id)} className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors">
-                        TAM
-                      </button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button onClick={() => handleOpenTamModal(product.id)} className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors">
+                              TAM
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p>View TAM details for this product</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </TableCell>
                   
@@ -346,13 +348,35 @@ export default function HeatmapGrid({
                           </TooltipProvider>
                           
                           <div className="flex items-center">
-                            {/* Comment Popover - pass focusedComment if this is the target cell */}
-                            <CellCommentPopover productId={product.id} marketId={market.id} focusCommentId={isHighlighted ? focusedComment || undefined : undefined} />
+                            {/* Comment Popover with Tooltip */}
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span>
+                                    <CellCommentPopover productId={product.id} marketId={market.id} focusCommentId={isHighlighted ? focusedComment || undefined : undefined} />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p>Add or view comments</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             
-                            {/* Escalation Badge */}
-                            <EscalationBadge productId={product.id} marketId={market.id} marketType={market.type as 'city' | 'country' | 'region'} />
+                            {/* Escalation Badge with Tooltip */}
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span>
+                                    <EscalationBadge productId={product.id} marketId={market.id} marketType={market.type as 'city' | 'country' | 'region'} />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p>View escalation status</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             
-                            {/* Escalation button - Fixed to correctly call openEscalationModal */}
+                            {/* Escalation button with tooltip */}
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -369,21 +393,43 @@ export default function HeatmapGrid({
                               </Tooltip>
                             </TooltipProvider>
                             
-                            {cell.hasBlocker && <TooltipProvider>
+                            {/* Blocker alert with tooltip */}
+                            {cell.hasBlocker && 
+                              <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <AlertTriangle className="w-4 h-4 text-red-500 ml-1" onClick={() => handleShowBlocker(product.id, market.id)} />
+                                    <AlertTriangle 
+                                      className="w-4 h-4 text-red-500 ml-1 cursor-pointer" 
+                                      onClick={() => handleShowBlocker(product.id, market.id)} 
+                                    />
                                   </TooltipTrigger>
                                   <TooltipContent side="top">
-                                    <span>This market has a blocker</span>
+                                    <p>View market blocker details</p>
                                   </TooltipContent>
                                 </Tooltip>
-                              </TooltipProvider>}
+                              </TooltipProvider>
+                            }
                             
-                            {/* Drill down button with improved visibility */}
-                            {currentLevel !== 'city' && <Button variant="ghost" size="icon" onClick={() => handleDrillDown(market)} className="h-5 w-5 ml-1 bg-blue-50 hover:bg-blue-100 rounded-full">
-                                <ChevronRight className="h-4 w-4 text-blue-600" />
-                              </Button>}
+                            {/* Drill down button with tooltip */}
+                            {currentLevel !== 'city' && 
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      onClick={() => handleDrillDown(market)} 
+                                      className="h-5 w-5 ml-1 bg-blue-50 hover:bg-blue-100 rounded-full"
+                                    >
+                                      <ChevronRight className="h-4 w-4 text-blue-600" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top">
+                                    <p>Drill down to {currentLevel === 'mega_region' ? 'regions' : currentLevel === 'region' ? 'countries' : 'cities'}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            }
                           </div>
                         </div>
                       </TableCell>;
