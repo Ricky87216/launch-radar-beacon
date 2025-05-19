@@ -13,7 +13,12 @@ const GlobalNavBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const {
-    toggleSidebar
+    toggleSidebar,
+    setCurrentLevel,
+    setSelectedParent,
+    setSelectedLOBs,
+    setSelectedSubTeams,
+    setHideFullCoverage
   } = useSidebar();
   const {
     user
@@ -34,7 +39,17 @@ const GlobalNavBar = () => {
   };
 
   const handleHomeClick = () => {
+    // Navigate to dashboard and reset to mega region level
     navigate('/');
+    
+    // Reset the dashboard view to mega region level
+    setCurrentLevel('mega_region');
+    setSelectedParent(null);
+    
+    // Clear any applied filters
+    setSelectedLOBs([]);
+    setSelectedSubTeams([]);
+    setHideFullCoverage(false);
   };
 
   // Set up keyboard shortcuts
