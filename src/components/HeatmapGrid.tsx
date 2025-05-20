@@ -4,7 +4,7 @@ import { useDashboard } from "../context/DashboardContext";
 import { Market, Product } from "../types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, ProductColumn } from "@/components/ui/table";
 import { CellCommentPopover } from "./CellCommentPopover";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
@@ -48,6 +48,7 @@ export default function HeatmapGrid({
     setHideFullCoverage,
     useTam
   } = useDashboard();
+  
   const markets = useMemo(() => getVisibleMarkets(), [getVisibleMarkets]);
   const products = useMemo(() => getFilteredProducts(), [getFilteredProducts]);
 
@@ -194,6 +195,24 @@ export default function HeatmapGrid({
     return `${value.toFixed(1)}%`;
   };
 
+  // Function to calculate total coverage for a product
+  const calculateTotalCoverage = (productId: string) => {
+    if (markets.length === 0) return 0;
+    
+    let validCells = 0;
+    let totalCoverage = 0;
+    
+    markets.forEach(market => {
+      const cell = getCoverageCell(productId, market.id);
+      if (cell) {
+        totalCoverage += cell.coverage;
+        validCells++;
+      }
+    });
+    
+    return validCells > 0 ? totalCoverage / validCells : 0;
+  };
+
   // Get product-specific blockers
   const getProductBlockers = (productId: string) => {
     return blockers.filter(blocker => blocker.product_id === productId && !blocker.resolved).map(blocker => `[${blocker.category}] ${blocker.note} (ETA: ${new Date(blocker.eta).toLocaleDateString()})`).join('\n');
@@ -293,6 +312,8 @@ export default function HeatmapGrid({
             <TableHeader>
               <TableRow>
                 <TableHead className="sticky left-0 bg-white z-10 border-b">Products</TableHead>
+                {/* New Total column */}
+                <TableHead className="border-b font-semibold">Total</TableHead>
                 {markets.map(market => <TableHead key={market.id} className="border-b">
                     <div className="text-sm font-medium whitespace-nowrap">
                       {market.name}
@@ -302,170 +323,199 @@ export default function HeatmapGrid({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map(product => <TableRow key={product.id}>
-                  <TableCell className="sticky left-0 z-10 border-b bg-neutral-900">
-                    <div className="flex items-center justify-between">
-                      <div className="mr-2">
-                        <div className="text-sm font-medium">
-                          <ProductNameTrigger productId={product.id} productName={product.name} />
+              {products.map(product => {
+                // Calculate total coverage for this product
+                const totalCoverage = calculateTotalCoverage(product.id);
+                
+                return (
+                  <TableRow key={product.id}>
+                    <TableCell className="sticky left-0 z-10 border-b bg-neutral-900">
+                      <div className="flex items-center justify-between">
+                        <div className="mr-2">
+                          <div className="text-sm font-medium">
+                            <ProductNameTrigger productId={product.id} productName={product.name} />
+                          </div>
+                          <div className="text-xs text-gray-500">{product.line_of_business} - {product.sub_team}</div>
                         </div>
-                        <div className="text-xs text-gray-500">{product.line_of_business} - {product.sub_team}</div>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button onClick={() => handleOpenTamModal(product.id)} className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors">
+                                TAM
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>View TAM details for this product</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={() => handleOpenTamModal(product.id)} className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors">
-                              TAM
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top">
-                            <p>View TAM details for this product</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </TableCell>
-                  
-                  {markets.map(market => {
-                const cell = getCoverageCell(product.id, market.id);
-                const isHighlighted = focusedProduct === product.id && focusedMarket === market.id;
-                if (!cell) {
-                  return <TableCell key={market.id} className="border-b text-center bg-gray-100">
-                          <span className="text-xs text-gray-400">No data</span>
-                        </TableCell>;
-                }
-                return <TableCell key={market.id} className={`border-b ${getCellColor(cell.coverage)} relative ${isHighlighted ? 'ring-2 ring-blue-500' : ''}`} id={`cell-${product.id}-${market.id}`}>
-                        <div className="flex items-center justify-between">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="text-sm">
-                                  {getFormattedCoverage(cell.coverage)}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent side="top">
-                                <div>
-                                  <strong>Product:</strong> {product.name}<br />
-                                  <strong>Market:</strong> {market.name}<br />
-                                  <strong>Coverage:</strong> {getFormattedCoverage(cell.coverage)}
-                                  {cell.hasBlocker && <div className="mt-1 text-red-500 flex items-center">
-                                      <AlertTriangle className="w-3 h-3 mr-1" />
-                                      <span>Has blocker</span>
-                                    </div>}
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          
-                          <div className="flex items-center">
-                            {/* Comment Popover with Tooltip */}
+                    </TableCell>
+                    
+                    {/* Total column cell */}
+                    <ProductColumn className={`border-b ${getCellColor(totalCoverage)} font-semibold`}>
+                      <div className="flex items-center justify-between">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="text-sm font-semibold">
+                                {getFormattedCoverage(totalCoverage)}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <div>
+                                <strong>Product:</strong> {product.name}<br />
+                                <strong>Level:</strong> {currentLevel}<br />
+                                <strong>Total Coverage:</strong> {getFormattedCoverage(totalCoverage)}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </ProductColumn>
+                    
+                    {markets.map(market => {
+                  const cell = getCoverageCell(product.id, market.id);
+                  const isHighlighted = focusedProduct === product.id && focusedMarket === market.id;
+                  if (!cell) {
+                    return <TableCell key={market.id} className="border-b text-center bg-gray-100">
+                            <span className="text-xs text-gray-400">No data</span>
+                          </TableCell>;
+                  }
+                  return <TableCell key={market.id} className={`border-b ${getCellColor(cell.coverage)} relative ${isHighlighted ? 'ring-2 ring-blue-500' : ''}`} id={`cell-${product.id}-${market.id}`}>
+                          <div className="flex items-center justify-between">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <span>
-                                    <CellCommentPopover productId={product.id} marketId={market.id} focusCommentId={isHighlighted ? focusedComment || undefined : undefined} />
-                                  </span>
+                                  <div className="text-sm">
+                                    {getFormattedCoverage(cell.coverage)}
+                                  </div>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">
-                                  <p>Add or view comments</p>
+                                  <div>
+                                    <strong>Product:</strong> {product.name}<br />
+                                    <strong>Market:</strong> {market.name}<br />
+                                    <strong>Coverage:</strong> {getFormattedCoverage(cell.coverage)}
+                                    {cell.hasBlocker && <div className="mt-1 text-red-500 flex items-center">
+                                        <AlertTriangle className="w-3 h-3 mr-1" />
+                                        <span>Has blocker</span>
+                                      </div>}
+                                  </div>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                             
-                            {/* Escalation Badge with Tooltip */}
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span>
-                                    <EscalationBadge productId={product.id} marketId={market.id} marketType={market.type as 'city' | 'country' | 'region'} />
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                  <p>View escalation status</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            
-                            {/* Escalation button with tooltip */}
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" onClick={e => {
-                              e.stopPropagation();
-                              openEscalationModal(product.id, market.id, market.type as 'city' | 'country' | 'region');
-                            }} className="h-5 w-5 p-0 ml-1">
-                                    <Flag className="h-3 w-3 text-red-500" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                  <p>Escalate this market</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            
-                            {/* Blocker alert with tooltip */}
-                            {cell.hasBlocker && 
+                            <div className="flex items-center">
+                              {/* Comment Popover with Tooltip */}
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <AlertTriangle 
-                                      className="w-4 h-4 text-red-500 ml-1 cursor-pointer" 
-                                      onClick={() => handleShowBlocker(product.id, market.id)} 
-                                    />
+                                    <span>
+                                      <CellCommentPopover productId={product.id} marketId={market.id} focusCommentId={isHighlighted ? focusedComment || undefined : undefined} />
+                                    </span>
                                   </TooltipTrigger>
                                   <TooltipContent side="top">
-                                    <p>View market blocker details</p>
+                                    <p>Add or view comments</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                            }
-                            
-                            {/* Drill down button with tooltip */}
-                            {currentLevel !== 'city' && 
+                              
+                              {/* Escalation Badge with Tooltip */}
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      onClick={() => handleDrillDown(market)} 
-                                      className="h-5 w-5 ml-1 bg-blue-50 hover:bg-blue-100 rounded-full"
-                                    >
-                                      <ChevronRight className="h-4 w-4 text-blue-600" />
+                                    <span>
+                                      <EscalationBadge productId={product.id} marketId={market.id} marketType={market.type as 'city' | 'country' | 'region'} />
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top">
+                                    <p>View escalation status</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              
+                              {/* Escalation button with tooltip */}
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={e => {
+                                e.stopPropagation();
+                                openEscalationModal(product.id, market.id, market.type as 'city' | 'country' | 'region');
+                              }} className="h-5 w-5 p-0 ml-1">
+                                      <Flag className="h-3 w-3 text-red-500" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent side="top">
-                                    <p>Drill down to {currentLevel === 'mega_region' ? 'regions' : currentLevel === 'region' ? 'countries' : 'cities'}</p>
+                                    <p>Escalate this market</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                            }
+                              
+                              {/* Blocker alert with tooltip */}
+                              {cell.hasBlocker && 
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <AlertTriangle 
+                                        className="w-4 h-4 text-red-500 ml-1 cursor-pointer" 
+                                        onClick={() => handleShowBlocker(product.id, market.id)} 
+                                      />
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">
+                                      <p>View market blocker details</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              }
+                              
+                              {/* Drill down button with tooltip */}
+                              {currentLevel !== 'city' && 
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        onClick={() => handleDrillDown(market)} 
+                                        className="h-5 w-5 ml-1 bg-blue-50 hover:bg-blue-100 rounded-full"
+                                      >
+                                        <ChevronRight className="h-4 w-4 text-blue-600" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">
+                                      <p>Drill down to {currentLevel === 'mega_region' ? 'regions' : currentLevel === 'region' ? 'countries' : 'cities'}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              }
+                            </div>
                           </div>
+                        </TableCell>;
+                })}
+                    
+                    {/* Product Status Column */}
+                    <TableCell className="border-b text-sm">
+                      <div className="space-y-2 max-w-md">
+                        <div>
+                          <span className="font-semibold">Status:</span> {product.status || 'N/A'}
                         </div>
-                      </TableCell>;
-              })}
-                  
-                  {/* Product Status Column */}
-                  <TableCell className="border-b text-sm">
-                    <div className="space-y-2 max-w-md">
-                      <div>
-                        <span className="font-semibold">Status:</span> {product.status || 'N/A'}
+                        {product.launch_date && <div>
+                            <span className="font-semibold">Launch date:</span> {new Date(product.launch_date).toLocaleDateString()}
+                          </div>}
+                        {product.notes && <div>
+                            <span className="font-semibold">Notes:</span> {product.notes}
+                          </div>}
+                        {getProductBlockers(product.id) && <div>
+                            <span className="font-semibold text-red-500">Blockers:</span>
+                            <div className="whitespace-pre-line text-xs mt-1">
+                              {getProductBlockers(product.id)}
+                            </div>
+                          </div>}
                       </div>
-                      {product.launch_date && <div>
-                          <span className="font-semibold">Launch date:</span> {new Date(product.launch_date).toLocaleDateString()}
-                        </div>}
-                      {product.notes && <div>
-                          <span className="font-semibold">Notes:</span> {product.notes}
-                        </div>}
-                      {getProductBlockers(product.id) && <div>
-                          <span className="font-semibold text-red-500">Blockers:</span>
-                          <div className="whitespace-pre-line text-xs mt-1">
-                            {getProductBlockers(product.id)}
-                          </div>
-                        </div>}
-                    </div>
-                  </TableCell>
-                </TableRow>)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
