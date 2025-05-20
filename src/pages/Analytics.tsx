@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -307,25 +306,26 @@ const Analytics = () => {
               </Card>
             </div>
             
-            {/* TAM Trend Line Chart - IMPROVED FOR BETTER RESPONSIVENESS */}
-            <Card className="mb-8">
+            {/* TAM Trend Line Chart - FIXED FOR PROPER SPACING AND CONTAINMENT */}
+            <Card className="mb-12">
               <CardHeader className="pb-2">
                 <CardTitle>Global TAM Coverage Trend (180 Days)</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="h-[320px] w-full" style={{ minHeight: "300px", maxHeight: "400px" }}>
+              <CardContent className="px-1 sm:px-4">
+                <div className="h-[350px] w-full" style={{ margin: "0 auto", maxHeight: "350px" }}>
                   <ChartContainer
                     config={{
                       tam: { color: "var(--uber-green)" },
                     }}
+                    className="h-full w-full flex items-center justify-center"
                   >
                     <LineChart
                       data={mockDailyAnalyticsData}
                       margin={{ 
                         top: 20, 
-                        right: 30, 
-                        left: isMobile ? 5 : 20, 
-                        bottom: 40 
+                        right: isMobile ? 15 : 20, 
+                        left: isMobile ? 5 : 15, 
+                        bottom: 60 
                       }}
                     >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -337,9 +337,11 @@ const Analytics = () => {
                         }}
                         tick={{fontSize: 10}}
                         tickMargin={10}
-                        height={40}
+                        height={50}
                         padding={{ left: 10, right: 10 }}
                         axisLine={{ stroke: '#E5E7EB' }}
+                        interval={"preserveStartEnd"}
+                        minTickGap={30}
                       />
                       <YAxis 
                         domain={[0, 100]} 
@@ -387,13 +389,13 @@ const Analytics = () => {
               </CardContent>
             </Card>
             
-            {/* Team Bar Chart - UPDATED FOR IMPROVED SPACING AND RESPONSIVENESS */}
-            <Card className="mb-8">
+            {/* Team Bar Chart - UPDATED FOR IMPROVED SPACING */}
+            <Card className="mb-12">
               <CardHeader className="pb-2">
                 <CardTitle>TAM Coverage by Team</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="h-[400px] w-full" style={{ minHeight: "350px", maxHeight: "450px" }}>
+              <CardContent className="px-1 sm:px-4">
+                <div className="h-[450px] w-full" style={{ margin: "0 auto", maxHeight: "450px" }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       layout="vertical"
