@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -45,9 +46,11 @@ import {
   mockCityData
 } from "@/data/analyticsData"; 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Analytics = () => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedLOBs, setSelectedLOBs] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
@@ -304,13 +307,13 @@ const Analytics = () => {
               </Card>
             </div>
             
-            {/* TAM Trend Line Chart - MODIFIED FOR RESPONSIVENESS */}
-            <Card className="mb-6">
+            {/* TAM Trend Line Chart - IMPROVED FOR BETTER RESPONSIVENESS */}
+            <Card className="mb-8">
               <CardHeader className="pb-2">
                 <CardTitle>Global TAM Coverage Trend (180 Days)</CardTitle>
               </CardHeader>
-              <CardContent className="px-1 sm:px-2 md:px-4">
-                <div className="h-80 w-full">
+              <CardContent>
+                <div className="h-[320px] w-full" style={{ minHeight: "300px", maxHeight: "400px" }}>
                   <ChartContainer
                     config={{
                       tam: { color: "var(--uber-green)" },
@@ -318,7 +321,12 @@ const Analytics = () => {
                   >
                     <LineChart
                       data={mockDailyAnalyticsData}
-                      margin={{ top: 20, right: 30, left: 10, bottom: 30 }}
+                      margin={{ 
+                        top: 20, 
+                        right: 30, 
+                        left: isMobile ? 5 : 20, 
+                        bottom: 40 
+                      }}
                     >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis 
@@ -329,8 +337,9 @@ const Analytics = () => {
                         }}
                         tick={{fontSize: 10}}
                         tickMargin={10}
-                        height={50}
+                        height={40}
                         padding={{ left: 10, right: 10 }}
+                        axisLine={{ stroke: '#E5E7EB' }}
                       />
                       <YAxis 
                         domain={[0, 100]} 
@@ -338,6 +347,7 @@ const Analytics = () => {
                         width={35}
                         tick={{fontSize: 10}}
                         tickMargin={5}
+                        axisLine={{ stroke: '#E5E7EB' }}
                       >
                         <Label
                           value="Coverage %"
@@ -377,18 +387,23 @@ const Analytics = () => {
               </CardContent>
             </Card>
             
-            {/* Team Bar Chart - ALSO UPDATED FOR BETTER RESPONSIVENESS */}
-            <Card className="mb-6">
+            {/* Team Bar Chart - UPDATED FOR IMPROVED SPACING AND RESPONSIVENESS */}
+            <Card className="mb-8">
               <CardHeader className="pb-2">
                 <CardTitle>TAM Coverage by Team</CardTitle>
               </CardHeader>
-              <CardContent className="px-1 sm:px-2 md:px-4">
-                <div className="h-80 w-full">
+              <CardContent>
+                <div className="h-[400px] w-full" style={{ minHeight: "350px", maxHeight: "450px" }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       layout="vertical"
                       data={filteredTeamData}
-                      margin={{ top: 20, right: 90, left: 70, bottom: 5 }}
+                      margin={{ 
+                        top: 20, 
+                        right: isMobile ? 70 : 90, 
+                        left: isMobile ? 50 : 70, 
+                        bottom: 20 
+                      }}
                     >
                       <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                       <XAxis 
@@ -396,12 +411,14 @@ const Analytics = () => {
                         domain={[0, 100]} 
                         tickCount={6} 
                         tick={{fontSize: 10}}
+                        axisLine={{ stroke: '#E5E7EB' }}
                       />
                       <YAxis 
                         type="category"
                         dataKey="product_team" 
                         tick={{ fontSize: 11 }}
-                        width={60}
+                        width={isMobile ? 40 : 60}
+                        axisLine={{ stroke: '#E5E7EB' }}
                       />
                       <Tooltip
                         content={({ active, payload, label }) => {
@@ -453,7 +470,7 @@ const Analytics = () => {
             </Card>
             
             {/* Summary Tabs for Team, LOB, and Region */}
-            <Tabs defaultValue="team" className="mb-6">
+            <Tabs defaultValue="team" className="mb-8">
               <TabsList className="mb-4">
                 <TabsTrigger value="team">By Team</TabsTrigger>
                 <TabsTrigger value="lob">By Line of Business</TabsTrigger>
@@ -466,32 +483,34 @@ const Analytics = () => {
                     <CardTitle>Team Summary</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Team</TableHead>
-                          <TableHead>LOB</TableHead>
-                          <TableHead className="text-right">TAM %</TableHead>
-                          <TableHead className="text-right">Avg Days → TAM</TableHead>
-                          <TableHead className="text-right">Open Blockers</TableHead>
-                          <TableHead className="text-right">Median Blocker Age</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredTeamData.map((team) => (
-                          <TableRow key={team.product_team}>
-                            <TableCell className="font-medium">{team.product_team}</TableCell>
-                            <TableCell>{team.lob}</TableCell>
-                            <TableCell className={`text-right font-bold ${getTAMColorClass(team.tam_pct)}`}>
-                              {team.tam_pct}%
-                            </TableCell>
-                            <TableCell className="text-right">{team.avg_days_to_tam} days</TableCell>
-                            <TableCell className="text-right">{team.open_blockers}</TableCell>
-                            <TableCell className="text-right">{team.median_blocker_age} days</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Team</TableHead>
+                            <TableHead>LOB</TableHead>
+                            <TableHead className="text-right">TAM %</TableHead>
+                            <TableHead className="text-right">Avg Days → TAM</TableHead>
+                            <TableHead className="text-right">Open Blockers</TableHead>
+                            <TableHead className="text-right">Median Blocker Age</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredTeamData.map((team) => (
+                            <TableRow key={team.product_team}>
+                              <TableCell className="font-medium">{team.product_team}</TableCell>
+                              <TableCell>{team.lob}</TableCell>
+                              <TableCell className={`text-right font-bold ${getTAMColorClass(team.tam_pct)}`}>
+                                {team.tam_pct}%
+                              </TableCell>
+                              <TableCell className="text-right">{team.avg_days_to_tam} days</TableCell>
+                              <TableCell className="text-right">{team.open_blockers}</TableCell>
+                              <TableCell className="text-right">{team.median_blocker_age} days</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -502,30 +521,32 @@ const Analytics = () => {
                     <CardTitle>Line of Business Summary</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Line of Business</TableHead>
-                          <TableHead className="text-right">TAM %</TableHead>
-                          <TableHead className="text-right">Avg Days → TAM</TableHead>
-                          <TableHead className="text-right">Open Blockers</TableHead>
-                          <TableHead className="text-right">Median Blocker Age</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredLOBData.map((lob) => (
-                          <TableRow key={lob.lob}>
-                            <TableCell className="font-medium">{lob.lob}</TableCell>
-                            <TableCell className={`text-right font-bold ${getTAMColorClass(lob.tam_pct)}`}>
-                              {lob.tam_pct}%
-                            </TableCell>
-                            <TableCell className="text-right">{lob.avg_days_to_tam} days</TableCell>
-                            <TableCell className="text-right">{lob.open_blockers}</TableCell>
-                            <TableCell className="text-right">{lob.median_blocker_age} days</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Line of Business</TableHead>
+                            <TableHead className="text-right">TAM %</TableHead>
+                            <TableHead className="text-right">Avg Days → TAM</TableHead>
+                            <TableHead className="text-right">Open Blockers</TableHead>
+                            <TableHead className="text-right">Median Blocker Age</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredLOBData.map((lob) => (
+                            <TableRow key={lob.lob}>
+                              <TableCell className="font-medium">{lob.lob}</TableCell>
+                              <TableCell className={`text-right font-bold ${getTAMColorClass(lob.tam_pct)}`}>
+                                {lob.tam_pct}%
+                              </TableCell>
+                              <TableCell className="text-right">{lob.avg_days_to_tam} days</TableCell>
+                              <TableCell className="text-right">{lob.open_blockers}</TableCell>
+                              <TableCell className="text-right">{lob.median_blocker_age} days</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -536,37 +557,39 @@ const Analytics = () => {
                     <CardTitle>Region Summary</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Region</TableHead>
-                          <TableHead className="text-right">TAM %</TableHead>
-                          <TableHead className="text-right">Avg Days → TAM</TableHead>
-                          <TableHead className="text-right">Open Blockers</TableHead>
-                          <TableHead className="text-right">Median Blocker Age</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredRegionData.map((region) => (
-                          <TableRow key={region.region}>
-                            <TableCell className="font-medium">{region.region}</TableCell>
-                            <TableCell className={`text-right font-bold ${getTAMColorClass(region.tam_pct)}`}>
-                              {region.tam_pct}%
-                            </TableCell>
-                            <TableCell className="text-right">{region.avg_days_to_tam} days</TableCell>
-                            <TableCell className="text-right">{region.open_blockers}</TableCell>
-                            <TableCell className="text-right">{region.median_blocker_age} days</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Region</TableHead>
+                            <TableHead className="text-right">TAM %</TableHead>
+                            <TableHead className="text-right">Avg Days → TAM</TableHead>
+                            <TableHead className="text-right">Open Blockers</TableHead>
+                            <TableHead className="text-right">Median Blocker Age</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredRegionData.map((region) => (
+                            <TableRow key={region.region}>
+                              <TableCell className="font-medium">{region.region}</TableCell>
+                              <TableCell className={`text-right font-bold ${getTAMColorClass(region.tam_pct)}`}>
+                                {region.tam_pct}%
+                              </TableCell>
+                              <TableCell className="text-right">{region.avg_days_to_tam} days</TableCell>
+                              <TableCell className="text-right">{region.open_blockers}</TableCell>
+                              <TableCell className="text-right">{region.median_blocker_age} days</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
             </Tabs>
             
             {/* Country/City Specific Metrics */}
-            <Card className="mb-6">
+            <Card className="mb-8">
               <CardHeader className="pb-2">
                 <CardTitle>Country/City Specific Metrics</CardTitle>
               </CardHeader>
@@ -665,34 +688,36 @@ const Analytics = () => {
                     {/* Mock blocker table */}
                     {locationData.open_blockers > 0 && (
                       <div className="border rounded-md overflow-hidden mt-2">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Product</TableHead>
-                              <TableHead>Category</TableHead>
-                              <TableHead>Owner</TableHead>
-                              <TableHead className="text-right">Age (days)</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {Array(Math.min(5, locationData.open_blockers)).fill(0).map((_, i) => (
-                              <TableRow key={i}>
-                                <TableCell>
-                                  {["Maps", "Driver", "Rider", "Pricing", "Marketplace"][i % 5]}
-                                </TableCell>
-                                <TableCell>
-                                  {["Legal", "Technical", "Product", "Localization", "Compliance"][i % 5]}
-                                </TableCell>
-                                <TableCell>
-                                  {["Team A", "Team B", "Team C", "Team D", "Team E"][i % 5]}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  {Math.max(1, locationData.median_blocker_age - 2 + i)}
-                                </TableCell>
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Product</TableHead>
+                                <TableHead>Category</TableHead>
+                                <TableHead>Owner</TableHead>
+                                <TableHead className="text-right">Age (days)</TableHead>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                            </TableHeader>
+                            <TableBody>
+                              {Array(Math.min(5, locationData.open_blockers)).fill(0).map((_, i) => (
+                                <TableRow key={i}>
+                                  <TableCell>
+                                    {["Maps", "Driver", "Rider", "Pricing", "Marketplace"][i % 5]}
+                                  </TableCell>
+                                  <TableCell>
+                                    {["Legal", "Technical", "Product", "Localization", "Compliance"][i % 5]}
+                                  </TableCell>
+                                  <TableCell>
+                                    {["Team A", "Team B", "Team C", "Team D", "Team E"][i % 5]}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {Math.max(1, locationData.median_blocker_age - 2 + i)}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
                       </div>
                     )}
                     
