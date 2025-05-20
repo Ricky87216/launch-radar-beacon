@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { 
   Market, 
@@ -57,6 +56,7 @@ interface DashboardContextProps {
   isUserLocationInTam: (productId: string) => boolean;
   addCellComment: (comment: Omit<CellComment, "comment_id" | "created_at">) => void;
   updateCellComment: (commentId: string, updates: Partial<CellComment>) => void;
+  getCoverageData: () => Coverage[];
 }
 
 const DashboardContext = createContext<DashboardContextProps | undefined>(undefined);
@@ -80,6 +80,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   // State for drill-down navigation
   const [currentLevel, setCurrentLevel] = useState<'mega_region' | 'region' | 'country' | 'city'>('mega_region');
   const [selectedParent, setSelectedParent] = useState<string | null>(null);
+  
+  // Add a function to expose the coverage data
+  const getCoverageData = () => {
+    return coverageDataState;
+  };
   
   // Function to check if a market is in TAM scope for a product
   const isMarketInTam = (productId: string, marketId: string): boolean => {
@@ -371,7 +376,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         getProductTamRegions,
         isUserLocationInTam,
         addCellComment,
-        updateCellComment
+        updateCellComment,
+        getCoverageData
       }}
     >
       {children}
