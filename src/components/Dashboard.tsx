@@ -10,6 +10,7 @@ import Sidebar from "./Sidebar";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Star } from "lucide-react";
 import { OnboardingCallout } from "./OnboardingCallout";
+import { ChatBotCallout } from "./chat-bot/ChatBotCallout";
 
 export default function Dashboard() {
   const [blockerModalOpen, setBlockerModalOpen] = useState(false);
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
   const [selectedMarketId, setSelectedMarketId] = useState<string | undefined>(undefined);
   const [escalationModalOpen, setEscalationModalOpen] = useState(false);
+  const [showChatBotCallout, setShowChatBotCallout] = useState(true);
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   const { getAllMarkets } = useDashboard();
@@ -95,6 +97,9 @@ export default function Dashboard() {
       <Sidebar personalFilters={personalizedFilters} />
       <main className="flex-1 overflow-hidden">
         <OnboardingCallout />
+        {showChatBotCallout && (
+          <ChatBotCallout />
+        )}
         {personalizedFilters.isPersonalView && (
           <Alert className="mb-2 mx-4 mt-4 bg-blue-50 border-blue-200">
             <AlertTitle className="flex items-center">

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { DashboardProvider } from "@/context/DashboardContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useSideMenuPatch } from "@/hooks/use-side-menu-patch";
 
 // Layout components
 import GlobalSidebar from "@/components/GlobalSidebar";
@@ -24,9 +25,44 @@ import Analytics from "@/pages/Analytics";
 import HowTo from "@/pages/HowTo";
 import Dashboard from "@/components/Dashboard";
 import Feedback from "@/pages/Feedback";
+import ChatBot from "@/pages/ChatBot";
 
 // Create a client
 const queryClient = new QueryClient();
+
+function AppContent() {
+  // Use our custom hook to patch the sidebar menu
+  useSideMenuPatch();
+  
+  return (
+    <div className="flex min-h-screen w-full">
+      <GlobalSidebar />
+      <div className="flex-1 flex flex-col">
+        <GlobalNavBar />
+        <main className="flex-1 overflow-y-auto">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/my" element={<MyLaunchRadar />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/how-to" element={<HowTo />} />
+            <Route path="/feedback" element={<Feedback />} />
+            <Route path="/chat" element={<ChatBot />} />
+            <Route path="/admin/bulk-edit" element={<BulkEdit />} />
+            <Route path="/admin/data-sync" element={<DataSync />} />
+            <Route path="/admin/answer-hub" element={<AnswerHub />} />
+            <Route path="/admin/logs" element={<Logs />} />
+            <Route path="/admin/escalations" element={<Escalations />} />
+            <Route path="/admin/product-meta" element={<ProductMeta />} />
+            <Route path="/escalations" element={<EscalationLog />} />
+            <Route path="/escalations/:id" element={<EscalationLog />} />
+            <Route path="/index" element={<Index />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   return (
@@ -34,31 +70,7 @@ function App() {
       <DashboardProvider>
         <Router>
           <SidebarProvider>
-            <div className="flex min-h-screen w-full">
-              <GlobalSidebar />
-              <div className="flex-1 flex flex-col">
-                <GlobalNavBar />
-                <main className="flex-1 overflow-y-auto">
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/my" element={<MyLaunchRadar />} />
-                    <Route path="/analytics" element={<Analytics />} />
-                    <Route path="/how-to" element={<HowTo />} />
-                    <Route path="/feedback" element={<Feedback />} />
-                    <Route path="/admin/bulk-edit" element={<BulkEdit />} />
-                    <Route path="/admin/data-sync" element={<DataSync />} />
-                    <Route path="/admin/answer-hub" element={<AnswerHub />} />
-                    <Route path="/admin/logs" element={<Logs />} />
-                    <Route path="/admin/escalations" element={<Escalations />} />
-                    <Route path="/admin/product-meta" element={<ProductMeta />} />
-                    <Route path="/escalations" element={<EscalationLog />} />
-                    <Route path="/escalations/:id" element={<EscalationLog />} />
-                    <Route path="/index" element={<Index />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-              </div>
-            </div>
+            <AppContent />
             <Toaster />
           </SidebarProvider>
         </Router>
