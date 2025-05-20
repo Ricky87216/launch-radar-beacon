@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -305,13 +304,13 @@ const Analytics = () => {
               </Card>
             </div>
             
-            {/* TAM Trend Line Chart */}
+            {/* TAM Trend Line Chart - MODIFIED FOR RESPONSIVENESS */}
             <Card className="mb-6">
               <CardHeader className="pb-2">
                 <CardTitle>Global TAM Coverage Trend (180 Days)</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="h-80">
+              <CardContent className="px-1 sm:px-2 md:px-4">
+                <div className="h-80 w-full">
                   <ChartContainer
                     config={{
                       tam: { color: "var(--uber-green)" },
@@ -319,7 +318,7 @@ const Analytics = () => {
                   >
                     <LineChart
                       data={mockDailyAnalyticsData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                      margin={{ top: 20, right: 30, left: 10, bottom: 30 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis 
@@ -328,13 +327,24 @@ const Analytics = () => {
                           const date = new Date(value);
                           return `${date.getMonth() + 1}/${date.getDate()}`;
                         }}
+                        tick={{fontSize: 10}}
+                        tickMargin={10}
+                        height={50}
+                        padding={{ left: 10, right: 10 }}
                       />
-                      <YAxis domain={[0, 100]} tickCount={6}>
+                      <YAxis 
+                        domain={[0, 100]} 
+                        tickCount={6}
+                        width={35}
+                        tick={{fontSize: 10}}
+                        tickMargin={5}
+                      >
                         <Label
                           value="Coverage %"
                           angle={-90}
                           position="insideLeft"
                           style={{ textAnchor: "middle", fontSize: 12 }}
+                          offset={-10}
                         />
                       </YAxis>
                       <Tooltip
@@ -357,9 +367,9 @@ const Analytics = () => {
                         dataKey="global_tam_pct"
                         name="TAM Coverage"
                         stroke="var(--uber-green)"
-                        strokeWidth={3}
+                        strokeWidth={2}
                         dot={false}
-                        activeDot={{ r: 6 }}
+                        activeDot={{ r: 5 }}
                       />
                     </LineChart>
                   </ChartContainer>
@@ -367,25 +377,31 @@ const Analytics = () => {
               </CardContent>
             </Card>
             
-            {/* Team Bar Chart */}
+            {/* Team Bar Chart - ALSO UPDATED FOR BETTER RESPONSIVENESS */}
             <Card className="mb-6">
               <CardHeader className="pb-2">
                 <CardTitle>TAM Coverage by Team</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="h-80">
+              <CardContent className="px-1 sm:px-2 md:px-4">
+                <div className="h-80 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       layout="vertical"
                       data={filteredTeamData}
-                      margin={{ top: 20, right: 120, left: 80, bottom: 5 }}
+                      margin={{ top: 20, right: 90, left: 70, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                      <XAxis type="number" domain={[0, 100]} tickCount={6} />
+                      <XAxis 
+                        type="number" 
+                        domain={[0, 100]} 
+                        tickCount={6} 
+                        tick={{fontSize: 10}}
+                      />
                       <YAxis 
                         type="category"
                         dataKey="product_team" 
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 11 }}
+                        width={60}
                       />
                       <Tooltip
                         content={({ active, payload, label }) => {
@@ -411,10 +427,10 @@ const Analytics = () => {
                           const team = filteredTeamData[index];
                           return (
                             <text 
-                              x={x + width + 10} 
+                              x={x + width + 5} 
                               y={y + height/2} 
                               dy={4} 
-                              fontSize={12}
+                              fontSize={10}
                               fill="var(--uber-gray-90)"
                               textAnchor="start"
                             >
