@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Grid, Star, AlertTriangle, Wrench, Database, Search, ShieldAlert, BarChartIcon, HelpCircle, MessageSquare, Bot } from 'lucide-react';
@@ -128,10 +129,10 @@ const GlobalSidebar = () => {
           {/* Mini Robot Component */}
           <SidebarMenuItem>
             <Link to="/chat" className="block p-2">
-              <div className="h-16 w-full relative overflow-hidden rounded-md bg-transparent hover:bg-sidebar-accent transition-colors cursor-pointer">
+              <div className="h-48 w-full relative overflow-hidden rounded-md bg-transparent hover:bg-sidebar-accent transition-colors cursor-pointer flex justify-start">
                 <SplineScene 
                   scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode" 
-                  className="w-full h-full scale-75 hover:scale-90 transition-transform duration-300"
+                  className="h-full w-48 scale-[2.25] hover:scale-[2.5] transition-transform duration-300 origin-left"
                 />
               </div>
             </Link>
