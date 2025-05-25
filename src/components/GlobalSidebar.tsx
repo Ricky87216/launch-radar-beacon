@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Grid, Star, AlertTriangle, Wrench, Database, Search, ShieldAlert, BarChartIcon, HelpCircle, MessageSquare, Bot } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
+import { SplineScene } from '@/components/ui/splite';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -123,6 +123,18 @@ const GlobalSidebar = () => {
                 <span>AI Assistant</span>
               </Link>
             </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          {/* Mini Robot Component */}
+          <SidebarMenuItem>
+            <Link to="/chat" className="block p-2">
+              <div className="h-16 w-full relative overflow-hidden rounded-md bg-transparent hover:bg-sidebar-accent transition-colors cursor-pointer">
+                <SplineScene 
+                  scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode" 
+                  className="w-full h-full scale-75 hover:scale-90 transition-transform duration-300"
+                />
+              </div>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
