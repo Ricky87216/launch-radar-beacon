@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useDashboard } from "@/context/DashboardContext";
@@ -9,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SuggestedQuestions } from "@/components/chat-bot/SuggestedQuestions";
+import { SplineSceneBasic } from "@/components/ui/demo";
 
 interface Message {
   id: string;
@@ -234,11 +234,20 @@ export default function ChatBot() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="p-4 border-b bg-background flex items-center gap-2">
-        <Bot className="h-5 w-5" />
-        <h1 className="text-xl font-semibold">Launch Radar AI Assistant</h1>
+      {/* Header with 3D Robot */}
+      <div className="p-4 border-b bg-background">
+        <div className="flex items-center gap-2 mb-4">
+          <Bot className="h-5 w-5" />
+          <h1 className="text-xl font-semibold">Launch Radar AI Assistant</h1>
+        </div>
+        
+        {/* 3D Robot Component */}
+        <div className="mb-4">
+          <SplineSceneBasic />
+        </div>
       </div>
       
+      {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div 
@@ -301,6 +310,7 @@ export default function ChatBot() {
         <div ref={messagesEndRef} />
       </div>
       
+      {/* Input Area */}
       <div className="border-t p-4 bg-background">
         <div className="flex gap-2">
           <Input
