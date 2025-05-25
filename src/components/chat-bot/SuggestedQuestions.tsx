@@ -22,7 +22,7 @@ export function SuggestedQuestions({ onSelectQuestion }: SuggestedQuestionsProps
           key={index} 
           variant="outline" 
           size="sm"
-          className="text-xs"
+          className="text-xs bg-black text-white border-gray-600 hover:bg-white hover:text-black hover:border-white hover:scale-110 hover:shadow-lg hover:shadow-white/20 transition-all duration-300 ease-out transform hover:-translate-y-1"
           onClick={() => onSelectQuestion(question)}
         >
           {question}

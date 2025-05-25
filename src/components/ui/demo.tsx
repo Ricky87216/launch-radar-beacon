@@ -315,7 +315,7 @@ export function SplineSceneBasic() {
             
             {showSuggestions && messages.length === 1 && (
               <div className="flex justify-center">
-                <div className="p-3 w-full bg-gray-800 rounded-lg">
+                <div className="p-3 w-full bg-transparent rounded-lg">
                   <p className="text-sm text-center mb-2 text-gray-300">Try asking one of these questions:</p>
                   <SuggestedQuestions onSelectQuestion={handleSelectSuggestion} />
                 </div>
