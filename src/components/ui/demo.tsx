@@ -20,8 +20,7 @@ export function SplineSceneBasic() {
             Interactive 3D
           </h1>
           <p className="mt-4 text-neutral-300 max-w-lg">
-            Bring your UI to life with beautiful 3D scenes. Create immersive experiences 
-            that capture attention and enhance your design.
+            chat bot
           </p>
         </div>
 

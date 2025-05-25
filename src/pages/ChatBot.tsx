@@ -233,12 +233,12 @@ export default function ChatBot() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-black">
       {/* Header with 3D Robot */}
-      <div className="p-4 border-b bg-background">
+      <div className="p-4 border-b bg-black border-gray-800">
         <div className="flex items-center gap-2 mb-4">
-          <Bot className="h-5 w-5" />
-          <h1 className="text-xl font-semibold">Launch Radar AI Assistant</h1>
+          <Bot className="h-5 w-5 text-white" />
+          <h1 className="text-xl font-semibold text-white">Launch Radar AI Assistant</h1>
         </div>
         
         {/* 3D Robot Component */}
@@ -248,7 +248,7 @@ export default function ChatBot() {
       </div>
       
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black">
         {messages.map((message) => (
           <div 
             key={message.id}
@@ -258,19 +258,19 @@ export default function ChatBot() {
               className={`max-w-[80%] p-3 rounded-lg ${
                 message.role === "user" 
                   ? "bg-primary text-primary-foreground" 
-                  : "bg-muted"
+                  : "bg-gray-800 text-white"
               }`}
             >
               <div className="whitespace-pre-line">{message.content}</div>
               
               {message.links && message.links.length > 0 && (
                 <div className="mt-2 space-y-1">
-                  <Separator />
+                  <Separator className="bg-gray-600" />
                   <p className="text-xs opacity-70 mt-1">Relevant resources:</p>
                   <div className="flex flex-wrap gap-2">
                     {message.links.map((link, i) => (
                       <Link key={i} to={link.url}>
-                        <Badge variant="outline" className="cursor-pointer hover:bg-accent">
+                        <Badge variant="outline" className="cursor-pointer hover:bg-gray-700 border-gray-600 text-gray-200">
                           {link.text}
                         </Badge>
                       </Link>
@@ -288,11 +288,11 @@ export default function ChatBot() {
         
         {isTyping && (
           <div className="flex justify-start">
-            <Card className="p-3 max-w-[80%]">
+            <Card className="p-3 max-w-[80%] bg-gray-800 border-gray-700">
               <div className="flex space-x-2 items-center">
-                <div className="w-2 h-2 rounded-full bg-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                <div className="w-2 h-2 rounded-full bg-foreground/60 animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                <div className="w-2 h-2 rounded-full bg-foreground/60 animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{ animationDelay: "300ms" }}></div>
               </div>
             </Card>
           </div>
@@ -300,8 +300,8 @@ export default function ChatBot() {
         
         {showSuggestions && messages.length === 1 && (
           <div className="flex justify-center">
-            <Card className="p-3 w-full max-w-xl">
-              <p className="text-sm text-center mb-2 text-muted-foreground">Try asking one of these questions:</p>
+            <Card className="p-3 w-full max-w-xl bg-gray-800 border-gray-700">
+              <p className="text-sm text-center mb-2 text-gray-300">Try asking one of these questions:</p>
               <SuggestedQuestions onSelectQuestion={handleSelectSuggestion} />
             </Card>
           </div>
@@ -311,7 +311,7 @@ export default function ChatBot() {
       </div>
       
       {/* Input Area */}
-      <div className="border-t p-4 bg-background">
+      <div className="border-t p-4 bg-black border-gray-800">
         <div className="flex gap-2">
           <Input
             ref={inputRef}
@@ -319,14 +319,14 @@ export default function ChatBot() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask me about product coverage, blockers, markets..."
-            className="flex-1"
+            className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-400"
             disabled={isTyping}
           />
           <Button onClick={handleSendMessage} disabled={!input.trim() || isTyping}>
             <Send className="h-4 w-4" />
           </Button>
         </div>
-        <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+        <div className="text-xs text-gray-400 mt-2 flex items-center gap-1">
           <MessageCircle className="h-3 w-3" />
           <span>Try asking about product coverage, blockers, or launch dates</span>
         </div>
