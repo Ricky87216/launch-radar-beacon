@@ -225,6 +225,7 @@ export function SplineSceneBasic() {
       }]
     };
   };
+
   return <Card className="w-full h-[500px] bg-transparent border-transparent relative overflow-hidden">
       <Spotlight className="-top-40 left-0 md:left-60 md:-top-20" fill="white" />
       
@@ -243,51 +244,83 @@ export function SplineSceneBasic() {
         {/* Right content - Chat Interface */}
         <div className="flex-1 relative flex flex-col">
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map(message => <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`p-3 max-w-[80%] rounded-lg ${
-                  message.role === "user" 
-                    ? "bg-blue-600 text-white" 
-                    : "bg-gray-800 text-white"
-                }`}>
-                  <div className="text-sm whitespace-pre-wrap break-words">
-                    {message.content}
-                  </div>
-                  {message.links && message.links.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {message.links.map((link, index) => (
-                        <Link
-                          key={index}
-                          to={link.url}
-                          className="block text-xs text-blue-300 hover:text-blue-200 underline"
-                        >
-                          {link.text}
-                        </Link>
-                      ))}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-black/50 to-gray-900/30">
+            {messages.map(message => <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} mb-4`}>
+                <div className={`relative max-w-[85%] ${message.role === "user" ? "order-1" : "order-2"}`}>
+                  {/* Message bubble */}
+                  <div className={`p-4 rounded-2xl border backdrop-blur-sm shadow-lg ${
+                    message.role === "user" 
+                      ? "bg-white/90 text-black border-white/20 rounded-br-md ml-4" 
+                      : "bg-black/80 text-white border-gray-700/50 rounded-bl-md mr-4"
+                  }`}>
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                      {message.content}
                     </div>
+                    {message.links && message.links.length > 0 && (
+                      <div className="mt-3 pt-2 border-t border-gray-300/20 space-y-1">
+                        {message.links.map((link, index) => (
+                          <Link
+                            key={index}
+                            to={link.url}
+                            className={`block text-xs underline transition-colors ${
+                              message.role === "user" 
+                                ? "text-blue-600 hover:text-blue-800" 
+                                : "text-blue-400 hover:text-blue-300"
+                            }`}
+                          >
+                            {link.text}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Timestamp */}
+                  <div className={`text-xs text-gray-400 mt-1 ${
+                    message.role === "user" ? "text-right mr-4" : "text-left ml-4"
+                  }`}>
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+                
+                {/* Avatar indicator */}
+                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                  message.role === "user" 
+                    ? "bg-white text-black order-2 ml-2" 
+                    : "bg-gray-800 text-white order-1 mr-2"
+                }`}>
+                  {message.role === "user" ? (
+                    <span className="text-xs font-bold">U</span>
+                  ) : (
+                    <Bot className="h-4 w-4" />
                   )}
                 </div>
               </div>)}
             
-            {isTyping && <div className="flex justify-start">
-                <div className="p-3 max-w-[80%] bg-gray-800 rounded-lg">
-                  <div className="flex space-x-2 items-center">
-                    <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{
-                  animationDelay: "0ms"
-                }}></div>
-                    <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{
-                  animationDelay: "150ms"
-                }}></div>
-                    <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{
-                  animationDelay: "300ms"
-                }}></div>
+            {isTyping && <div className="flex justify-start mb-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center order-1 mr-2">
+                  <Bot className="h-4 w-4" />
+                </div>
+                <div className="relative max-w-[85%] order-2">
+                  <div className="p-4 bg-black/80 border border-gray-700/50 rounded-2xl rounded-bl-md mr-4 backdrop-blur-sm shadow-lg">
+                    <div className="flex space-x-2 items-center">
+                      <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{
+                    animationDelay: "0ms"
+                  }}></div>
+                      <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{
+                    animationDelay: "150ms"
+                  }}></div>
+                      <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{
+                    animationDelay: "300ms"
+                  }}></div>
+                    </div>
                   </div>
                 </div>
               </div>}
             
             {showSuggestions && messages.length === 1 && <div className="flex justify-center">
-                <div className="p-3 w-full bg-transparent rounded-lg">
-                  <p className="text-sm text-center mb-2 text-gray-300">Try asking one of these questions:</p>
+                <div className="p-4 w-full bg-transparent rounded-lg">
+                  <p className="text-sm text-center mb-4 text-gray-300">Try asking one of these questions:</p>
                   <SuggestedQuestions onSelectQuestion={handleSelectSuggestion} />
                 </div>
               </div>}
@@ -296,10 +329,23 @@ export function SplineSceneBasic() {
           </div>
           
           {/* Input Area */}
-          <div className="border-t p-4 border-gray-800">
-            <div className="flex gap-2">
-              <Input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Ask me about product coverage, blockers, markets..." className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-400 text-sm" disabled={isTyping} />
-              <Button onClick={handleSendMessage} disabled={!input.trim() || isTyping} size="sm">
+          <div className="border-t border-gray-700/50 p-4 bg-black/20 backdrop-blur-sm">
+            <div className="flex gap-3">
+              <Input 
+                ref={inputRef} 
+                value={input} 
+                onChange={e => setInput(e.target.value)} 
+                onKeyDown={handleKeyDown} 
+                placeholder="Ask me about product coverage, blockers, markets..." 
+                className="flex-1 bg-gray-900/50 border-gray-600/50 text-white placeholder-gray-400 text-sm rounded-xl focus:border-white/50 focus:ring-1 focus:ring-white/20" 
+                disabled={isTyping} 
+              />
+              <Button 
+                onClick={handleSendMessage} 
+                disabled={!input.trim() || isTyping} 
+                size="sm"
+                className="rounded-xl bg-white text-black hover:bg-gray-200 disabled:bg-gray-600 disabled:text-gray-400"
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
