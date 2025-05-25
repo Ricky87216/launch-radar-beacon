@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { SuggestedQuestions } from "@/components/chat-bot/SuggestedQuestions";
 import { SplineScene } from "@/components/ui/splite";
 import { Spotlight } from "@/components/ui/spotlight";
+
 interface Message {
   id: string;
   content: string;
@@ -22,6 +23,7 @@ interface Message {
     url: string;
   }>;
 }
+
 export function SplineSceneBasic() {
   const [messages, setMessages] = useState<Message[]>([{
     id: "welcome",
@@ -243,7 +245,28 @@ export function SplineSceneBasic() {
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map(message => <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                
+                <div className={`p-3 max-w-[80%] rounded-lg ${
+                  message.role === "user" 
+                    ? "bg-blue-600 text-white" 
+                    : "bg-gray-800 text-white"
+                }`}>
+                  <div className="text-sm whitespace-pre-wrap break-words">
+                    {message.content}
+                  </div>
+                  {message.links && message.links.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {message.links.map((link, index) => (
+                        <Link
+                          key={index}
+                          to={link.url}
+                          className="block text-xs text-blue-300 hover:text-blue-200 underline"
+                        >
+                          {link.text}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>)}
             
             {isTyping && <div className="flex justify-start">
