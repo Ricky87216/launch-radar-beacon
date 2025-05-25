@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { DashboardProvider } from "@/context/DashboardContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { useSideMenuPatch } from "@/hooks/use-side-menu-patch";
 
 // Layout components
 import GlobalSidebar from "@/components/GlobalSidebar";
@@ -31,9 +30,6 @@ import ChatBot from "@/pages/ChatBot";
 const queryClient = new QueryClient();
 
 function AppContent() {
-  // Use our custom hook to patch the sidebar menu
-  useSideMenuPatch();
-  
   return (
     <div className="flex min-h-screen w-full">
       <GlobalSidebar />

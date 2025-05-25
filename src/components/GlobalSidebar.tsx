@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Grid, Star, AlertTriangle, Wrench, Database, Search, ShieldAlert, BarChartIcon, HelpCircle, MessageSquare } from 'lucide-react';
+import { Grid, Star, AlertTriangle, Wrench, Database, Search, ShieldAlert, BarChartIcon, HelpCircle, MessageSquare, Bot } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { 
   Sidebar, 
@@ -107,6 +107,23 @@ const GlobalSidebar = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+        </SidebarMenu>
+        
+        <SidebarSeparator className="my-2" />
+        
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={location.pathname === '/chat'}
+              tooltip="AI Assistant"
+            >
+              <Link to="/chat">
+                <Bot className="h-4 w-4" />
+                <span>AI Assistant</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
